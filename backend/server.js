@@ -13,6 +13,6 @@ app.use(express.json());
 app.use("/productos", productosRoutes);
 app.use("/ventas", ventasRoutes);
 
-app.listen(PORT, ()=>{
+app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });

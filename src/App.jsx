@@ -1,7 +1,11 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import Navbar from "./components/Navbar";
-
 import Home from "./pages/Home";
 import Productos from "./pages/Productos";
 import NuevaVenta from "./pages/NuevaVenta";
@@ -10,13 +14,13 @@ import NuevoProducto from "./pages/NuevoProducto";
 import EditarProducto from "./pages/EditarProducto";
 import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
+import BackButton from "./components/UI/BackButton";
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
 
   useEffect(() => {
     document.body.className = theme;
-
     localStorage.setItem("theme", theme);
   }, [theme]);
 
@@ -29,6 +33,7 @@ function App() {
       <Navbar toggleTheme={toggleTheme} theme={theme} />
 
       <div className="container mt-4">
+        <BackButton />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Productos />} />
@@ -38,7 +43,6 @@ function App() {
           <Route path="/productos/editar/:id" element={<EditarProducto />} />
         </Routes>
       </div>
-
 
       <ToastContainer
         position="top-right"
