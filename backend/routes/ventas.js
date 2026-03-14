@@ -1,0 +1,103 @@
+import express from "express";
+import db from "../db.js";
+
+const router = express.Router();
+
+// POST /ventas
+router.post("/", (req, res) => {
+  const { productos, total } = req.body;
+
+  db.query("INSERT INTO ventas (total) VALUES (?)", [total], (err, result) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Error al crear venta" });
+    }
+
+    const ventaId = result.insertId;
+
+    let pendientes = productos.length;
+
+    productos.forEach((p) => {
+      db.query(
+        `INSERT INTO detalle_ventas
+          (venta_id, producto_id, cantidad, precio)
+          VALUES (?, ?, ?, ?)`,
+        [ventaId, p.id, p.cantidad, p.precio],
+        (err) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Error en detalle venta" });
+          }
+
+          // actualizar stock
+          db.query("UPDATE productos SET stock = stock - ? WHERE id = ?", [
+            p.cantidad,
+            p.id,
+          ]);
+
+          pendientes--;
+
+          if (pendientes === 0) {
+            res.json({ success: true });
+          }
+        },
+      );
+    });
+  });
+});
+
+// GET /ventas/hoy
+router.get("/hoy", (req, res) => {
+  db.query(
+    `SELECT * FROM ventas
+     WHERE DATE(fecha) = CURDATE()
+     ORDER BY fecha DESC`,
+    (err, ventas) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      db.query(
+        `SELECT SUM(total) as total
+         FROM ventas
+         WHERE DATE(fecha) = CURDATE()`,
+        (err, totalResult) => {
+          if (err) {
+            return res.status(500).json(err);
+          }
+
+          res.json({
+            ventas,
+            total: totalResult[0].total || 0,
+          });
+        },
+      );
+    },
+  );
+});
+
+// GET /ventas/:id
+router.get("/:id", (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    `SELECT 
+      dv.cantidad,
+      dv.precio,
+      p.nombre
+     FROM detalle_ventas dv
+     JOIN productos p ON dv.producto_id = p.id
+     WHERE dv.venta_id = ?`,
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Error obteniendo detalle" });
+      }
+
+      res.json(rows);
+    },
+  );
+});
+
+export default router;
