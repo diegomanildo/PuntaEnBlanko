@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Package, BarChart3, Sun, Moon } from "lucide-react";
+import { ShoppingCart, Package, BarChart3, Sun, Moon, Receipt, TrendingUp } from "lucide-react";
 import logo from "../assets/logo.png";
 
 function Navbar({ toggleTheme, theme }) {
@@ -23,8 +23,12 @@ function Navbar({ toggleTheme, theme }) {
             <Package size={18} /> Productos
           </Link>
 
-          <Link className="nav-link" to="/facturacion">
-            <BarChart3 size={18} /> Facturación
+          <Link className="nav-link" to={`/facturacion/${new Date().toISOString().split("T")[0]}`}>
+            <Receipt size={18} /> Facturación del dia
+          </Link>
+
+          <Link className="nav-link" to={`/facturacion/${new Date().toISOString().split("T")[0]}`}>
+            <TrendingUp size={18} /> Facturación del mes
           </Link>
 
           <button

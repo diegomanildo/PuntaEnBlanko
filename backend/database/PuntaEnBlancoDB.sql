@@ -56,3 +56,16 @@ CREATE TABLE detalle_ventas (
     FOREIGN KEY (venta_id) REFERENCES ventas(id),
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
 );
+
+INSERT INTO ventas (fecha, total) VALUES ('2026-03-14 10:30:00', 7250.00);
+INSERT INTO ventas (fecha, total) VALUES ('2026-03-15 14:20:00', 3200.00);
+INSERT INTO ventas (fecha, total) VALUES ('2026-03-18 09:10:00', 5600.00);
+INSERT INTO ventas (fecha, total) VALUES ('2026-03-18 09:10:00', 5600.00);
+INSERT INTO ventas (fecha, total) VALUES ('2026-03-20 17:45:00', 8900.00);
+INSERT INTO ventas (fecha, total) VALUES ('2026-03-22 11:05:00', 2100.00);
+INSERT INTO ventas (fecha, total) VALUES ('2026-03-25 16:30:00', 4750.00);
+
+INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio) VALUES
+  (1, 1, 1, 4400.00),
+  (1, 3, 2, 850.00),
+  (1, 9, 1, 800.00);

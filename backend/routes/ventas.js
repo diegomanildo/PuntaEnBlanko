@@ -76,6 +76,76 @@ router.get("/hoy", (req, res) => {
   );
 });
 
+// GET /ventas/mes
+router.get("/mes", (req, res) => {
+  db.query(
+    `SELECT DATE_FORMAT(fecha, '%Y-%m-%d') as dia, COUNT(*) as cantidad, SUM(total) as total
+    FROM ventas
+    WHERE MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())
+    GROUP BY DATE(fecha)
+    ORDER BY dia ASC;`,
+    (err, porDia) => {
+      if (err) return res.status(500).json(err);
+
+      db.query(
+        `SELECT COUNT(*) as cantidad, SUM(total) as total
+         FROM ventas
+         WHERE MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())`,
+        (err, resumen) => {
+          if (err) return res.status(500).json(err);
+
+          db.query(
+            `SELECT p.nombre, SUM(dv.cantidad) as total_vendido
+              FROM detalle_ventas dv
+              JOIN productos p ON dv.producto_id = p.id
+              JOIN ventas v ON dv.venta_id = v.id
+              WHERE MONTH(v.fecha) = MONTH(CURDATE()) AND YEAR(v.fecha) = YEAR(CURDATE())
+              GROUP BY p.nombre
+              ORDER BY total_vendido DESC
+              LIMIT 3`,
+            (err, topProducto) => {
+              if (err) return res.status(500).json(err);
+
+              res.json({
+                porDia,
+                total: resumen[0].total || 0,
+                cantidadVentas: resumen[0].cantidad || 0,
+                topProductos: topProducto || [],
+              });
+            },
+          );
+        },
+      );
+    },
+  );
+});
+
+// GET /ventas/dia/:fecha
+router.get("/dia/:fecha", (req, res) => {
+  const { fecha } = req.params;
+
+  db.query(
+    `SELECT * FROM ventas WHERE DATE(fecha) = ? ORDER BY fecha DESC`,
+    [fecha],
+    (err, ventas) => {
+      if (err) return res.status(500).json(err);
+
+      db.query(
+        `SELECT SUM(total) as total FROM ventas WHERE DATE(fecha) = ?`,
+        [fecha],
+        (err, totalResult) => {
+          if (err) return res.status(500).json(err);
+
+          res.json({
+            ventas,
+            total: totalResult[0].total || 0,
+          });
+        },
+      );
+    },
+  );
+});
+
 // GET /ventas/:id
 router.get("/:id", (req, res) => {
   const { id } = req.params;

@@ -325,3 +325,7 @@ td.d-flex .btn {
   background-color: #f3f4f6 !important;
   color: #585f5f !important;
 }
+
+.dark .fw-semibold {
+  color: #a09f9f;
+}

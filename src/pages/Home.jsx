@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Package, BarChart3, Receipt } from "lucide-react";
+import { ShoppingCart, Package, Receipt, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PORT } from "../../backend/config";
 
@@ -34,48 +34,68 @@ function Home() {
       iconColor: "text-primary",
     },
     {
-      to: "/facturacion",
-      icon: <Receipt size={20} className="text-warning" />,
+      to: `/facturacion/${new Date().toISOString().split("T")[0]}`,
+      icon: <Receipt size={22} />,
       label: "Facturación del día",
-      sub: "Resumen de ventas",
+      sub: "Resumen de ventas de hoy",
       iconBg: "bg-warning bg-opacity-10",
       iconColor: "text-warning",
+    },
+    {
+      to: "/facturacion/mes",
+      icon: <TrendingUp size={22} />,
+      label: "Facturación del mes",
+      sub: "Ventas y estadísticas mensuales",
+      iconBg: "bg-info bg-opacity-10",
+      iconColor: "text-info",
     },
   ];
 
   return (
     <div className="d-flex flex-column align-items-center pt-5">
-
       {/* Encabezado */}
       <div className="text-center mb-4">
-        <p className="text-muted mb-1" style={{ fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+        <p
+          className="text-muted mb-1"
+          style={{
+            fontSize: "0.75rem",
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+          }}
+        >
           Sistema de gestión
         </p>
         <h1 className="fw-bold mb-0">Punta en Blanko</h1>
       </div>
 
       {/* Alerta de stock */}
-      {alertaStock && (alertaStock.stockBajo > 0 || alertaStock.sinStock > 0) && (
-        <div
-          className="alert alert-warning d-flex align-items-start gap-2 mb-4"
-          style={{ width: "100%", maxWidth: "400px" }}
-        >
-          <span style={{ fontSize: "1.1rem", marginTop: "1px" }}>⚠️</span>
-          <div>
-            <p className="mb-0 fw-semibold" style={{ fontSize: "0.9rem" }}>
-              Atención con el stock
-            </p>
-            <p className="mb-0" style={{ fontSize: "0.82rem" }}>
-              {alertaStock.stockBajo > 0 && `${alertaStock.stockBajo} productos con stock bajo`}
-              {alertaStock.stockBajo > 0 && alertaStock.sinStock > 0 && " · "}
-              {alertaStock.sinStock > 0 && `${alertaStock.sinStock} sin stock`}
-            </p>
+      {alertaStock &&
+        (alertaStock.stockBajo > 0 || alertaStock.sinStock > 0) && (
+          <div
+            className="alert alert-warning d-flex align-items-start gap-2 mb-4"
+            style={{ width: "100%", maxWidth: "400px" }}
+          >
+            <span style={{ fontSize: "1.1rem", marginTop: "1px" }}>⚠️</span>
+            <div>
+              <p className="mb-0 fw-semibold" style={{ fontSize: "0.9rem" }}>
+                Atención con el stock
+              </p>
+              <p className="mb-0" style={{ fontSize: "0.82rem" }}>
+                {alertaStock.stockBajo > 0 &&
+                  `${alertaStock.stockBajo} productos con stock bajo`}
+                {alertaStock.stockBajo > 0 && alertaStock.sinStock > 0 && " · "}
+                {alertaStock.sinStock > 0 &&
+                  `${alertaStock.sinStock} sin stock`}
+              </p>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Navegación */}
-      <div className="d-flex flex-column gap-3" style={{ width: "100%", maxWidth: "400px" }}>
+      <div
+        className="d-flex flex-column gap-3"
+        style={{ width: "100%", maxWidth: "400px" }}
+      >
         {navItems.map(({ to, icon, label, sub, iconBg, iconColor }) => (
           <Link
             key={to}
@@ -90,8 +110,12 @@ function Home() {
               {icon}
             </div>
             <div className="flex-grow-1">
-              <p className="mb-0" style={{ fontSize: "0.95rem" }}>{label}</p>
-              <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>{sub}</p>
+              <p className="mb-0" style={{ fontSize: "0.95rem" }}>
+                {label}
+              </p>
+              <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
+                {sub}
+              </p>
             </div>
             <span className="text-muted">›</span>
           </Link>

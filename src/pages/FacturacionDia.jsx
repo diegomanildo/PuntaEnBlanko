@@ -1,24 +1,23 @@
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { PORT } from "../../backend/config";
 import { ChevronDown, ChevronUp, Receipt } from "lucide-react";
 
-function Facturacion() {
+function FacturacionDia() {
+  const { fecha } = useParams();
   const [ventas, setVentas] = useState([]);
   const [total, setTotal] = useState(0);
   const [detalles, setDetalles] = useState({});
   const [ventaAbierta, setVentaAbierta] = useState(null);
-  const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
-
-  const cargarVentas = async () => {
-    const res = await fetch(`http://localhost:${PORT}/ventas/hoy`);
-    const data = await res.json();
-    setVentas(data.ventas);
-    setTotal(data.total);
-  };
 
   useEffect(() => {
-    cargarVentas();
-  }, []);
+    fetch(`http://localhost:${PORT}/ventas/dia/${fecha}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setVentas(data.ventas);
+        setTotal(data.total);
+      });
+  }, [fecha]);
 
   const toggleDetalle = async (id) => {
     if (ventaAbierta === id) { setVentaAbierta(null); return; }
@@ -30,27 +29,11 @@ function Facturacion() {
     setVentaAbierta(id);
   };
 
-  const ordenarPor = (columna) => {
-    const direccion = orden.columna === columna && orden.direccion === "asc" ? "desc" : "asc";
-    const ventasOrdenadas = [...ventas].sort((a, b) => {
-      if (columna === "fecha")
-        return direccion === "asc" ? new Date(a.fecha) - new Date(b.fecha) : new Date(b.fecha) - new Date(a.fecha);
-      return direccion === "asc" ? a[columna] - b[columna] : b[columna] - a[columna];
-    });
-    setVentas(ventasOrdenadas);
-    setOrden({ columna, direccion });
-  };
-
-  const iconoOrden = (columna) => {
-    if (orden.columna !== columna) return <span style={{ opacity: 0.3 }}>↕</span>;
-    return orden.direccion === "asc" ? "▲" : "▼";
-  };
+  const fechaFormateada = new Date(fecha + "T12:00:00").toLocaleDateString("es-AR", {
+    weekday: "long", day: "numeric", month: "long", year: "numeric",
+  });
 
   const ticketPromedio = ventas.length > 0 ? Math.round(total / ventas.length) : 0;
-
-  const fechaHoy = new Date().toLocaleDateString("es-AR", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric"
-  });
 
   return (
     <div>
@@ -63,8 +46,12 @@ function Facturacion() {
           <Receipt size={20} className="text-warning" />
         </div>
         <div>
-          <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>Facturación del día</h2>
-          <small className="text-muted" style={{ textTransform: "capitalize" }}>{fechaHoy}</small>
+          <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
+            Facturación del día
+          </h2>
+          <small className="text-muted" style={{ textTransform: "capitalize" }}>
+            {fechaFormateada}
+          </small>
         </div>
       </div>
 
@@ -72,29 +59,21 @@ function Facturacion() {
       <div className="row g-3 mb-4">
         <div className="col-md-4">
           <div className="card p-3" style={{ borderRadius: 12 }}>
-            <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-              Total facturado
-            </p>
+            <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>Total facturado</p>
             <p className="text-success fw-bold mb-0" style={{ fontSize: "1.7rem", lineHeight: 1.1 }}>
-              ${total.toLocaleString("es-AR")}
+              ${Number(total).toLocaleString("es-AR")}
             </p>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card p-3" style={{ borderRadius: 12 }}>
-            <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-              Ventas
-            </p>
-            <p className="fw-bold mb-0" style={{ fontSize: "1.7rem", lineHeight: 1.1 }}>
-              {ventas.length}
-            </p>
+            <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>Ventas</p>
+            <p className="fw-bold mb-0" style={{ fontSize: "1.7rem", lineHeight: 1.1 }}>{ventas.length}</p>
           </div>
         </div>
         <div className="col-md-4">
           <div className="card p-3" style={{ borderRadius: 12 }}>
-            <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
-              Ticket promedio
-            </p>
+            <p className="text-muted mb-1" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>Ticket promedio</p>
             <p className="text-primary fw-bold mb-0" style={{ fontSize: "1.7rem", lineHeight: 1.1 }}>
               ${ticketPromedio.toLocaleString("es-AR")}
             </p>
@@ -106,7 +85,7 @@ function Facturacion() {
       {ventas.length === 0 ? (
         <div className="card p-5 text-center" style={{ borderRadius: 12 }}>
           <Receipt size={36} strokeWidth={1.2} className="text-muted mx-auto mb-3" />
-          <p className="text-muted mb-0">No hay ventas registradas hoy</p>
+          <p className="text-muted mb-0">No hay ventas registradas este día</p>
         </div>
       ) : (
         <div className="card" style={{ borderRadius: 12, overflow: "hidden" }}>
@@ -114,17 +93,9 @@ function Facturacion() {
             <thead>
               <tr>
                 <th style={{ width: 44 }}></th>
-                {[["id", "ID"], ["fecha", "Hora"], ["total", "Total"]].map(([col, label]) => (
-                  <th
-                    key={col}
-                    onClick={() => ordenarPor(col)}
-                    style={{ cursor: "pointer", userSelect: "none", textAlign: col === "total" ? "right" : "left" }}
-                  >
-                    <span className="d-inline-flex align-items-center gap-1">
-                      {label} <span style={{ fontSize: 11 }}>{iconoOrden(col)}</span>
-                    </span>
-                  </th>
-                ))}
+                <th>ID</th>
+                <th>Hora</th>
+                <th className="text-end">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -147,11 +118,9 @@ function Facturacion() {
                       <span className="text-muted" style={{ fontSize: 12 }}>#</span>
                       <span className="fw-bold">{v.id}</span>
                     </td>
-                    <td>
-                      {new Date(v.fecha).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </td>
+                    <td>{new Date(v.fecha).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</td>
                     <td className="text-end fw-bold text-success">
-                      ${v.total.toLocaleString("es-AR")}
+                      ${Number(v.total).toLocaleString("es-AR")}
                     </td>
                   </tr>
 
@@ -175,12 +144,8 @@ function Facturacion() {
                                   <td className="text-center">
                                     <span className="badge bg-secondary">{d.cantidad}</span>
                                   </td>
-                                  <td className="text-end text-muted">
-                                    ${d.precio.toLocaleString("es-AR")}
-                                  </td>
-                                  <td className="text-end fw-semibold">
-                                    ${(d.precio * d.cantidad).toLocaleString("es-AR")}
-                                  </td>
+                                  <td className="text-end text-muted">${d.precio.toLocaleString("es-AR")}</td>
+                                  <td className="text-end fw-semibold">${(d.precio * d.cantidad).toLocaleString("es-AR")}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -199,4 +164,4 @@ function Facturacion() {
   );
 }
 
-export default Facturacion;
+export default FacturacionDia;

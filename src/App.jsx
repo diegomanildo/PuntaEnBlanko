@@ -9,12 +9,13 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Productos from "./pages/Productos";
 import NuevaVenta from "./pages/NuevaVenta";
-import Facturacion from "./pages/Facturacion";
 import NuevoProducto from "./pages/NuevoProducto";
 import EditarProducto from "./pages/EditarProducto";
 import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import BackButton from "./components/UI/BackButton";
+import FacturacionDia from "./pages/FacturacionDia";
+import FacturacionMes from "./pages/FacturacionMes";
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
@@ -38,7 +39,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/venta" element={<NuevaVenta />} />
-          <Route path="/facturacion" element={<Facturacion />} />
+          <Route path="/facturacion/:fecha" element={<FacturacionDia />} />
+          <Route path="/facturacion/mes" element={<FacturacionMes />} />
           <Route path="/productos/nuevo" element={<NuevoProducto />} />
           <Route path="/productos/editar/:id" element={<EditarProducto />} />
         </Routes>
