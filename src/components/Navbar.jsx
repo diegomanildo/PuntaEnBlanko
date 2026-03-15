@@ -28,10 +28,50 @@ function Navbar({ toggleTheme, theme }) {
           </Link>
 
           <button
-            className="btn btn-sm btn-outline-secondary ms-3"
             onClick={toggleTheme}
+            title={
+              theme === "dark"
+                ? "Cambiar a modo claro"
+                : "Cambiar a modo oscuro"
+            }
+            style={{
+              width: 48,
+              height: 26,
+              borderRadius: 99,
+              border: "1px solid rgba(128,128,128,0.35)",
+              background:
+                theme === "dark"
+                  ? "rgba(255,255,255,0.08)"
+                  : "rgba(0,0,0,0.06)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              padding: "3px 4px",
+              transition: "background 0.3s ease",
+              marginLeft: "1rem",
+            }}
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            <div
+              style={{
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                background: theme === "dark" ? "#ffffff" : "#1a1a1a",
+                transform:
+                  theme === "dark" ? "translateX(22px)" : "translateX(0px)",
+                transition: "transform 0.3s ease, background 0.3s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {theme === "dark" ? (
+                <Moon size={12} color="#1a1a1a" />
+              ) : (
+                <Sun size={12} color="#ffffff" />
+              )}
+            </div>
           </button>
         </div>
       </div>
