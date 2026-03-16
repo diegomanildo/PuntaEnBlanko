@@ -1,21 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PORT } from "../../backend/config";
-import { BarChart3, TrendingUp, ShoppingBag, Star } from "lucide-react";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+import { BarChart3, TrendingUp, Star } from "lucide-react";
+import GraficoVentasMes from "../components/GraficoVentasMes";
 
 function FacturacionMes() {
   const [datos, setDatos] = useState(null);
+  const [verGrafico, setVerGrafico] = useState(false);
   const navigate = useNavigate();
 
   const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
@@ -44,13 +35,25 @@ function FacturacionMes() {
     : [];
 
   const formatearFecha = (dia) => {
+    const hoy = new Date();
+    const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
     const [yyyy, mm, dd] = dia.split("-");
     const fecha = new Date(yyyy, mm - 1, dd);
-    return fecha.toLocaleDateString("es-AR", {
+    const fechaFormateada = fecha.toLocaleDateString("es-AR", {
       weekday: "long",
       day: "numeric",
       month: "long",
     });
+    if (dia === hoyStr)
+      return (
+        <>
+          {fechaFormateada}{" "}
+          <span className="badge bg-info" style={{ fontSize: "0.65rem" }}>
+            Hoy
+          </span>
+        </>
+      );
+    return fechaFormateada;
   };
 
   useEffect(() => {
@@ -68,84 +71,6 @@ function FacturacionMes() {
     datos && datos.cantidadVentas > 0
       ? Math.round(datos.total / datos.cantidadVentas)
       : 0;
-
-  const chartData = datos
-    ? {
-        labels: datos.porDia.map((d) => {
-          const [yyyy, mm, dd] = d.dia.split("-");
-          const fecha = new Date(yyyy, mm - 1, dd);
-          return fecha.toLocaleDateString("es-AR", {
-            day: "numeric",
-            month: "short",
-          });
-        }),
-        datasets: [
-          {
-            label: "Total del día",
-            data: datos.porDia.map((d) => d.total),
-            backgroundColor: datos.porDia.map((_, i) => {
-              const colores = [
-                "rgba(0, 180, 90, 0.5)",
-                "rgba(79, 158, 255, 0.5)",
-                "rgba(245, 158, 11, 0.5)",
-                "rgba(239, 68, 68, 0.5)",
-                "rgba(168, 85, 247, 0.5)",
-                "rgba(20, 184, 166, 0.5)",
-                "rgba(249, 115, 22, 0.5)",
-                "rgba(236, 72, 153, 0.5)",
-                "rgba(234, 179, 8, 0.5)",
-                "rgba(6, 182, 212, 0.5)",
-                "rgba(16, 185, 129, 0.5)",
-                "rgba(99, 102, 241, 0.5)",
-                "rgba(244, 63, 94, 0.5)",
-                "rgba(251, 146, 60, 0.5)",
-                "rgba(52, 211, 153, 0.5)",
-                "rgba(129, 140, 248, 0.5)",
-                "rgba(251, 113, 133, 0.5)",
-                "rgba(34, 211, 238, 0.5)",
-                "rgba(163, 230, 53, 0.5)",
-                "rgba(232, 121, 249, 0.5)",
-                "rgba(45, 212, 191, 0.5)",
-                "rgba(251, 191, 36, 0.5)",
-                "rgba(248, 113, 113, 0.5)",
-                "rgba(96, 165, 250, 0.5)",
-                "rgba(74, 222, 128, 0.5)",
-                "rgba(167, 139, 250, 0.5)",
-                "rgba(249, 168, 212, 0.5)",
-                "rgba(103, 232, 249, 0.5)",
-                "rgba(190, 242, 100, 0.5)",
-                "rgba(217, 70, 239, 0.5)",
-                "rgba(0, 150, 136, 0.5)",
-              ];
-              return colores[i % colores.length];
-            }),
-            borderRadius: 6,
-            borderSkipped: false,
-          },
-        ],
-      }
-    : null;
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (context) => "$" + Number(context.raw).toLocaleString("es-AR"),
-        },
-      },
-    },
-    scales: {
-      x: { grid: { display: true } },
-      y: {
-        grid: { color: "rgba(0, 0, 0, 0.1)" },
-        ticks: {
-          callback: (v) => "$" + v.toLocaleString("es-AR"),
-        },
-      },
-    },
-  };
 
   return (
     <div>
@@ -296,23 +221,7 @@ function FacturacionMes() {
             </div>
           )}
 
-          {/* Gráfico */}
-          {chartData && datos.porDia.length > 0 && (
-            <div className="card p-4 mb-4" style={{ borderRadius: 12 }}>
-              <p
-                className="text-muted mb-3"
-                style={{
-                  fontSize: "0.72rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  fontWeight: 600,
-                }}
-              >
-                Ventas por día
-              </p>
-              <Bar data={chartData} options={chartOptions} />
-            </div>
-          )}
+          {datos.porDia.length > 0 && <GraficoVentasMes porDia={datos.porDia} />}
 
           {/* Historial por día */}
           <div
@@ -356,11 +265,10 @@ function FacturacionMes() {
                 ) : (
                   porDiaOrdenado.map((d) => (
                     <tr key={d.dia}>
-                      <td
-                        className="fw-semibold"
-                        style={{ textTransform: "capitalize" }}
-                      >
-                        {formatearFecha(d.dia)}
+                      <td className="fw-semibold">
+                        <span style={{ textTransform: "capitalize" }}>
+                          {formatearFecha(d.dia)}
+                        </span>
                       </td>
                       <td>
                         <span className="badge bg-secondary">{d.cantidad}</span>
