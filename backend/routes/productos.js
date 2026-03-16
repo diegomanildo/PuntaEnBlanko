@@ -67,7 +67,7 @@ router.get("/stock-bajo", (req, res) => {
           if (err) return res.status(500).json(err);
 
           db.query(
-            "SELECT COUNT(*) as total FROM productos WHERE stock = 0",
+            "SELECT COUNT(*) as total FROM productos WHERE stock = 0 AND tiene_stock = 1",
             (err, sinStockResult) => {
               if (err) return res.status(500).json(err);
 

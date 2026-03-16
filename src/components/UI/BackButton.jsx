@@ -8,7 +8,7 @@ function BackButton() {
   if (location.pathname === "/") return null;
 
   return (
-    <button className="btn-volver" onClick={() => navigate(-1)}>
+    <button className="btn-volver" onClick={() => navigate("/")}>
       <ArrowLeft size={16} /> Volver
     </button>
   );

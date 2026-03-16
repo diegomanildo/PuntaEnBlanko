@@ -64,10 +64,16 @@ function Productos() {
   };
 
   const confirmarEliminar = (id) => {
+    const toastId = `eliminar-${id}`;
+    if (toast.isActive(toastId)) return;
+
     toast(
       ({ closeToast }) => (
         <div>
-          <p className="mb-2">¿Seguro que querés eliminar este producto?</p>
+          <p className="mb-2">
+            ¿Seguro que querés eliminar el producto{" "}
+            <strong>"{productos.find((p) => p.id === id)?.nombre}"</strong>?
+          </p>
           <div className="d-flex gap-2">
             <button
               className="btn btn-danger btn-sm"
@@ -84,7 +90,7 @@ function Productos() {
           </div>
         </div>
       ),
-      { autoClose: false, closeOnClick: false, draggable: false },
+      { toastId, autoClose: false, closeOnClick: false, draggable: false },
     );
   };
 
@@ -169,7 +175,7 @@ function Productos() {
           }}
         >
           <AlertTriangle size={14} className="text-warning" />
-          <small className="text-muted">Alerta stock:</small>
+          <small className="text-muted">Alerta stock bajo:</small>
           <input
             type="number"
             className="form-control form-control-sm"
@@ -246,18 +252,22 @@ function Productos() {
                         <AlertTriangle size={11} /> SIN STOCK
                       </span>
                     )}
-                    {producto.tiene_stock !== 0 && producto.stock > 0 && producto.stock <= stockAlerta && (
-                      <span className="badge bg-warning text-dark d-flex align-items-center gap-1">
-                        <AlertTriangle size={11} /> STOCK BAJO
-                      </span>
-                    )}
+                    {producto.tiene_stock !== 0 &&
+                      producto.stock > 0 &&
+                      producto.stock <= stockAlerta && (
+                        <span className="badge bg-warning text-dark d-flex align-items-center gap-1">
+                          <AlertTriangle size={11} /> STOCK BAJO
+                        </span>
+                      )}
                     <span className="fw-semibold">{producto.nombre}</span>
                   </div>
                 </td>
                 <td>${producto.precio.toLocaleString("es-AR")}</td>
                 <td>
                   {producto.tiene_stock === 0 ? (
-                    <span className="text-muted fw-bold">Sin manejo de stock</span>
+                    <span className="text-muted fw-bold">
+                      Sin manejo de stock
+                    </span>
                   ) : (
                     <span className={stockColor(producto.stock)}>
                       {producto.stock}
