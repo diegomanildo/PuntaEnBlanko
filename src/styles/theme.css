@@ -329,3 +329,9 @@ td.d-flex .btn {
 .dark .fw-semibold {
   color: #a09f9f;
 }
+
+.dark input:disabled {
+  background-color: #2a2a2a;
+  color: #555555;
+  border-color: #333333;
+}

@@ -7,6 +7,7 @@ CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100),
     precio DECIMAL(10,2),
+    tiene_stock TINYINT(1) DEFAULT 1,
     stock INT
 );
 

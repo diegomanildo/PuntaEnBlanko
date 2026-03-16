@@ -99,17 +99,17 @@ router.get("/:id", (req, res) => {
 
 // POST /productos
 router.post("/", (req, res) => {
-  const { nombre, precio, stock } = req.body;
+  const { nombre, precio, stock, tiene_stock } = req.body;
 
-  if (!nombre || !precio || !stock) {
+  if (!nombre || !precio) {
     return res
       .status(400)
       .json({ message: "Todos los campos son obligatorios" });
   }
 
   db.query(
-    "INSERT INTO productos(nombre,precio,stock) VALUES(?,?,?)",
-    [nombre, precio, stock],
+    "INSERT INTO productos(nombre, precio, stock, tiene_stock) VALUES(?, ?, ?, ?)",
+  [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0],
     (err, result) => {
       if (err) {
         return res.status(500).json(err);
@@ -123,11 +123,11 @@ router.post("/", (req, res) => {
 // PUT /productos/:id
 router.put("/:id", (req, res) => {
   const { id } = req.params;
-  const { nombre, precio, stock } = req.body;
+  const { nombre, precio, stock, tiene_stock } = req.body;
 
   db.query(
-    "UPDATE productos SET nombre=?, precio=?, stock=? WHERE id=?",
-    [nombre, precio, stock, id],
+    "UPDATE productos SET nombre=?, precio=?, stock=?, tiene_stock=? WHERE id=?",
+    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0, id],
     (err, result) => {
       if (err) {
         res.status(500).json(err);

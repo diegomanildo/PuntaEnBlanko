@@ -230,21 +230,23 @@ function Productos() {
               <tr
                 key={producto.id}
                 className={
-                  producto.stock === 0
-                    ? "table-danger"
-                    : producto.stock <= stockAlerta
-                      ? "table-warning"
-                      : ""
+                  producto.tiene_stock === 0
+                    ? ""
+                    : producto.stock === 0
+                      ? "table-danger"
+                      : producto.stock <= stockAlerta
+                        ? "table-warning"
+                        : ""
                 }
               >
                 <td>
                   <div className="d-flex align-items-center gap-2">
-                    {producto.stock === 0 && (
+                    {producto.tiene_stock !== 0 && producto.stock === 0 && (
                       <span className="badge bg-danger d-flex align-items-center gap-1">
                         <AlertTriangle size={11} /> SIN STOCK
                       </span>
                     )}
-                    {producto.stock > 0 && producto.stock <= stockAlerta && (
+                    {producto.tiene_stock !== 0 && producto.stock > 0 && producto.stock <= stockAlerta && (
                       <span className="badge bg-warning text-dark d-flex align-items-center gap-1">
                         <AlertTriangle size={11} /> STOCK BAJO
                       </span>
@@ -254,9 +256,13 @@ function Productos() {
                 </td>
                 <td>${producto.precio.toLocaleString("es-AR")}</td>
                 <td>
-                  <span className={stockColor(producto.stock)}>
-                    {producto.stock}
-                  </span>
+                  {producto.tiene_stock === 0 ? (
+                    <span className="text-muted fw-bold">Sin manejo de stock</span>
+                  ) : (
+                    <span className={stockColor(producto.stock)}>
+                      {producto.stock}
+                    </span>
+                  )}
                 </td>
                 <td>
                   <div className="d-flex gap-2">

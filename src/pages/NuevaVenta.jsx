@@ -29,21 +29,31 @@ function NuevaVenta() {
   }, []);
 
   const productosFiltrados = productos.filter((p) =>
-    p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    p.nombre.toLowerCase().includes(busqueda.toLowerCase()),
   );
 
   const agregarProducto = () => {
     if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
-    if (productoSeleccionado.stock === 0) return toast.error("Este producto no tiene stock");
-    if (cantidad > productoSeleccionado.stock)
-      return toast.warning(`Solo hay ${productoSeleccionado.stock} unidades disponibles`);
 
-    setCarrito([...carrito, {
-      id: productoSeleccionado.id,
-      nombre: productoSeleccionado.nombre,
-      precio: productoSeleccionado.precio,
-      cantidad,
-    }]);
+    // Solo validar stock si el producto lo maneja
+    if (productoSeleccionado.tiene_stock !== 0) {
+      if (productoSeleccionado.stock === 0)
+        return toast.error("Este producto no tiene stock");
+      if (cantidad > productoSeleccionado.stock)
+        return toast.warning(
+          `Solo hay ${productoSeleccionado.stock} unidades disponibles`,
+        );
+    }
+
+    setCarrito([
+      ...carrito,
+      {
+        id: productoSeleccionado.id,
+        nombre: productoSeleccionado.nombre,
+        precio: productoSeleccionado.precio,
+        cantidad,
+      },
+    ]);
     setBusqueda("");
     setProductoSeleccionado(null);
     setCantidad(1);
@@ -80,16 +90,27 @@ function NuevaVenta() {
         <div>
           <p className="mb-2">¿Reiniciar la venta actual?</p>
           <div className="d-flex gap-2">
-            <button className="btn btn-danger btn-sm" onClick={() => {
-              setCarrito([]); setTotal(0); setBusqueda("");
-              setProductoSeleccionado(null); setCantidad(1);
-              toast.success("Venta reiniciada"); closeToast();
-            }}>Reiniciar</button>
-            <button className="btn btn-secondary btn-sm" onClick={closeToast}>Cancelar</button>
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => {
+                setCarrito([]);
+                setTotal(0);
+                setBusqueda("");
+                setProductoSeleccionado(null);
+                setCantidad(1);
+                toast.success("Venta reiniciada");
+                closeToast();
+              }}
+            >
+              Reiniciar
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={closeToast}>
+              Cancelar
+            </button>
           </div>
         </div>
       ),
-      { autoClose: false, closeOnClick: false, draggable: false }
+      { autoClose: false, closeOnClick: false, draggable: false },
     );
   };
 
@@ -111,8 +132,12 @@ function NuevaVenta() {
           <ShoppingCart size={20} className="text-success" />
         </div>
         <div>
-          <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>Nueva Venta</h2>
-          <small className="text-muted">Registrá los productos de la venta</small>
+          <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
+            Nueva Venta
+          </h2>
+          <small className="text-muted">
+            Registrá los productos de la venta
+          </small>
         </div>
       </div>
 
@@ -120,12 +145,22 @@ function NuevaVenta() {
         {/* Columna izquierda — buscador */}
         <div className="col-md-5">
           <div className="card p-4" style={{ borderRadius: 12 }}>
-            <p className="text-muted mb-3" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
+            <p
+              className="text-muted mb-3"
+              style={{
+                fontSize: "0.72rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                fontWeight: 600,
+              }}
+            >
               Agregar producto
             </p>
 
             <div className="mb-3 position-relative" ref={buscadorRef}>
-              <label className="form-label" style={{ fontSize: 13 }}>Buscar producto</label>
+              <label className="form-label" style={{ fontSize: 13 }}>
+                Buscar producto
+              </label>
               <input
                 type="text"
                 className="form-control"
@@ -138,13 +173,23 @@ function NuevaVenta() {
               {mostrarLista && productosFiltrados.length > 0 && (
                 <div
                   className="card position-absolute w-100 shadow"
-                  style={{ zIndex: 100, borderRadius: 10, overflow: "hidden", top: "100%", marginTop: 4 }}
+                  style={{
+                    zIndex: 100,
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    top: "100%",
+                    marginTop: 4,
+                  }}
                 >
                   {productosFiltrados.slice(0, 6).map((p) => (
                     <button
                       key={p.id}
                       className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                      style={{ fontSize: 13, padding: "9px 14px", border: "none" }}
+                      style={{
+                        fontSize: 13,
+                        padding: "9px 14px",
+                        border: "none",
+                      }}
                       onClick={() => {
                         setProductoSeleccionado(p);
                         setBusqueda(p.nombre);
@@ -154,9 +199,21 @@ function NuevaVenta() {
                       <span className="fw-semibold">{p.nombre}</span>
                       <span className="text-muted" style={{ fontSize: 11 }}>
                         ${p.precio.toLocaleString("es-AR")} ·{" "}
-                        <span className={p.stock === 0 ? "text-danger fw-semibold" : "text-success fw-semibold"}>
-                          Stock {p.stock}
-                        </span>
+                        {p.tiene_stock === 0 ? (
+                          <span className="text-muted fw-semibold">
+                            Sin manejo de stock
+                          </span>
+                        ) : (
+                          <span
+                            className={
+                              p.stock === 0
+                                ? "text-danger fw-semibold"
+                                : "text-success fw-semibold"
+                            }
+                          >
+                            Stock {p.stock}
+                          </span>
+                        )}
                       </span>
                     </button>
                   ))}
@@ -165,7 +222,9 @@ function NuevaVenta() {
             </div>
 
             <div className="mb-4">
-              <label className="form-label" style={{ fontSize: 13 }}>Cantidad</label>
+              <label className="form-label" style={{ fontSize: 13 }}>
+                Cantidad
+              </label>
               <input
                 type="number"
                 className="form-control"
@@ -187,13 +246,27 @@ function NuevaVenta() {
         {/* Columna derecha — carrito */}
         <div className="col-md-7">
           <div className="card" style={{ borderRadius: 12 }}>
-            <div className="card-body d-flex flex-column" style={{ minHeight: 320 }}>
-              <p className="text-muted mb-3" style={{ fontSize: "0.72rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}>
+            <div
+              className="card-body d-flex flex-column"
+              style={{ minHeight: 320 }}
+            >
+              <p
+                className="text-muted mb-3"
+                style={{
+                  fontSize: "0.72rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontWeight: 600,
+                }}
+              >
                 Carrito
               </p>
 
               {carrito.length === 0 ? (
-                <div className="d-flex flex-column align-items-center justify-content-center flex-grow-1 text-muted" style={{ gap: 8, padding: "2rem 0" }}>
+                <div
+                  className="d-flex flex-column align-items-center justify-content-center flex-grow-1 text-muted"
+                  style={{ gap: 8, padding: "2rem 0" }}
+                >
                   <ShoppingCart size={32} strokeWidth={1.2} />
                   <span style={{ fontSize: 14 }}>El carrito está vacío</span>
                 </div>
@@ -215,9 +288,14 @@ function NuevaVenta() {
                           <tr key={i}>
                             <td className="fw-semibold">{p.nombre}</td>
                             <td className="text-center">
-                              <span className="badge bg-secondary">{p.cantidad}</span>
+                              <span className="badge bg-secondary">
+                                {p.cantidad}
+                              </span>
                             </td>
-                            <td className="text-end text-muted" style={{ fontSize: 13 }}>
+                            <td
+                              className="text-end text-muted"
+                              style={{ fontSize: 13 }}
+                            >
                               ${p.precio.toLocaleString("es-AR")}
                             </td>
                             <td className="text-end fw-semibold">
@@ -227,7 +305,7 @@ function NuevaVenta() {
                               <button
                                 className="btn btn-sm btn-danger d-flex align-items-center"
                                 style={{ padding: "3px 7px" }}
-                                onClick={() => removerProducto(i, p.nombre) }
+                                onClick={() => removerProducto(i, p.nombre)}
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -242,21 +320,41 @@ function NuevaVenta() {
                   <div className="border-top pt-3 mt-3">
                     <div className="d-flex justify-content-between align-items-end mb-3">
                       <small className="text-muted">
-                        {carrito.length} producto{carrito.length !== 1 ? "s" : ""} · {totalUnidades} unidad{totalUnidades !== 1 ? "es" : ""}
+                        {carrito.length} producto
+                        {carrito.length !== 1 ? "s" : ""} · {totalUnidades}{" "}
+                        unidad{totalUnidades !== 1 ? "es" : ""}
                       </small>
                       <div className="text-end">
-                        <div className="text-muted" style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.08em" }}>Total</div>
-                        <div className="text-success fw-bold" style={{ fontSize: "1.6rem", lineHeight: 1.1 }}>
+                        <div
+                          className="text-muted"
+                          style={{
+                            fontSize: 11,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.08em",
+                          }}
+                        >
+                          Total
+                        </div>
+                        <div
+                          className="text-success fw-bold"
+                          style={{ fontSize: "1.6rem", lineHeight: 1.1 }}
+                        >
                           ${total.toLocaleString("es-AR")}
                         </div>
                       </div>
                     </div>
 
                     <div className="d-flex gap-2">
-                      <button className="btn btn-danger flex-fill" onClick={reiniciarVenta}>
+                      <button
+                        className="btn btn-danger flex-fill"
+                        onClick={reiniciarVenta}
+                      >
                         Reiniciar
                       </button>
-                      <button className="btn btn-primary flex-fill btn-lg" onClick={finalizarVenta}>
+                      <button
+                        className="btn btn-primary flex-fill btn-lg"
+                        onClick={finalizarVenta}
+                      >
                         Finalizar venta →
                       </button>
                     </div>

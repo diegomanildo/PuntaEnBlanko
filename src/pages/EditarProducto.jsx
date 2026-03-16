@@ -11,6 +11,7 @@ function EditarProducto() {
   const [nombre, setNombre] = useState("");
   const [precio, setPrecio] = useState("");
   const [stock, setStock] = useState("");
+  const [tieneStock, setTieneStock] = useState(true);
 
   useEffect(() => {
     const cargarProducto = async () => {
@@ -20,6 +21,7 @@ function EditarProducto() {
       setNombre(data.nombre);
       setPrecio(data.precio);
       setStock(data.stock);
+      setTieneStock(data.tiene_stock === 1);
     };
 
     cargarProducto();
@@ -30,7 +32,7 @@ function EditarProducto() {
       const res = await fetch(`http://localhost:${PORT}/productos/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, precio, stock }),
+        body: JSON.stringify({ nombre, precio, stock, tiene_stock: tieneStock }),
       });
 
       const data = await res.json();
@@ -74,15 +76,43 @@ function EditarProducto() {
           />
         </div>
 
+        
+
+        {/* Toggle tiene stock */}
         <div className="mb-3">
-          <label className="form-label">Stock</label>
-          <input
-            type="number"
-            className="form-control"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-          />
+          <label className="form-label">Manejo de stock</label>
+          <div className="d-flex gap-2">
+            <button
+              type="button"
+              className={`btn btn-sm ${tieneStock ? "btn-success" : "btn-outline-success"}`}
+              onClick={() => setTieneStock(true)}
+            >
+              ✓ Con stock
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${!tieneStock ? "btn-secondary" : "btn-outline-secondary"}`}
+              onClick={() => setTieneStock(false)}
+            >
+              — Sin manejo de stock
+            </button>
+          </div>
         </div>
+
+        {/* Campo stock: solo si tiene_stock */}
+        {tieneStock && (
+          <div className="mb-3">
+            <label>Stock</label>
+            <input
+              type="number"
+              className={`form-control`}
+              value={stock}
+              onChange={(e) => {
+                setStock(e.target.value);
+              }}
+            />
+          </div>
+        )}
 
         <div className="d-flex gap-3">
           <button

@@ -10,13 +10,14 @@ function NuevoProducto() {
   const [nombre, setNombre] = useState("");
   const [precio, setPrecio] = useState("");
   const [stock, setStock] = useState("");
+  const [tieneStock, setTieneStock] = useState(true);
   const [errores, setErrores] = useState({});
 
   const guardarProducto = async () => {
     const nuevosErrores = {};
     if (!nombre) nuevosErrores.nombre = "El nombre es obligatorio";
     if (!precio) nuevosErrores.precio = "El precio es obligatorio";
-    if (!stock) nuevosErrores.stock = "El stock es obligatorio";
+    if (tieneStock && !stock) nuevosErrores.stock = "El stock es obligatorio";
 
     setErrores(nuevosErrores);
 
@@ -27,7 +28,7 @@ function NuevoProducto() {
       const res = await fetch(`http://localhost:${PORT}/productos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, precio, stock }),
+        body: JSON.stringify({ nombre, precio, stock, tiene_stock: tieneStock }),
       });
 
       const data = await res.json();
@@ -86,23 +87,46 @@ function NuevoProducto() {
           )}
         </div>
 
+        {/* Toggle tiene stock */}
         <div className="mb-3">
-          <label>Stock</label>
-          <input
-            type="number"
-            className={`form-control ${errores.stock ? "is-invalid" : ""}`}
-            value={stock}
-            onChange={(e) => {
-              setStock(e.target.value);
-              if (errores.stock) {
-                setErrores((prev) => ({ ...prev, stock: null }));
-              }
-            }}
-          />
-          {errores.stock && (
-            <div className="invalid-feedback">{errores.stock}</div>
-          )}
+          <label className="form-label">Manejo de stock</label>
+          <div className="d-flex gap-2">
+            <button
+              type="button"
+              className={`btn btn-sm ${tieneStock ? "btn-success" : "btn-outline-success"}`}
+              onClick={() => setTieneStock(true)}
+            >
+              ✓ Con stock
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${!tieneStock ? "btn-secondary" : "btn-outline-secondary"}`}
+              onClick={() => setTieneStock(false)}
+            >
+              — Sin manejo de stock
+            </button>
+          </div>
         </div>
+
+        {/* Campo stock: solo si tiene_stock */}
+        {tieneStock && (
+          <div className="mb-3">
+            <label>Stock</label>
+            <input
+              type="number"
+              className={`form-control ${errores.stock ? "is-invalid" : ""}`}
+              value={stock}
+              onChange={(e) => {
+                setStock(e.target.value);
+                if (errores.stock)
+                  setErrores((prev) => ({ ...prev, stock: null }));
+              }}
+            />
+            {errores.stock && (
+              <div className="invalid-feedback">{errores.stock}</div>
+            )}
+          </div>
+        )}
 
         <div className="d-flex gap-3">
           <button
