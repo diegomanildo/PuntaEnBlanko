@@ -12,6 +12,7 @@ function NuevaVenta() {
   const [cantidad, setCantidad] = useState(1);
   const [carrito, setCarrito] = useState([]);
   const [total, setTotal] = useState(0);
+  const reiniciandoRef = useRef(false);
 
   useEffect(() => {
     fetch(`http://localhost:${PORT}/productos`)
@@ -85,6 +86,9 @@ function NuevaVenta() {
   };
 
   const reiniciarVenta = () => {
+    if (reiniciandoRef.current) return; // si ya hay uno abierto, no hacer nada
+    reiniciandoRef.current = true;
+
     toast(
       ({ closeToast }) => (
         <div>
@@ -99,12 +103,19 @@ function NuevaVenta() {
                 setProductoSeleccionado(null);
                 setCantidad(1);
                 toast.success("Venta reiniciada");
+                reiniciandoRef.current = false; // liberar
                 closeToast();
               }}
             >
               Reiniciar
             </button>
-            <button className="btn btn-secondary btn-sm" onClick={closeToast}>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={() => {
+                reiniciandoRef.current = false; // liberar
+                closeToast();
+              }}
+            >
               Cancelar
             </button>
           </div>

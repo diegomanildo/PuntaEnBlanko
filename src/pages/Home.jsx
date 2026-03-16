@@ -72,22 +72,66 @@ function Home() {
       {alertaStock &&
         (alertaStock.stockBajo > 0 || alertaStock.sinStock > 0) && (
           <div
-            className="alert alert-warning d-flex align-items-start gap-2 mb-4"
+            className="d-flex flex-column gap-2 mb-4"
             style={{ width: "100%", maxWidth: "400px" }}
           >
-            <span style={{ fontSize: "1.1rem", marginTop: "1px" }}>⚠️</span>
-            <div>
-              <p className="mb-0 fw-semibold" style={{ fontSize: "0.9rem" }}>
-                Atención con el stock
-              </p>
-              <p className="mb-0" style={{ fontSize: "0.82rem" }}>
-                {alertaStock.stockBajo > 0 &&
-                  `${alertaStock.stockBajo} productos con stock bajo`}
-                {alertaStock.stockBajo > 0 && alertaStock.sinStock > 0 && " · "}
-                {alertaStock.sinStock > 0 &&
-                  `${alertaStock.sinStock} sin stock`}
-              </p>
-            </div>
+            {alertaStock.sinStock > 0 && (
+              <div
+                className="d-flex align-items-center gap-3 px-3 py-2"
+                style={{
+                  borderRadius: 10,
+                  background: "rgba(220, 53, 69, 0.08)",
+                  border: "1px solid rgba(220, 53, 69, 0.25)",
+                }}
+              >
+                <span style={{ fontSize: "1.2rem" }}>🔴</span>
+                <div>
+                  <p
+                    className="mb-0 fw-semibold"
+                    style={{ fontSize: "0.85rem", color: "#dc3545" }}
+                  >
+                    Sin stock
+                  </p>
+                  <p
+                    className="mb-0 text-muted"
+                    style={{ fontSize: "0.78rem" }}
+                  >
+                    {alertaStock.sinStock} producto
+                    {alertaStock.sinStock !== 1 ? "s" : ""} sin unidades
+                    disponibles
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {alertaStock.stockBajo > 0 && (
+              <div
+                className="d-flex align-items-center gap-3 px-3 py-2"
+                style={{
+                  borderRadius: 10,
+                  background: "rgba(255, 193, 7, 0.08)",
+                  border: "1px solid rgba(255, 193, 7, 0.3)",
+                }}
+              >
+                <span style={{ fontSize: "1.2rem" }}>🟡</span>
+                <div>
+                  <p
+                    className="mb-0 fw-semibold"
+                    style={{ fontSize: "0.85rem", color: "#e6a817" }}
+                  >
+                    Stock bajo
+                  </p>
+                  <p
+                    className="mb-0 text-muted"
+                    style={{ fontSize: "0.78rem" }}
+                  >
+                    {alertaStock.stockBajo} producto
+                    {alertaStock.stockBajo !== 1 ? "s" : ""} por debajo del
+                    límite
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
