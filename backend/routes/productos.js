@@ -109,7 +109,7 @@ router.post("/", (req, res) => {
 
   db.query(
     "INSERT INTO productos(nombre, precio, stock, tiene_stock) VALUES(?, ?, ?, ?)",
-  [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0],
+    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0],
     (err, result) => {
       if (err) {
         return res.status(500).json(err);

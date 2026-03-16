@@ -1,5 +1,5 @@
-- Los ticket comunes que emita se puedan emitir a la tickeadora fiscal (ARCA)
-- Agregar opción no stock
+- Los ticket comunes que emita se puedan emitir a la tickeadora fiscal (ARCA) ✅
+- Agregar opción no stock ✅
 - Facturación del mes ✅
-- Agregar opción efectivo o transferencia, o mix
+- Agregar opción efectivo o transferencia, o mix ✅
 - Presupuesto (parecido a venta) VENTA
