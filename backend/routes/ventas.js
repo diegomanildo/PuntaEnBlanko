@@ -5,45 +5,50 @@ const router = express.Router();
 
 // POST /ventas
 router.post("/", (req, res) => {
-  const { productos, total } = req.body;
+  const { productos, total, medio_pago, monto_efectivo, monto_transferencia } =
+    req.body;
 
-  db.query("INSERT INTO ventas (total) VALUES (?)", [total], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: "Error al crear venta" });
-    }
+  db.query(
+    "INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia) VALUES (?, ?, ?, ?)",
+    [total, medio_pago, monto_efectivo ?? null, monto_transferencia ?? null],
+    (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Error al crear venta" });
+      }
 
-    const ventaId = result.insertId;
+      const ventaId = result.insertId;
 
-    let pendientes = productos.length;
+      let pendientes = productos.length;
 
-    productos.forEach((p) => {
-      db.query(
-        `INSERT INTO detalle_ventas
+      productos.forEach((p) => {
+        db.query(
+          `INSERT INTO detalle_ventas
           (venta_id, producto_id, cantidad, precio)
           VALUES (?, ?, ?, ?)`,
-        [ventaId, p.id, p.cantidad, p.precio],
-        (err) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).json({ error: "Error en detalle venta" });
-          }
+          [ventaId, p.id, p.cantidad, p.precio],
+          (err) => {
+            if (err) {
+              console.error(err);
+              return res.status(500).json({ error: "Error en detalle venta" });
+            }
 
-          // actualizar stock
-          db.query("UPDATE productos SET stock = stock - ? WHERE id = ?", [
-            p.cantidad,
-            p.id,
-          ]);
+            // actualizar stock
+            db.query("UPDATE productos SET stock = stock - ? WHERE id = ?", [
+              p.cantidad,
+              p.id,
+            ]);
 
-          pendientes--;
+            pendientes--;
 
-          if (pendientes === 0) {
-            res.json({ success: true });
-          }
-        },
-      );
-    });
-  });
+            if (pendientes === 0) {
+              res.json({ success: true, id: ventaId });
+            }
+          },
+        );
+      });
+    },
+  );
 });
 
 // GET /ventas/hoy

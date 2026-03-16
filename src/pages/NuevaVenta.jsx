@@ -2,7 +2,9 @@ import { ShoppingCart, Plus, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
+import TicketModal from "../components/modals/TicketModal";
 
+// ── Componente principal ──────────────────────────────────────────────────────
 function NuevaVenta() {
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
@@ -12,7 +14,12 @@ function NuevaVenta() {
   const [cantidad, setCantidad] = useState(1);
   const [carrito, setCarrito] = useState([]);
   const [total, setTotal] = useState(0);
-  const reiniciandoRef = useRef(false);
+  const [medioPago, setMedioPago] = useState("efectivo");
+  const [montoEfectivo, setMontoEfectivo] = useState("");
+  const [montoTransferencia, setMontoTransferencia] = useState("");
+
+  // Estado del ticket para el modal
+  const [ticketData, setTicketData] = useState(null);
 
   useEffect(() => {
     fetch(`http://localhost:${PORT}/productos`)
@@ -36,7 +43,6 @@ function NuevaVenta() {
   const agregarProducto = () => {
     if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
 
-    // Solo validar stock si el producto lo maneja
     if (productoSeleccionado.tiene_stock !== 0) {
       if (productoSeleccionado.stock === 0)
         return toast.error("Este producto no tiene stock");
@@ -66,17 +72,40 @@ function NuevaVenta() {
 
   const finalizarVenta = async () => {
     if (carrito.length === 0) return toast.warn("No hay productos en la venta");
+
+    if (medioPago === "mix") {
+      const suma = Number(montoEfectivo) + Number(montoTransferencia);
+      if (Math.abs(suma - total) >= 1)
+        return toast.error("Los montos del mix no coinciden con el total");
+    }
+
     try {
       const res = await fetch(`http://localhost:${PORT}/ventas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productos: carrito, total }),
+        body: JSON.stringify({
+          productos: carrito,
+          total,
+          medio_pago: medioPago,
+          monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
+          monto_transferencia:
+            medioPago === "mix" ? Number(montoTransferencia) : null,
+        }),
       });
       const data = await res.json();
       if (data.success) {
         toast.success(data.message || "Venta realizada");
-        setCarrito([]);
-        setTotal(0);
+
+        setTicketData({
+          id: data.id ?? Date.now(),
+          fecha: new Date().toISOString(),
+          productos: carrito,
+          total,
+          medio_pago: medioPago,
+          monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
+          monto_transferencia:
+            medioPago === "mix" ? Number(montoTransferencia) : null,
+        });
       } else {
         toast.error(data.message || "Error en la venta");
       }
@@ -86,9 +115,6 @@ function NuevaVenta() {
   };
 
   const reiniciarVenta = () => {
-    if (reiniciandoRef.current) return; // si ya hay uno abierto, no hacer nada
-    reiniciandoRef.current = true;
-
     toast(
       ({ closeToast }) => (
         <div>
@@ -103,19 +129,12 @@ function NuevaVenta() {
                 setProductoSeleccionado(null);
                 setCantidad(1);
                 toast.success("Venta reiniciada");
-                reiniciandoRef.current = false; // liberar
                 closeToast();
               }}
             >
               Reiniciar
             </button>
-            <button
-              className="btn btn-secondary btn-sm"
-              onClick={() => {
-                reiniciandoRef.current = false; // liberar
-                closeToast();
-              }}
-            >
+            <button className="btn btn-secondary btn-sm" onClick={closeToast}>
               Cancelar
             </button>
           </div>
@@ -134,6 +153,21 @@ function NuevaVenta() {
 
   return (
     <div>
+      {/* Modal de ticket — se muestra tras venta exitosa */}
+      {ticketData && (
+        <TicketModal
+          ticket={ticketData}
+          onClose={() => {
+            setTicketData(null);
+            setCarrito([]);
+            setTotal(0);
+            setMedioPago("efectivo");
+            setMontoEfectivo("");
+            setMontoTransferencia("");
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="d-flex align-items-center gap-3 mb-4">
         <div
@@ -327,8 +361,111 @@ function NuevaVenta() {
                     </table>
                   </div>
 
-                  {/* Total y botones */}
+                  {/* Total y medio de pago */}
                   <div className="border-top pt-3 mt-3">
+                    <div className="mb-3">
+                      <label className="form-label" style={{ fontSize: 13 }}>
+                        Medio de pago
+                      </label>
+                      <div className="d-flex gap-2">
+                        {["efectivo", "transferencia", "mix"].map((m) => (
+                          <button
+                            key={m}
+                            className={`btn btn-sm flex-fill ${medioPago === m ? "btn-dark" : "btn-outline-secondary"}`}
+                            style={{
+                              textTransform: "capitalize",
+                              fontSize: 13,
+                            }}
+                            onClick={() => {
+                              setMedioPago(m);
+                              setMontoEfectivo("");
+                              setMontoTransferencia("");
+                            }}
+                          >
+                            {m === "efectivo"
+                              ? "💵 Efectivo"
+                              : m === "transferencia"
+                                ? "📲 Transferencia"
+                                : "🔀 Mix"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {medioPago === "mix" && (
+                      <div className="row g-2 mb-3">
+                        <div className="col-6">
+                          <label
+                            className="form-label"
+                            style={{ fontSize: 12 }}
+                          >
+                            Efectivo
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            placeholder="$0"
+                            value={montoEfectivo}
+                            min={0}
+                            onChange={(e) => {
+                              const valor = e.target.value;
+                              setMontoEfectivo(valor);
+                              setMontoTransferencia(
+                                valor === ""
+                                  ? ""
+                                  : String(Math.max(0, total - Number(valor))),
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label
+                            className="form-label"
+                            style={{ fontSize: 12 }}
+                          >
+                            Transferencia
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            placeholder="$0"
+                            value={montoTransferencia}
+                            min={0}
+                            onChange={(e) => {
+                              const valor = e.target.value;
+                              setMontoTransferencia(valor);
+                              setMontoEfectivo(
+                                valor === ""
+                                  ? ""
+                                  : String(Math.max(0, total - Number(valor))),
+                              );
+                            }}
+                          />
+                        </div>
+                        {montoEfectivo !== "" &&
+                          montoTransferencia !== "" &&
+                          (() => {
+                            const suma =
+                              Number(montoEfectivo) +
+                              Number(montoTransferencia);
+                            const ok = Math.abs(suma - total) < 1;
+                            return (
+                              <div className="col-12">
+                                <small
+                                  className={
+                                    ok ? "text-success" : "text-danger"
+                                  }
+                                >
+                                  {ok
+                                    ? "✓ Los montos coinciden con el total"
+                                    : `⚠ Suma $${suma.toLocaleString("es-AR")} — falta $${(total - suma).toLocaleString("es-AR")}`}
+                                </small>
+                              </div>
+                            );
+                          })()}
+                      </div>
+                    )}
+
                     <div className="d-flex justify-content-between align-items-end mb-3">
                       <small className="text-muted">
                         {carrito.length} producto
