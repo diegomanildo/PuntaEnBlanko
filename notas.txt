@@ -2,4 +2,4 @@
 - Agregar opción no stock ✅
 - Facturación del mes ✅
 - Agregar opción efectivo o transferencia, o mix ✅
-- Presupuesto (parecido a venta) VENTA
+- Presupuesto (parecido a venta) VENTA ✅
