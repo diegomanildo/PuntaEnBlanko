@@ -15,7 +15,7 @@ function Navbar({ toggleTheme, theme }) {
         </Link>
 
         <div className="navbar-nav d-flex align-items-center gap-2">
-          <Link className="nav-link" to="/venta">
+          <Link className="nav-link" to="/ventas/nueva">
             <ShoppingCart size={18} /> Nueva Venta
           </Link>
 

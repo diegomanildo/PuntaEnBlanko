@@ -1,7 +1,23 @@
 import { Link } from "react-router-dom";
-import { ShoppingCart, Package, Receipt, TrendingUp } from "lucide-react";
+import {
+  ShoppingCart,
+  Package,
+  Receipt,
+  TrendingUp,
+  FileText,
+  ClipboardList,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { PORT } from "../../backend/config";
+
+// Devuelve "YYYY-MM-DD" en hora local, sin desfase UTC
+const fechaHoy = () => {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
 
 function Home() {
   const [alertaStock, setAlertaStock] = useState(null);
@@ -18,7 +34,7 @@ function Home() {
 
   const navItems = [
     {
-      to: "/venta",
+      to: "/ventas/nueva",
       icon: <ShoppingCart size={22} />,
       label: "Nueva Venta",
       sub: "Registrar una transacción",
@@ -26,15 +42,22 @@ function Home() {
       iconColor: "text-success",
     },
     {
+      to: "/presupuestos",
+      icon: <ClipboardList size={22} />,
+      label: "Presupuestos",
+      sub: "Ver, agregar, aceptar o eliminar presupuestos",
+      iconStyle: { background: "rgba(99, 102, 241, 0.12)", color: "#6366f1" },
+    },
+    {
       to: "/productos",
       icon: <Package size={22} />,
       label: "Productos",
-      sub: "Inventario y stock",
+      sub: "Ver, agregar o editar productos",
       iconBg: "bg-primary bg-opacity-10",
       iconColor: "text-primary",
     },
     {
-      to: `/facturacion/${new Date().toISOString().split("T")[0]}`,
+      to: `/facturacion/${fechaHoy()}`,
       icon: <Receipt size={22} />,
       label: "Facturación del día",
       sub: "Resumen de ventas de hoy",
@@ -137,33 +160,44 @@ function Home() {
 
       {/* Navegación */}
       <div
-        className="d-flex flex-column gap-3"
-        style={{ width: "100%", maxWidth: "400px" }}
+        className="d-grid gap-3"
+        style={{
+          width: "100%",
+          maxWidth: "820px",
+          gridTemplateColumns: "repeat(2, 1fr)",
+        }}
       >
-        {navItems.map(({ to, icon, label, sub, iconBg, iconColor }) => (
-          <Link
-            key={to}
-            to={to}
-            className="card text-decoration-none d-flex flex-row align-items-center gap-3 p-3"
-            style={{ borderRadius: "12px" }}
-          >
-            <div
-              className={`d-flex align-items-center justify-content-center rounded-3 ${iconBg} ${iconColor}`}
-              style={{ width: "44px", height: "44px", flexShrink: 0 }}
+        {navItems.map(
+          ({ to, icon, label, sub, iconBg, iconColor, iconStyle }) => (
+            <Link
+              key={to}
+              to={to}
+              className="card text-decoration-none d-flex flex-row align-items-center gap-3 p-3"
+              style={{ borderRadius: "12px" }}
             >
-              {icon}
-            </div>
-            <div className="flex-grow-1">
-              <p className="mb-0" style={{ fontSize: "0.95rem" }}>
-                {label}
-              </p>
-              <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
-                {sub}
-              </p>
-            </div>
-            <span className="text-muted">›</span>
-          </Link>
-        ))}
+              <div
+                className={`d-flex align-items-center justify-content-center rounded-3 ${iconBg ?? ""} ${iconColor ?? ""}`}
+                style={{
+                  width: "44px",
+                  height: "44px",
+                  flexShrink: 0,
+                  ...(iconStyle ?? {}),
+                }}
+              >
+                {icon}
+              </div>
+              <div className="flex-grow-1">
+                <p className="mb-0" style={{ fontSize: "0.95rem" }}>
+                  {label}
+                </p>
+                <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
+                  {sub}
+                </p>
+              </div>
+              <span className="text-muted">›</span>
+            </Link>
+          ),
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Package, Save } from "lucide-react";
-import { PORT } from "../../backend/config";
+import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 
 function EditarProducto() {
@@ -75,8 +75,6 @@ function EditarProducto() {
             onChange={(e) => setPrecio(e.target.value)}
           />
         </div>
-
-        
 
         {/* Toggle tiene stock */}
         <div className="mb-3">

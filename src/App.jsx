@@ -9,13 +9,16 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Productos from "./pages/Productos";
 import NuevaVenta from "./pages/NuevaVenta";
-import NuevoProducto from "./pages/NuevoProducto";
-import EditarProducto from "./pages/EditarProducto";
+import NuevoProducto from "./pages/productos/NuevoProducto";
+import EditarProducto from "./pages/productos/EditarProducto";
 import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
 import BackButton from "./components/UI/BackButton";
 import FacturacionDia from "./pages/FacturacionDia";
 import FacturacionMes from "./pages/FacturacionMes";
+import NuevoPresupuesto from "./pages/presupuesto/NuevoPresupuesto";
+import Presupuestos from "./pages/Presupuestos";
+import EditarPresupuesto from "./pages/presupuesto/EditarPresupuesto";
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
@@ -37,10 +40,16 @@ function App() {
         <BackButton />
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/productos" element={<Productos />} />
-          <Route path="/venta" element={<NuevaVenta />} />
+          <Route path="/ventas/nueva" element={<NuevaVenta />} />
+          
+          <Route path="/presupuestos" element={<Presupuestos />} />
+          <Route path="/presupuestos/nuevo" element={<NuevoPresupuesto />} />
+          <Route path="/presupuestos/editar/:id" element={<EditarPresupuesto />} />
+          
           <Route path="/facturacion/:fecha" element={<FacturacionDia />} />
           <Route path="/facturacion/mes" element={<FacturacionMes />} />
+
+          <Route path="/productos" element={<Productos />} />
           <Route path="/productos/nuevo" element={<NuevoProducto />} />
           <Route path="/productos/editar/:id" element={<EditarProducto />} />
         </Routes>

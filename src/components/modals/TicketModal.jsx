@@ -81,7 +81,7 @@ function TicketModal({ ticket, onClose }) {
       >
         {/* Cabecera modal */}
         <div className="d-flex justify-content-between align-items-center mb-3">
-          <span className="fw-bold" style={{ fontSize: 15 }}>
+          <span className="ticket-fw-bold" style={{ fontSize: 15 }}>
             Vista previa del ticket
           </span>
           <button className="btn btn-sm btn-light" onClick={onClose}>

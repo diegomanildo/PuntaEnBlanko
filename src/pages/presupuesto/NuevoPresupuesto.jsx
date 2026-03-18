@@ -1,12 +1,10 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { ShoppingCart, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { PORT } from "../../backend/config";
+import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
-import TicketModal from "../components/modals/TicketModal";
 
-// ── Componente principal ──────────────────────────────────────────────────────
-function NuevaVenta() {
+function NuevoPresupuesto() {
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [mostrarLista, setMostrarLista] = useState(false);
@@ -15,12 +13,7 @@ function NuevaVenta() {
   const [cantidad, setCantidad] = useState(1);
   const [carrito, setCarrito] = useState([]);
   const [total, setTotal] = useState(0);
-  const [medioPago, setMedioPago] = useState("efectivo");
-  const [montoEfectivo, setMontoEfectivo] = useState("");
-  const [montoTransferencia, setMontoTransferencia] = useState("");
-
-  // Estado del ticket para el modal
-  const [ticketData, setTicketData] = useState(null);
+  const [clienteNombre, setClienteNombre] = useState("");
 
   useEffect(() => {
     fetch(`http://localhost:${PORT}/productos`)
@@ -44,15 +37,6 @@ function NuevaVenta() {
   const agregarProducto = () => {
     if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
 
-    if (productoSeleccionado.tiene_stock !== 0) {
-      if (productoSeleccionado.stock === 0)
-        return toast.error("Este producto no tiene stock");
-      if (cantidad > productoSeleccionado.stock)
-        return toast.warning(
-          `Solo hay ${productoSeleccionado.stock} unidades disponibles`,
-        );
-    }
-
     setCarrito([
       ...carrito,
       {
@@ -71,55 +55,44 @@ function NuevaVenta() {
     setTotal(carrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0));
   }, [carrito]);
 
-  const finalizarVenta = async () => {
-    if (carrito.length === 0) return toast.warn("No hay productos en la venta");
-
-    if (medioPago === "mix") {
-      const suma = Number(montoEfectivo) + Number(montoTransferencia);
-      if (Math.abs(suma - total) >= 1)
-        return toast.error("Los montos del mix no coinciden con el total");
-    }
+  const guardarPresupuesto = async () => {
+    if (!clienteNombre.trim())
+      return toast.warn("Ingresá el nombre del cliente");
+    if (carrito.length === 0)
+      return toast.warn("No hay productos en el presupuesto");
 
     try {
-      const res = await fetch(`http://localhost:${PORT}/ventas`, {
+      const res = await fetch(`http://localhost:${PORT}/presupuestos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           productos: carrito,
           total,
-          medio_pago: medioPago,
-          monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
-          monto_transferencia:
-            medioPago === "mix" ? Number(montoTransferencia) : null,
+          cliente_nombre: clienteNombre.trim() || null,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(data.message || "Venta realizada");
-
-        setTicketData({
-          id: data.id ?? Date.now(),
-          fecha: new Date().toISOString(),
-          productos: carrito,
-          total,
-          medio_pago: medioPago,
-          monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
-          monto_transferencia:
-            medioPago === "mix" ? Number(montoTransferencia) : null,
-        });
+        toast.success(`Presupuesto de "${clienteNombre.trim()}" guardado`);
+        setCarrito([]);
+        setTotal(0);
+        setClienteNombre("");
+        setBusqueda("");
+        setProductoSeleccionado(null);
+        setCantidad(1);
       } else {
-        toast.error(data.message || "Error en la venta");
+        toast.error(data.message || "Error al guardar el presupuesto");
       }
     } catch (error) {
-      toast.error("Error al finalizar la venta: " + error.message);
+      toast.error("Error al guardar el presupuesto: " + error.message);
     }
   };
 
-  const reiniciarVenta = () => {
+  const reiniciarPresupuesto = () => {
     toast(
       ({ closeToast }) => (
         <div>
-          <p className="mb-2">¿Reiniciar la venta actual?</p>
+          <p className="mb-2">¿Reiniciar el presupuesto actual?</p>
           <div className="d-flex gap-2">
             <button
               className="btn btn-danger btn-sm"
@@ -129,7 +102,8 @@ function NuevaVenta() {
                 setBusqueda("");
                 setProductoSeleccionado(null);
                 setCantidad(1);
-                toast.success("Venta reiniciada");
+                setClienteNombre("");
+                toast.success("Presupuesto reiniciado");
                 closeToast();
               }}
             >
@@ -147,48 +121,38 @@ function NuevaVenta() {
 
   const removerProducto = (index, name) => {
     setCarrito(carrito.filter((_, i) => i !== index));
-    toast.success(`Producto eliminado del carrito: ${name}`);
+    toast.success(`Producto eliminado: ${name}`);
   };
 
   const totalUnidades = carrito.reduce((acc, p) => acc + p.cantidad, 0);
 
   return (
     <div>
-      {/* Modal de ticket — se muestra tras venta exitosa */}
-      {ticketData && (
-        <TicketModal
-          ticket={ticketData}
-          onClose={() => {
-            setTicketData(null);
-            setCarrito([]);
-            setTotal(0);
-            setMedioPago("efectivo");
-            setMontoEfectivo("");
-            setMontoTransferencia("");
-          }}
-        />
-      )}
-
       {/* Header */}
       <div className="d-flex align-items-center gap-3 mb-4">
         <div
-          className="d-flex align-items-center justify-content-center rounded-3 bg-success bg-opacity-10"
-          style={{ width: 42, height: 42, flexShrink: 0 }}
+          className="d-flex align-items-center justify-content-center rounded-3"
+          style={{
+            width: 42,
+            height: 42,
+            flexShrink: 0,
+            background: "rgba(99, 102, 241, 0.12)",
+          }}
         >
-          <ShoppingCart size={20} className="text-success" />
+          <FileText size={20} style={{ color: "#6366f1" }} />
         </div>
         <div>
           <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
-            Nueva Venta
+            Nuevo Presupuesto
           </h2>
           <small className="text-muted">
-            Registrá los productos de la venta
+            Armá un presupuesto sin generar una venta
           </small>
         </div>
       </div>
 
       <div className="row g-4">
-        {/* Columna izquierda — buscador */}
+        {/* Columna izquierda — buscador + cliente */}
         <div className="col-md-5">
           <div className="card p-4" style={{ borderRadius: 12 }}>
             <p
@@ -203,6 +167,20 @@ function NuevaVenta() {
               Agregar producto
             </p>
 
+            <div className="mb-3">
+              <label className="form-label" style={{ fontSize: 13 }}>
+                Cliente
+              </label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Nombre del cliente..."
+                value={clienteNombre}
+                onChange={(e) => setClienteNombre(e.target.value)}
+              />
+            </div>
+
+            {/* Buscador de productos */}
             <div className="mb-3 position-relative" ref={buscadorRef}>
               <label className="form-label" style={{ fontSize: 13 }}>
                 Buscar producto
@@ -244,22 +222,7 @@ function NuevaVenta() {
                     >
                       <span className="fw-semibold">{p.nombre}</span>
                       <span className="text-muted" style={{ fontSize: 11 }}>
-                        ${p.precio.toLocaleString("es-AR")} ·{" "}
-                        {p.tiene_stock === 0 ? (
-                          <span className="text-muted fw-semibold">
-                            Sin manejo de stock
-                          </span>
-                        ) : (
-                          <span
-                            className={
-                              p.stock === 0
-                                ? "text-danger fw-semibold"
-                                : "text-success fw-semibold"
-                            }
-                          >
-                            Stock {p.stock}
-                          </span>
-                        )}
+                        ${p.precio.toLocaleString("es-AR")}
                       </span>
                     </button>
                   ))}
@@ -281,15 +244,20 @@ function NuevaVenta() {
             </div>
 
             <button
-              className="btn btn-success w-100 d-flex align-items-center justify-content-center gap-2"
+              className="btn w-100 d-flex align-items-center justify-content-center gap-2"
+              style={{
+                background: "#6366f1",
+                color: "#fff",
+                border: "none",
+              }}
               onClick={agregarProducto}
             >
-              <Plus size={16} /> Agregar al carrito
+              <Plus size={16} /> Agregar al presupuesto
             </button>
           </div>
         </div>
 
-        {/* Columna derecha — carrito */}
+        {/* Columna derecha — lista de productos */}
         <div className="col-md-7">
           <div className="card" style={{ borderRadius: 12 }}>
             <div
@@ -305,7 +273,7 @@ function NuevaVenta() {
                   fontWeight: 600,
                 }}
               >
-                Carrito
+                Detalle del presupuesto
               </p>
 
               {carrito.length === 0 ? (
@@ -313,8 +281,10 @@ function NuevaVenta() {
                   className="d-flex flex-column align-items-center justify-content-center flex-grow-1 text-muted"
                   style={{ gap: 8, padding: "2rem 0" }}
                 >
-                  <ShoppingCart size={32} strokeWidth={1.2} />
-                  <span style={{ fontSize: 14 }}>El carrito está vacío</span>
+                  <FileText size={32} strokeWidth={1.2} />
+                  <span style={{ fontSize: 14 }}>
+                    El presupuesto está vacío
+                  </span>
                 </div>
               ) : (
                 <>
@@ -362,111 +332,8 @@ function NuevaVenta() {
                     </table>
                   </div>
 
-                  {/* Total y medio de pago */}
+                  {/* Total y acciones */}
                   <div className="border-top pt-3 mt-3">
-                    <div className="mb-3">
-                      <label className="form-label" style={{ fontSize: 13 }}>
-                        Medio de pago
-                      </label>
-                      <div className="d-flex gap-2">
-                        {["efectivo", "transferencia", "mix"].map((m) => (
-                          <button
-                            key={m}
-                            className={`btn btn-sm flex-fill ${medioPago === m ? "btn-dark" : "btn-outline-secondary"}`}
-                            style={{
-                              textTransform: "capitalize",
-                              fontSize: 13,
-                            }}
-                            onClick={() => {
-                              setMedioPago(m);
-                              setMontoEfectivo("");
-                              setMontoTransferencia("");
-                            }}
-                          >
-                            {m === "efectivo"
-                              ? "💵 Efectivo"
-                              : m === "transferencia"
-                                ? "📲 Transferencia"
-                                : "🔀 Mix"}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {medioPago === "mix" && (
-                      <div className="row g-2 mb-3">
-                        <div className="col-6">
-                          <label
-                            className="form-label"
-                            style={{ fontSize: 12 }}
-                          >
-                            Efectivo
-                          </label>
-                          <input
-                            type="number"
-                            className="form-control form-control-sm"
-                            placeholder="$0"
-                            value={montoEfectivo}
-                            min={0}
-                            onChange={(e) => {
-                              const valor = e.target.value;
-                              setMontoEfectivo(valor);
-                              setMontoTransferencia(
-                                valor === ""
-                                  ? ""
-                                  : String(Math.max(0, total - Number(valor))),
-                              );
-                            }}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <label
-                            className="form-label"
-                            style={{ fontSize: 12 }}
-                          >
-                            Transferencia
-                          </label>
-                          <input
-                            type="number"
-                            className="form-control form-control-sm"
-                            placeholder="$0"
-                            value={montoTransferencia}
-                            min={0}
-                            onChange={(e) => {
-                              const valor = e.target.value;
-                              setMontoTransferencia(valor);
-                              setMontoEfectivo(
-                                valor === ""
-                                  ? ""
-                                  : String(Math.max(0, total - Number(valor))),
-                              );
-                            }}
-                          />
-                        </div>
-                        {montoEfectivo !== "" &&
-                          montoTransferencia !== "" &&
-                          (() => {
-                            const suma =
-                              Number(montoEfectivo) +
-                              Number(montoTransferencia);
-                            const ok = Math.abs(suma - total) < 1;
-                            return (
-                              <div className="col-12">
-                                <small
-                                  className={
-                                    ok ? "text-success" : "text-danger"
-                                  }
-                                >
-                                  {ok
-                                    ? "✓ Los montos coinciden con el total"
-                                    : `⚠ Suma $${suma.toLocaleString("es-AR")} — falta $${(total - suma).toLocaleString("es-AR")}`}
-                                </small>
-                              </div>
-                            );
-                          })()}
-                      </div>
-                    )}
-
                     <div className="d-flex justify-content-between align-items-end mb-3">
                       <small className="text-muted">
                         {carrito.length} producto
@@ -482,11 +349,15 @@ function NuevaVenta() {
                             letterSpacing: "0.08em",
                           }}
                         >
-                          Total
+                          Total estimado
                         </div>
                         <div
-                          className="text-success fw-bold"
-                          style={{ fontSize: "1.6rem", lineHeight: 1.1 }}
+                          className="fw-bold"
+                          style={{
+                            fontSize: "1.6rem",
+                            lineHeight: 1.1,
+                            color: "#6366f1",
+                          }}
                         >
                           ${total.toLocaleString("es-AR")}
                         </div>
@@ -496,15 +367,20 @@ function NuevaVenta() {
                     <div className="d-flex gap-2">
                       <button
                         className="btn btn-danger flex-fill"
-                        onClick={reiniciarVenta}
+                        onClick={reiniciarPresupuesto}
                       >
                         Reiniciar
                       </button>
                       <button
-                        className="btn btn-primary flex-fill btn-lg"
-                        onClick={finalizarVenta}
+                        className="btn btn-lg flex-fill"
+                        style={{
+                          background: "#6366f1",
+                          color: "#fff",
+                          border: "none",
+                        }}
+                        onClick={guardarPresupuesto}
                       >
-                        Finalizar venta →
+                        Guardar presupuesto →
                       </button>
                     </div>
                   </div>
@@ -518,4 +394,4 @@ function NuevaVenta() {
   );
 }
 
-export default NuevaVenta;
+export default NuevoPresupuesto;

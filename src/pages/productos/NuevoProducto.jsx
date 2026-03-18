@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Save, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PORT } from "../../backend/config";
+import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 
 function NuevoProducto() {

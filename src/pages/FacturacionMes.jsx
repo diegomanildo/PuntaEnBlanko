@@ -6,7 +6,6 @@ import GraficoVentasMes from "../components/GraficoVentasMes";
 
 function FacturacionMes() {
   const [datos, setDatos] = useState(null);
-  const [verGrafico, setVerGrafico] = useState(false);
   const navigate = useNavigate();
 
   const [orden, setOrden] = useState({ columna: null, direccion: "asc" });

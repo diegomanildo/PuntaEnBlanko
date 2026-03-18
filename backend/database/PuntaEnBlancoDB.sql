@@ -41,7 +41,7 @@ CREATE TABLE configuracion (
 );
 
 INSERT INTO configuracion (id, stock_alerta)
-VALUES (1, 0);
+VALUES (1, 5);
 
 -- ── Ventas ────────────────────────────────────────────────────────────────────
 CREATE TABLE ventas (
@@ -53,14 +53,14 @@ CREATE TABLE ventas (
     monto_transferencia DECIMAL(10,2) DEFAULT NULL
 );
 
-INSERT INTO ventas (fecha, total, medio_pago) VALUES
-    ('2026-03-14 10:30:00', 7250.00, 'efectivo'),
-    ('2026-03-15 14:20:00', 3200.00, 'transferencia'),
-    ('2026-03-18 09:10:00', 5600.00, 'efectivo'),
-    ('2026-03-18 15:30:00', 5600.00, 'transferencia'),
-    ('2026-03-20 17:45:00', 8900.00, 'efectivo'),
-    ('2026-03-22 11:05:00', 2100.00, 'transferencia'),
-    ('2026-03-25 16:30:00', 4750.00, 'efectivo');
+-- INSERT INTO ventas (fecha, total, medio_pago) VALUES
+--     ('2026-03-14 10:30:00', 7250.00, 'efectivo'),
+--     ('2026-03-15 14:20:00', 3200.00, 'transferencia'),
+--     ('2026-03-18 09:10:00', 5600.00, 'efectivo'),
+--     ('2026-03-18 15:30:00', 5600.00, 'transferencia'),
+--     ('2026-03-20 17:45:00', 8900.00, 'efectivo'),
+--     ('2026-03-22 11:05:00', 2100.00, 'transferencia'),
+--     ('2026-03-25 16:30:00', 4750.00, 'efectivo');
 
 -- ── Detalle ventas ────────────────────────────────────────────────────────────
 CREATE TABLE detalle_ventas (
@@ -74,21 +74,45 @@ CREATE TABLE detalle_ventas (
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
 );
 
-INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio) VALUES
-    (1, 1, 1, 4400.00),
-    (1, 3, 2,  850.00),
-    (1, 9, 1,  800.00),
-    (2, 4, 2, 1200.00),
-    (2, 6, 1,  900.00),
-    (3, 2, 1, 4100.00),
-    (3, 7, 1, 1100.00),
-    (3, 8, 1,  400.00),
-    (4, 5, 1, 5500.00),
-    (4, 3, 1,  850.00),
-    (5, 1, 2, 4400.00),
-    (5, 9, 1,  800.00),
-    (6, 11, 2,  700.00),
-    (6, 12, 1,  650.00),
-    (7, 13, 1, 2300.00),
-    (7, 14, 2,  400.00),
-    (7, 15, 1, 1200.00);
+-- ── Presupuestos ─────────────────────────────────────────────────────────────
+CREATE TABLE presupuestos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    total DECIMAL(10,2),
+    cliente_nombre VARCHAR(100) DEFAULT NULL,
+    estado ENUM('pendiente', 'convertido') DEFAULT 'pendiente',
+    venta_id INT DEFAULT NULL,
+
+    FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL
+);
+
+-- ── Detalle presupuestos ──────────────────────────────────────────────────────
+CREATE TABLE detalle_presupuestos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    presupuesto_id INT,
+    producto_id INT,
+    cantidad INT,
+    precio DECIMAL(10,2),
+
+    FOREIGN KEY (presupuesto_id) REFERENCES presupuestos(id) ON DELETE CASCADE,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+);
+
+-- INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio) VALUES
+--     (1, 1, 1, 4400.00),
+--     (1, 3, 2,  850.00),
+--     (1, 9, 1,  800.00),
+--     (2, 4, 2, 1200.00),
+--     (2, 6, 1,  900.00),
+--     (3, 2, 1, 4100.00),
+--     (3, 7, 1, 1100.00),
+--     (3, 8, 1,  400.00),
+--     (4, 5, 1, 5500.00),
+--     (4, 3, 1,  850.00),
+--     (5, 1, 2, 4400.00),
+--     (5, 9, 1,  800.00),
+--     (6, 11, 2,  700.00),
+--     (6, 12, 1,  650.00),
+--     (7, 13, 1, 2300.00),
+--     (7, 14, 2,  400.00),
+--     (7, 15, 1, 1200.00);

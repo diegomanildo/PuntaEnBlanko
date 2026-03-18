@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { Link } from "react-router-dom";
 import {
   Package,
@@ -72,7 +73,7 @@ function Productos() {
         <div>
           <p className="mb-2">
             ¿Seguro que querés eliminar el producto{" "}
-            <strong>"{productos.find((p) => p.id === id)?.nombre}"</strong>?
+            <strong>"{productos.find((p) => p.id === id).nombre}"</strong>?
           </p>
           <div className="d-flex gap-2">
             <button

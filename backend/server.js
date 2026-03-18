@@ -3,6 +3,7 @@ import cors from "cors";
 
 import productosRoutes from "./routes/productos.js";
 import ventasRoutes from "./routes/ventas.js";
+import presupuestoRoutes from "./routes/presupuestos.js";
 import { PORT } from "./config.js";
 
 const app = express();
@@ -12,6 +13,7 @@ app.use(express.json());
 
 app.use("/productos", productosRoutes);
 app.use("/ventas", ventasRoutes);
+app.use("/presupuestos", presupuestoRoutes);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);

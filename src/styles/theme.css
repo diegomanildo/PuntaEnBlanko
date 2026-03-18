@@ -390,3 +390,14 @@ td.d-flex .btn {
 .dark .Toastify__progress-bar--info {
   background: #0d6efd;
 }
+
+.dark .table > :not(caption) > * > .table-success,
+.dark .table > :not(caption) > .table-success > * {
+  background-color: #1a3a2a !important;
+  color: #e0e0e0 !important;
+}
+
+.ticket-fw-bold {
+  color: #444444;
+  font-weight: bold;
+}
