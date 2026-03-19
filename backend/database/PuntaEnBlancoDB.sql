@@ -82,7 +82,9 @@ CREATE TABLE presupuestos (
     cliente_nombre VARCHAR(100) DEFAULT NULL,
     estado ENUM('pendiente', 'convertido') DEFAULT 'pendiente',
     venta_id INT DEFAULT NULL,
-
+    medio_pago VARCHAR(20) DEFAULT 'efectivo',
+    monto_efectivo DECIMAL(10,2) DEFAULT NULL,
+    monto_transferencia DECIMAL(10,2) DEFAULT NULL,
     FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL
 );
 

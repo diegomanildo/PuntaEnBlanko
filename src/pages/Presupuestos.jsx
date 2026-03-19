@@ -77,14 +77,22 @@ function Presupuestos() {
 
   const convertirAVenta = async (id) => {
     try {
+      const presupuesto = presupuestos.find((p) => p.id === id);
+
       const res = await fetch(
         `http://localhost:${PORT}/presupuestos/${id}/convertir`,
-        { method: "POST" },
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            medio_pago: presupuesto.medio_pago ?? "efectivo",
+            monto_efectivo: presupuesto.monto_efectivo ?? null,
+            monto_transferencia: presupuesto.monto_transferencia ?? null,
+          }),
+        },
       );
       const data = await res.json();
       if (data.success) {
-        // Obtener detalle del presupuesto para armar el ticket
-        const presupuesto = presupuestos.find((p) => p.id === id);
         const resDetalle = await fetch(
           `http://localhost:${PORT}/presupuestos/${id}`,
         );
@@ -99,9 +107,9 @@ function Presupuestos() {
             cantidad: d.cantidad,
           })),
           total: presupuesto.total,
-          medio_pago: "efectivo",
-          monto_efectivo: null,
-          monto_transferencia: null,
+          medio_pago: presupuesto.medio_pago ?? "efectivo",
+          monto_efectivo: presupuesto.monto_efectivo ?? null,
+          monto_transferencia: presupuesto.monto_transferencia ?? null,
         });
 
         cargarPresupuestos();
@@ -118,13 +126,31 @@ function Presupuestos() {
     if (toast.isActive(toastId)) return;
 
     const presupuesto = presupuestos.find((p) => p.id === id);
+    const labelMedio =
+      presupuesto.medio_pago === "transferencia"
+        ? "📲 transferencia"
+        : presupuesto.medio_pago === "mix"
+          ? "🔀 mix"
+          : "💵 efectivo";
+
     toast(
       ({ closeToast }) => (
         <div>
-          <p className="mb-2">
+          <p className="mb-1">
             ¿Convertir el presupuesto de "
             <strong>{presupuesto.cliente_nombre}</strong>" en una venta? Se
             descontará el stock.
+          </p>
+          <p className="mb-2 text-muted" style={{ fontSize: 12 }}>
+            Medio de pago: <strong>{labelMedio}</strong>
+            {presupuesto.medio_pago === "mix" &&
+              presupuesto.monto_efectivo != null && (
+                <span>
+                  {" "}
+                  (Ef: ${Number(presupuesto.monto_efectivo).toLocaleString("es-AR")} /
+                  Tr: ${Number(presupuesto.monto_transferencia).toLocaleString("es-AR")})
+                </span>
+              )}
           </p>
           <div className="d-flex gap-2">
             <button
@@ -202,6 +228,26 @@ function Presupuestos() {
     });
   };
 
+  const verTicket = async (presupuesto) => {
+    const res = await fetch(
+      `http://localhost:${PORT}/presupuestos/${presupuesto.id}`,
+    );
+    const detalle = await res.json();
+    setTicketData({
+      id: presupuesto.venta_id,
+      fecha: presupuesto.fecha,
+      productos: detalle.map((d) => ({
+        nombre: d.nombre,
+        precio: d.precio,
+        cantidad: d.cantidad,
+      })),
+      total: presupuesto.total,
+      medio_pago: presupuesto.medio_pago ?? "efectivo",
+      monto_efectivo: presupuesto.monto_efectivo ?? null,
+      monto_transferencia: presupuesto.monto_transferencia ?? null,
+    });
+  };
+
   if (presupuestos.length === 0) {
     return (
       <div className="text-center mt-5">
@@ -227,26 +273,6 @@ function Presupuestos() {
       </div>
     );
   }
-
-  const verTicket = async (presupuesto) => {
-    const res = await fetch(
-      `http://localhost:${PORT}/presupuestos/${presupuesto.id}`,
-    );
-    const detalle = await res.json();
-    setTicketData({
-      id: presupuesto.venta_id,
-      fecha: presupuesto.fecha,
-      productos: detalle.map((d) => ({
-        nombre: d.nombre,
-        precio: d.precio,
-        cantidad: d.cantidad,
-      })),
-      total: presupuesto.total,
-      medio_pago: "efectivo",
-      monto_efectivo: null,
-      monto_transferencia: null,
-    });
-  };
 
   return (
     <div>
@@ -305,6 +331,7 @@ function Presupuestos() {
               {[
                 ["cliente_nombre", "Cliente"],
                 ["fecha", "Fecha"],
+                ["medio_pago", "Pago"],
                 ["total", "Total"],
                 ["estado", "Estado"],
               ].map(([col, label]) => (
@@ -312,6 +339,7 @@ function Presupuestos() {
                   key={col}
                   onClick={() => ordenarPor(col)}
                   style={{ cursor: "pointer", userSelect: "none" }}
+                  className={col === "total" ? "text-end" : ""}
                 >
                   <span className="d-flex align-items-center gap-1">
                     {label}{" "}
@@ -338,10 +366,50 @@ function Presupuestos() {
                   </span>
                 </td>
                 <td>{formatFecha(presupuesto.fecha)}</td>
-                <td className="fw-semibold">
-                  ${presupuesto.total.toLocaleString("es-AR")}
+
+                {/* Pago — badge con color igual a FacturacionDia */}
+                <td>
+                  <span
+                    className={`badge ${
+                      !presupuesto.medio_pago || presupuesto.medio_pago === "efectivo"
+                        ? "bg-success"
+                        : presupuesto.medio_pago === "transferencia"
+                          ? "bg-primary"
+                          : "bg-warning text-dark"
+                    }`}
+                    style={{ fontSize: 11 }}
+                  >
+                    {presupuesto.medio_pago === "transferencia"
+                      ? "📲 Transfer."
+                      : presupuesto.medio_pago === "mix"
+                        ? "🔀 Mix"
+                        : "💵 Efectivo"}
+                  </span>
                 </td>
+
+                {/* Total — con desglose mix igual a FacturacionDia */}
+                <td className="text-end fw-bold text-success">
+                  ${Number(presupuesto.total).toLocaleString("es-AR")}
+                  {presupuesto.medio_pago === "mix" && (
+                    <div className="d-flex flex-column align-items-end gap-1 mt-1">
+                      <span
+                        className="badge bg-success bg-opacity-75"
+                        style={{ fontSize: 10 }}
+                      >
+                        💵 ${Number(presupuesto.monto_efectivo).toLocaleString("es-AR")}
+                      </span>
+                      <span
+                        className="badge bg-primary bg-opacity-75"
+                        style={{ fontSize: 10 }}
+                      >
+                        📲 ${Number(presupuesto.monto_transferencia).toLocaleString("es-AR")}
+                      </span>
+                    </div>
+                  )}
+                </td>
+
                 <td>{estadoBadge(presupuesto.estado)}</td>
+
                 <td>
                   <div className="d-flex gap-2">
                     <Link

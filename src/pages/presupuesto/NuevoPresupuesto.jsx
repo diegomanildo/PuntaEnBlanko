@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus, Save, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
@@ -14,6 +14,9 @@ function NuevoPresupuesto() {
   const [carrito, setCarrito] = useState([]);
   const [total, setTotal] = useState(0);
   const [clienteNombre, setClienteNombre] = useState("");
+  const [medioPago, setMedioPago] = useState("efectivo");
+  const [montoEfectivo, setMontoEfectivo] = useState("");
+  const [montoTransferencia, setMontoTransferencia] = useState("");
 
   useEffect(() => {
     fetch(`http://localhost:${PORT}/productos`)
@@ -61,6 +64,12 @@ function NuevoPresupuesto() {
     if (carrito.length === 0)
       return toast.warn("No hay productos en el presupuesto");
 
+    if (medioPago === "mix") {
+      const suma = Number(montoEfectivo) + Number(montoTransferencia);
+      if (Math.abs(suma - total) >= 1)
+        return toast.error("Los montos del mix no coinciden con el total");
+    }
+
     try {
       const res = await fetch(`http://localhost:${PORT}/presupuestos`, {
         method: "POST",
@@ -69,6 +78,10 @@ function NuevoPresupuesto() {
           productos: carrito,
           total,
           cliente_nombre: clienteNombre.trim() || null,
+          medio_pago: medioPago,
+          monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
+          monto_transferencia:
+            medioPago === "mix" ? Number(montoTransferencia) : null,
         }),
       });
       const data = await res.json();
@@ -80,6 +93,9 @@ function NuevoPresupuesto() {
         setBusqueda("");
         setProductoSeleccionado(null);
         setCantidad(1);
+        setMedioPago("efectivo");
+        setMontoEfectivo("");
+        setMontoTransferencia("");
       } else {
         toast.error(data.message || "Error al guardar el presupuesto");
       }
@@ -103,6 +119,9 @@ function NuevoPresupuesto() {
                 setProductoSeleccionado(null);
                 setCantidad(1);
                 setClienteNombre("");
+                setMedioPago("efectivo");
+                setMontoEfectivo("");
+                setMontoTransferencia("");
                 toast.success("Presupuesto reiniciado");
                 closeToast();
               }}
@@ -332,8 +351,113 @@ function NuevoPresupuesto() {
                     </table>
                   </div>
 
-                  {/* Total y acciones */}
+                  {/* Medio de pago + Total + acciones */}
                   <div className="border-top pt-3 mt-3">
+                    {/* Medio de pago */}
+                    <div className="mb-3">
+                      <label className="form-label" style={{ fontSize: 13 }}>
+                        Medio de pago
+                      </label>
+                      <div className="d-flex gap-2">
+                        {["efectivo", "transferencia", "mix"].map((m) => (
+                          <button
+                            key={m}
+                            className={`btn btn-sm flex-fill ${medioPago === m ? "btn-dark" : "btn-outline-secondary"}`}
+                            style={{
+                              textTransform: "capitalize",
+                              fontSize: 13,
+                            }}
+                            onClick={() => {
+                              setMedioPago(m);
+                              setMontoEfectivo("");
+                              setMontoTransferencia("");
+                            }}
+                          >
+                            {m === "efectivo"
+                              ? "💵 Efectivo"
+                              : m === "transferencia"
+                                ? "📲 Transferencia"
+                                : "🔀 Mix"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Campos mix */}
+                    {medioPago === "mix" && (
+                      <div className="row g-2 mb-3">
+                        <div className="col-6">
+                          <label
+                            className="form-label"
+                            style={{ fontSize: 12 }}
+                          >
+                            Efectivo
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            placeholder="$0"
+                            value={montoEfectivo}
+                            min={0}
+                            onChange={(e) => {
+                              const valor = e.target.value;
+                              setMontoEfectivo(valor);
+                              setMontoTransferencia(
+                                valor === ""
+                                  ? ""
+                                  : String(Math.max(0, total - Number(valor))),
+                              );
+                            }}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label
+                            className="form-label"
+                            style={{ fontSize: 12 }}
+                          >
+                            Transferencia
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control form-control-sm"
+                            placeholder="$0"
+                            value={montoTransferencia}
+                            min={0}
+                            onChange={(e) => {
+                              const valor = e.target.value;
+                              setMontoTransferencia(valor);
+                              setMontoEfectivo(
+                                valor === ""
+                                  ? ""
+                                  : String(Math.max(0, total - Number(valor))),
+                              );
+                            }}
+                          />
+                        </div>
+                        {montoEfectivo !== "" &&
+                          montoTransferencia !== "" &&
+                          (() => {
+                            const suma =
+                              Number(montoEfectivo) +
+                              Number(montoTransferencia);
+                            const ok = Math.abs(suma - total) < 1;
+                            return (
+                              <div className="col-12">
+                                <small
+                                  className={
+                                    ok ? "text-success" : "text-danger"
+                                  }
+                                >
+                                  {ok
+                                    ? "✓ Los montos coinciden con el total"
+                                    : `⚠ Suma $${suma.toLocaleString("es-AR")} — falta $${(total - suma).toLocaleString("es-AR")}`}
+                                </small>
+                              </div>
+                            );
+                          })()}
+                      </div>
+                    )}
+
                     <div className="d-flex justify-content-between align-items-end mb-3">
                       <small className="text-muted">
                         {carrito.length} producto
@@ -380,7 +504,7 @@ function NuevoPresupuesto() {
                         }}
                         onClick={guardarPresupuesto}
                       >
-                        Guardar presupuesto →
+                        <Save size={18} /> Guardar presupuesto →
                       </button>
                     </div>
                   </div>

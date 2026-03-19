@@ -5,11 +5,18 @@ const router = express.Router();
 
 // POST /presupuestos — crear presupuesto
 router.post("/", (req, res) => {
-  const { productos, total, cliente_nombre } = req.body;
+  const { productos, total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia } = req.body;
 
   db.query(
-    "INSERT INTO presupuestos (total, cliente_nombre) VALUES (?, ?)",
-    [total, cliente_nombre ?? null],
+    `INSERT INTO presupuestos (total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia)
+     VALUES (?, ?, ?, ?, ?)`,
+    [
+      total,
+      cliente_nombre ?? null,
+      medio_pago ?? "efectivo",
+      medio_pago === "mix" ? (monto_efectivo ?? null) : null,
+      medio_pago === "mix" ? (monto_transferencia ?? null) : null,
+    ],
     (err, result) => {
       if (err) {
         console.error(err);
@@ -45,11 +52,20 @@ router.post("/", (req, res) => {
 // PUT /presupuestos/:id — actualizar presupuesto
 router.put("/:id", (req, res) => {
   const { id } = req.params;
-  const { productos, total, cliente_nombre } = req.body;
+  const { productos, total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia } = req.body;
 
   db.query(
-    "UPDATE presupuestos SET total = ?, cliente_nombre = ? WHERE id = ?",
-    [total, cliente_nombre ?? null, id],
+    `UPDATE presupuestos
+     SET total = ?, cliente_nombre = ?, medio_pago = ?, monto_efectivo = ?, monto_transferencia = ?
+     WHERE id = ?`,
+    [
+      total,
+      cliente_nombre ?? null,
+      medio_pago ?? "efectivo",
+      medio_pago === "mix" ? (monto_efectivo ?? null) : null,
+      medio_pago === "mix" ? (monto_transferencia ?? null) : null,
+      id,
+    ],
     (err, result) => {
       if (err) {
         console.error(err);
@@ -98,6 +114,7 @@ router.put("/:id", (req, res) => {
 // POST /presupuestos/:id/convertir — convertir a venta
 router.post("/:id/convertir", (req, res) => {
   const { id } = req.params;
+  const { medio_pago, monto_efectivo, monto_transferencia } = req.body ?? {};
 
   db.query(
     "SELECT * FROM presupuestos WHERE id = ?",
@@ -107,6 +124,15 @@ router.post("/:id/convertir", (req, res) => {
         return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
 
       const presupuesto = presupuestos[0];
+
+      // Usar el medio de pago del body si se envió, o el guardado en el presupuesto
+      const medioPagoFinal = medio_pago ?? presupuesto.medio_pago ?? "efectivo";
+      const montoEfectivoFinal =
+        medioPagoFinal === "mix" ? (monto_efectivo ?? presupuesto.monto_efectivo ?? null) : null;
+      const montoTransferenciaFinal =
+        medioPagoFinal === "mix"
+          ? (monto_transferencia ?? presupuesto.monto_transferencia ?? null)
+          : null;
 
       db.query(
         "SELECT * FROM detalle_presupuestos WHERE presupuesto_id = ?",
@@ -118,8 +144,9 @@ router.post("/:id/convertir", (req, res) => {
               .json({ success: false, message: "Error obteniendo detalle" });
 
           db.query(
-            "INSERT INTO ventas (total, medio_pago) VALUES (?, 'efectivo')",
-            [presupuesto.total],
+            `INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia)
+             VALUES (?, ?, ?, ?)`,
+            [presupuesto.total, medioPagoFinal, montoEfectivoFinal, montoTransferenciaFinal],
             (err, result) => {
               if (err)
                 return res
