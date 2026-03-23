@@ -168,12 +168,15 @@ function Home() {
         }}
       >
         {navItems.map(
-          ({ to, icon, label, sub, iconBg, iconColor, iconStyle }) => (
+          ({ to, icon, label, sub, iconBg, iconColor, iconStyle }, index) => (
             <Link
               key={to}
               to={to}
               className="card text-decoration-none d-flex flex-row align-items-center gap-3 p-3"
-              style={{ borderRadius: "12px" }}
+              style={{
+                borderRadius: "12px",
+                ...(index === 0 ? { gridColumn: "1 / -1", justifyContent: "center" } : {}),
+              }}
             >
               <div
                 className={`d-flex align-items-center justify-content-center rounded-3 ${iconBg ?? ""} ${iconColor ?? ""}`}
