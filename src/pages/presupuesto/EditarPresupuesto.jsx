@@ -1,4 +1,4 @@
-import { FileText, Plus, Trash2, ShoppingCart } from "lucide-react";
+import { FileText, Plus, Trash2, ShoppingCart, Printer } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { PORT } from "../../../backend/config";
@@ -19,6 +19,8 @@ function EditarPresupuesto() {
   const [clienteNombre, setClienteNombre] = useState("");
   const [estado, setEstado] = useState("");
   const [ticketData, setTicketData] = useState(null);
+  // "presupuesto" o "venta" — determina qué tipo de modal mostrar
+  const [ticketTipo, setTicketTipo] = useState("venta");
   const [medioPago, setMedioPago] = useState("efectivo");
   const [montoEfectivo, setMontoEfectivo] = useState("");
   const [montoTransferencia, setMontoTransferencia] = useState("");
@@ -43,7 +45,6 @@ function EditarPresupuesto() {
       if (cab) {
         setClienteNombre(cab.cliente_nombre || "");
         setEstado(cab.estado);
-        // Cargar medio de pago guardado si existe
         if (cab.medio_pago) setMedioPago(cab.medio_pago);
         if (cab.monto_efectivo != null)
           setMontoEfectivo(String(cab.monto_efectivo));
@@ -98,6 +99,48 @@ function EditarPresupuesto() {
   const removerProducto = (index, name) => {
     setCarrito(carrito.filter((_, i) => i !== index));
     toast.success(`Producto eliminado: ${name}`);
+  };
+
+  /** Guarda los cambios actuales y abre el modal de presupuesto para imprimir */
+  const imprimirPresupuesto = async () => {
+    if (carrito.length === 0)
+      return toast.warn("No hay productos en el presupuesto");
+
+    // Guardar cambios antes de imprimir
+    try {
+      await fetch(`http://localhost:${PORT}/presupuestos/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cliente_nombre: clienteNombre.trim() || null,
+          productos: carrito.map((p) => ({
+            id: p.id,
+            cantidad: p.cantidad,
+            precio: p.precio,
+          })),
+          total,
+          medio_pago: medioPago,
+          monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
+          monto_transferencia:
+            medioPago === "mix" ? Number(montoTransferencia) : null,
+        }),
+      });
+    } catch {
+      // No bloqueamos la impresión si falla el guardado
+    }
+
+    setTicketTipo("presupuesto");
+    setTicketData({
+      id: parseInt(id),
+      fecha: new Date().toISOString(),
+      cliente_nombre: clienteNombre.trim() || null,
+      productos: carrito,
+      total,
+      medio_pago: medioPago,
+      monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
+      monto_transferencia:
+        medioPago === "mix" ? Number(montoTransferencia) : null,
+    });
   };
 
   const convertirAVenta = async () => {
@@ -170,6 +213,7 @@ function EditarPresupuesto() {
                     );
                     const data = await res.json();
                     if (data.success) {
+                      setTicketTipo("venta");
                       setTicketData({
                         id: data.venta_id,
                         fecha: new Date().toISOString(),
@@ -212,9 +256,10 @@ function EditarPresupuesto() {
       {ticketData && (
         <TicketModal
           ticket={ticketData}
+          tipo={ticketTipo}
           onClose={() => {
             setTicketData(null);
-            navigate("/presupuestos");
+            if (ticketTipo === "venta") navigate("/presupuestos");
           }}
         />
       )}
@@ -421,7 +466,7 @@ function EditarPresupuesto() {
                   </div>
 
                   <div className="border-top pt-3 mt-3">
-                    {/* Medio de pago — solo editable si no está convertido */}
+                    {/* Medio de pago */}
                     {convertido ? (
                       <div className="mb-3">
                         <small className="text-muted" style={{ fontSize: 12 }}>
@@ -593,21 +638,41 @@ function EditarPresupuesto() {
                     </div>
 
                     <div className="d-flex gap-2">
-                      <button className="btn btn-danger flex-fill">
-                        Reiniciar
-                      </button>
-
                       {!convertido && (
+                        <>
+                          <button
+                            className="btn btn-outline-secondary d-flex align-items-center gap-1"
+                            onClick={imprimirPresupuesto}
+                            title="Guardar e imprimir presupuesto"
+                          >
+                            <Printer size={15} /> Imprimir
+                          </button>
+
+                          <button
+                            className="btn btn-lg flex-fill"
+                            style={{
+                              background: "#6366f1",
+                              color: "#fff",
+                              border: "none",
+                            }}
+                            onClick={convertirAVenta}
+                          >
+                            <ShoppingCart size={18} /> Convertir a venta →
+                          </button>
+                        </>
+                      )}
+
+                      {convertido && (
                         <button
-                          className="btn btn-lg flex-fill"
+                          className="btn btn-lg flex-fill d-flex align-items-center justify-content-center gap-2"
                           style={{
-                            background: "#6366f1",
+                            background: "#4f46e5",
                             color: "#fff",
                             border: "none",
                           }}
-                          onClick={convertirAVenta}
+                          onClick={imprimirPresupuesto}
                         >
-                          <ShoppingCart size={18} /> Convertir a venta →
+                          <Printer size={18} /> Ver ticket de presupuesto
                         </button>
                       )}
                     </div>

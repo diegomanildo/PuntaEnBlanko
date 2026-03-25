@@ -27,7 +27,11 @@ const SEP = "=".repeat(58);
 /** Formatea un número con 2 decimales y coma, sin separador de miles. Ej: 40000,00 */
 const fmt = (n) => Number(n).toFixed(2).replace(".", ",");
 
-function TicketModal({ ticket, onClose }) {
+/**
+ * @param {{ ticket: object, onClose: function, tipo?: "venta" | "presupuesto" }} props
+ * `tipo` por defecto es "venta". Pasá "presupuesto" para mostrar encabezado de presupuesto.
+ */
+function TicketModal({ ticket, onClose, tipo = "venta" }) {
   useEffect(() => {
     if (!document.getElementById("ticket-print-styles")) {
       const style = document.createElement("style");
@@ -46,12 +50,14 @@ function TicketModal({ ticket, onClose }) {
   });
   const nro = String(ticket.id).padStart(8, "0");
 
+  const esPresupuesto = tipo === "presupuesto";
+
   const labelMedioPago =
     {
       efectivo: "EFECTIVO",
       transferencia: "TRANSFERENCIA",
       mix: "MIX",
-    }[ticket.medio_pago] ?? ticket.medio_pago.toUpperCase();
+    }[ticket.medio_pago] ?? ticket.medio_pago?.toUpperCase();
 
   return (
     <div
@@ -82,7 +88,7 @@ function TicketModal({ ticket, onClose }) {
         {/* Cabecera modal */}
         <div className="d-flex justify-content-between align-items-center mb-3">
           <span className="ticket-fw-bold" style={{ fontSize: 15 }}>
-            Vista previa del ticket
+            {esPresupuesto ? "Vista previa del presupuesto" : "Vista previa del ticket"}
           </span>
           <button className="btn btn-sm btn-light" onClick={onClose}>
             <X size={15} />
@@ -96,7 +102,7 @@ function TicketModal({ ticket, onClose }) {
             fontFamily: "'Courier New', monospace",
             fontSize: 11,
             background: "#fff",
-            border: "1px dashed #bbb",
+            border: `1px dashed ${esPresupuesto ? "#6366f1" : "#bbb"}`,
             borderRadius: 8,
             padding: "14px 16px",
             color: "#000",
@@ -104,13 +110,28 @@ function TicketModal({ ticket, onClose }) {
             overflowX: "auto",
           }}
         >
+          {/* Encabezado: tipo de documento */}
+          {esPresupuesto && (
+            <div style={{ textAlign: "center", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+              *** PRESUPUESTO ***
+            </div>
+          )}
+
           {/* Fecha y número */}
           <div>
             Fecha : {fecha}{"  "}Nro : {nro}
           </div>
-          <div>
-            <span style={{ marginRight: "2ch" }}>CF</span>CONSUMIDOR FINAL
-          </div>
+
+          {/* Cliente (solo en presupuesto, si existe) */}
+          {esPresupuesto && ticket.cliente_nombre && (
+            <div>Cliente: {ticket.cliente_nombre.toUpperCase()}</div>
+          )}
+
+          {!esPresupuesto && (
+            <div>
+              <span style={{ marginRight: "2ch" }}>CF</span>CONSUMIDOR FINAL
+            </div>
+          )}
 
           <div style={{ marginTop: 4 }}>{SEP}</div>
 
@@ -167,27 +188,34 @@ function TicketModal({ ticket, onClose }) {
               fontWeight: 700,
             }}
           >
-            <span>Total</span>
+            <span>TOTAL ESTIMADO</span>
             <span>{fmt(ticket.total)}</span>
           </div>
 
-          {/* Medio de pago */}
-          <div style={{ marginTop: 2, fontSize: 10 }}>
-            Pago: {labelMedioPago}
-            {ticket.medio_pago === "mix" && (
-              <span>
-                {"  "}Efectivo: ${fmt(ticket.monto_efectivo)}
-                {"  "}Transferencia: ${fmt(ticket.monto_transferencia)}
-              </span>
-            )}
-          </div>
+          {/* Medio de pago — solo en presupuesto si fue definido, siempre en venta */}
+          {(!esPresupuesto || ticket.medio_pago) && (
+            <div style={{ marginTop: 2, fontSize: 10 }}>
+              Pago: {labelMedioPago}
+              {ticket.medio_pago === "mix" && (
+                <span>
+                  {"  "}Efectivo: ${fmt(ticket.monto_efectivo)}
+                  {"  "}Transferencia: ${fmt(ticket.monto_transferencia)}
+                </span>
+              )}
+            </div>
+          )}
 
           <div style={{ marginTop: 4 }}>{SEP}</div>
 
           {/* Pie */}
           <div style={{ textAlign: "center", marginTop: 6 }}>
-            Gracias por su Visita!!
+              Gracias por su Visita!!
           </div>
+          {esPresupuesto && (
+            <div style={{ textAlign: "center", fontSize: 10, marginTop: 2 }}>
+              Ante cualquier consulta no dude en contactarnos.
+            </div>
+          )}
         </div>
         {/* ── FIN TICKET ── */}
 
@@ -203,7 +231,8 @@ function TicketModal({ ticket, onClose }) {
             className="btn btn-dark flex-fill d-flex align-items-center justify-content-center gap-2"
             onClick={handlePrint}
           >
-            <Printer size={15} /> Imprimir ticket
+            <Printer size={15} />{" "}
+            {esPresupuesto ? "Imprimir presupuesto" : "Imprimir ticket"}
           </button>
         </div>
       </div>

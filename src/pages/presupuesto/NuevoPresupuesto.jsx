@@ -1,8 +1,9 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { FileText, Plus, Save, Trash2 } from "lucide-react";
+import { FileText, Plus, Save, Printer, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
+import TicketModal from "../../components/modals/TicketModal";
 
 function NuevoPresupuesto() {
   const [productos, setProductos] = useState([]);
@@ -17,6 +18,7 @@ function NuevoPresupuesto() {
   const [medioPago, setMedioPago] = useState("efectivo");
   const [montoEfectivo, setMontoEfectivo] = useState("");
   const [montoTransferencia, setMontoTransferencia] = useState("");
+  const [ticketData, setTicketData] = useState(null);
 
   useEffect(() => {
     fetch(`http://localhost:${PORT}/productos`)
@@ -58,6 +60,18 @@ function NuevoPresupuesto() {
     setTotal(carrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0));
   }, [carrito]);
 
+  const resetForm = () => {
+    setCarrito([]);
+    setTotal(0);
+    setClienteNombre("");
+    setBusqueda("");
+    setProductoSeleccionado(null);
+    setCantidad(1);
+    setMedioPago("efectivo");
+    setMontoEfectivo("");
+    setMontoTransferencia("");
+  };
+
   const guardarPresupuesto = async () => {
     if (!clienteNombre.trim())
       return toast.warn("Ingresá el nombre del cliente");
@@ -87,15 +101,21 @@ function NuevoPresupuesto() {
       const data = await res.json();
       if (data.success) {
         toast.success(`Presupuesto de "${clienteNombre.trim()}" guardado`);
-        setCarrito([]);
-        setTotal(0);
-        setClienteNombre("");
-        setBusqueda("");
-        setProductoSeleccionado(null);
-        setCantidad(1);
-        setMedioPago("efectivo");
-        setMontoEfectivo("");
-        setMontoTransferencia("");
+
+        // Mostrar ticket de presupuesto
+        setTicketData({
+          id: data.id,
+          fecha: new Date().toISOString(),
+          cliente_nombre: clienteNombre.trim(),
+          productos: carrito,
+          total,
+          medio_pago: medioPago,
+          monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
+          monto_transferencia:
+            medioPago === "mix" ? Number(montoTransferencia) : null,
+        });
+
+        // El form se resetea cuando el usuario cierre el modal
       } else {
         toast.error(data.message || "Error al guardar el presupuesto");
       }
@@ -113,15 +133,7 @@ function NuevoPresupuesto() {
             <button
               className="btn btn-danger btn-sm"
               onClick={() => {
-                setCarrito([]);
-                setTotal(0);
-                setBusqueda("");
-                setProductoSeleccionado(null);
-                setCantidad(1);
-                setClienteNombre("");
-                setMedioPago("efectivo");
-                setMontoEfectivo("");
-                setMontoTransferencia("");
+                resetForm();
                 toast.success("Presupuesto reiniciado");
                 closeToast();
               }}
@@ -147,6 +159,17 @@ function NuevoPresupuesto() {
 
   return (
     <div>
+      {ticketData && (
+        <TicketModal
+          ticket={ticketData}
+          tipo="presupuesto"
+          onClose={() => {
+            setTicketData(null);
+            resetForm();
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="d-flex align-items-center gap-3 mb-4">
         <div
