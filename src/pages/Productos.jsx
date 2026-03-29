@@ -164,8 +164,11 @@ function Productos() {
             <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
               Productos
             </h2>
+            
             <small className="text-muted">
-              {productos.length} productos registrados
+              {productos.length} producto
+              {productos.length !== 1 ? "s" : ""} registrado
+              {productos.length !== 1 ? "s" : ""}
             </small>
           </div>
         </div>

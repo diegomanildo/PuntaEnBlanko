@@ -126,7 +126,7 @@ function FacturacionDia() {
                 fontWeight: 600,
               }}
             >
-              Ticket promedio
+              Precio de Venta promedio
             </p>
             <p
               className="text-primary fw-bold mb-0"
