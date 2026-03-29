@@ -25,8 +25,6 @@ function NuevoProducto() {
     if (!nombre) nuevosErrores.nombre = "El nombre es obligatorio";
     if (!precio) nuevosErrores.precio = "El precio es obligatorio";
     if (tieneStock && !stock) nuevosErrores.stock = "El stock es obligatorio";
-    if (!codigoBarras)
-      nuevosErrores.codigoBarras = "El código de barras es obligatorio";
 
     setErrores(nuevosErrores);
 
@@ -80,16 +78,14 @@ function NuevoProducto() {
               }
             }}
           />
-          {errores.codigoBarras && (
-            <div className="invalid-feedback">{errores.codigoBarras}</div>
+          {codigoBarras === "" && (
+            <small
+              style={{ fontSize: "12px" }}
+              className="d-block mt-1 text-danger"
+            >
+              ⚠️ IMPORTANTE! Si no se carga el código de barras, el producto no se podrá escanear.
+            </small>
           )}
-          <small
-            style={{ fontSize: "12px" }}
-            className="d-block mt-1 text-danger"
-          >
-            ⚠️ IMPORTANTE! Debe cargar el codigo de barras para ingresar un
-            nuevo producto!
-          </small>
         </div>
         <div className="mb-3">
           <label>Nombre</label>

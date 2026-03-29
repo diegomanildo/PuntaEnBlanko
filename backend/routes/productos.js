@@ -100,7 +100,7 @@ router.get("/:id", (req, res) => {
 router.post("/", (req, res) => {
   const { nombre, precio, stock, tiene_stock, codigo_barras } = req.body;
 
-  if (!nombre || !precio || (tiene_stock && !stock) || !codigo_barras) {
+  if (!nombre || !precio || (tiene_stock && !stock)) {
     return res
       .status(400)
       .json({ message: "Todos los campos son obligatorios" });

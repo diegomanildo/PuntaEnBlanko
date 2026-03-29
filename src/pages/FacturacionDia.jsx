@@ -49,7 +49,6 @@ function FacturacionDia() {
   const ticketPromedio =
     ventas.length > 0 ? Math.round(total / ventas.length) : 0;
 
-  console.log(backDir);
   return (
     <div>
       <BackButton dir={backDir} />

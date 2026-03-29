@@ -74,13 +74,14 @@ function EditarProducto() {
             onChange={(e) => setCodigoBarras(e.target.value)}
             autoFocus
           />
-          <small
-            style={{ fontSize: "12px" }}
-            className="d-block mt-1 text-danger"
-          >
-            ⚠️ IMPORTANTE! Debe cargar el codigo de barras para ingresar un
-            nuevo producto!
-          </small>
+          {codigoBarras === "" && (
+            <small
+              style={{ fontSize: "12px" }}
+              className="d-block mt-1 text-danger"
+            >
+              ⚠️ IMPORTANTE! Si no se carga el código de barras, el producto no se podrá escanear.
+            </small>
+          )}
         </div>
 
         <div className="mb-3">

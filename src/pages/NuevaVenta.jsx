@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { ShoppingCart, Plus, Trash2 } from "lucide-react";
+import { ShoppingCart, Plus, Trash2, Pencil, Check, X } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
@@ -22,17 +22,40 @@ function NuevaVenta() {
   const barcodeBufferRef = useRef("");
   const barcodeTimerRef = useRef(null);
 
+  // ── Estados para edición de precios ──────────────────────────────────────
+  // Solo guarda QUÉ se edita; el valor se lee directo del DOM via ref
+  const [editandoPrecio, setEditandoPrecio] = useState(null); // { index, campo }
+  const [editandoTotal, setEditandoTotal] = useState(false);
+  const inputPrecioRef = useRef(null);
+  const inputTotalRef = useRef(null);
+
+  // Focus automático al abrir edición
+  useEffect(() => {
+    if (editandoPrecio !== null && inputPrecioRef.current) {
+      inputPrecioRef.current.focus();
+      inputPrecioRef.current.select();
+    }
+  }, [editandoPrecio]);
+
+  useEffect(() => {
+    if (editandoTotal && inputTotalRef.current) {
+      inputTotalRef.current.focus();
+      inputTotalRef.current.select();
+    }
+  }, [editandoTotal]);
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Si el foco está en un input o textarea, no interceptar (edición de precios, búsqueda, etc.)
+      const tag = document.activeElement?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+
       if (e.key === "Enter") {
         const codigo = barcodeBufferRef.current.trim();
         barcodeBufferRef.current = "";
         clearTimeout(barcodeTimerRef.current);
 
-        // Si el buffer tiene menos de 3 chars, probablemente no es un escáner
         if (codigo.length < 3) return;
 
-        // ✅ Evitar que el Enter llegue al input
         e.preventDefault();
 
         const producto = productos.find((p) => p.codigo_barras === codigo);
@@ -64,14 +87,13 @@ function NuevaVenta() {
               id: producto.id,
               nombre: producto.nombre,
               precio: producto.precio,
+              precioOriginal: producto.precio,
               cantidad: 1,
             },
           ]);
         }
 
         toast.success(`"${producto.nombre}" agregado`);
-
-        // ✅ Limpiar el input de búsqueda por si el escáner escribió ahí
         setBusqueda("");
         setMostrarLista(false);
       } else if (e.key.length === 1) {
@@ -87,7 +109,6 @@ function NuevaVenta() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [productos, carrito]);
 
-  // Estado del ticket para el modal
   const [ticketData, setTicketData] = useState(null);
 
   useEffect(() => {
@@ -121,7 +142,6 @@ function NuevaVenta() {
         );
     }
 
-    // ✅ Verificar si ya está en el carrito
     const yaEnCarrito = carrito.findIndex(
       (p) => p.id === productoSeleccionado.id,
     );
@@ -146,6 +166,7 @@ function NuevaVenta() {
           id: productoSeleccionado.id,
           nombre: productoSeleccionado.nombre,
           precio: productoSeleccionado.precio,
+          precioOriginal: productoSeleccionado.precio,
           cantidad: Number(cantidad),
         },
       ]);
@@ -159,6 +180,86 @@ function NuevaVenta() {
   useEffect(() => {
     setTotal(carrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0));
   }, [carrito]);
+
+  // ── Handlers de edición de precio por producto ────────────────────────────
+
+  const iniciarEditPrecio = (index, campo) => {
+    setEditandoPrecio({ index, campo });
+  };
+
+  const confirmarEditPrecio = () => {
+    if (!editandoPrecio || !inputPrecioRef.current) return;
+    const { index, campo } = editandoPrecio;
+    // Leer el valor DIRECTO del DOM — sin closures stale
+    const num = parseFloat(inputPrecioRef.current.value);
+
+    if (isNaN(num) || num < 0) {
+      toast.error("Ingresá un precio válido");
+      setEditandoPrecio(null);
+      return;
+    }
+
+    const nuevoCarrito = carrito.map((p, i) => {
+      if (i !== index) return p;
+      if (campo === "precio") return { ...p, precio: num };
+      // subtotal → recalcular precio unitario
+      return { ...p, precio: Math.round((num / p.cantidad) * 100) / 100 };
+    });
+    setCarrito(nuevoCarrito);
+    setEditandoPrecio(null);
+    toast.success("Precio actualizado");
+  };
+
+  const cancelarEditPrecio = () => setEditandoPrecio(null);
+
+  const handleKeyEditPrecio = (e) => {
+    if (e.key === "Enter") { e.preventDefault(); confirmarEditPrecio(); }
+    if (e.key === "Escape") cancelarEditPrecio();
+  };
+
+  // ── Handlers de edición de total ─────────────────────────────────────────
+
+  const iniciarEditTotal = () => {
+    if (carrito.length === 0) return;
+    setEditandoTotal(true);
+  };
+
+  const confirmarEditTotal = () => {
+    if (!inputTotalRef.current) return;
+    // Leer el valor DIRECTO del DOM — sin closures stale
+    const num = parseFloat(inputTotalRef.current.value);
+
+    if (isNaN(num) || num < 0) {
+      toast.error("Ingresá un total válido");
+      setEditandoTotal(false);
+      return;
+    }
+
+    const factor = total === 0 ? 0 : num / total;
+    const totalUnids = carrito.reduce((acc, p) => acc + p.cantidad, 0);
+
+    setCarrito(
+      carrito.map((p) => ({
+        ...p,
+        precio:
+          total === 0
+            ? Math.round((num / totalUnids) * 100) / 100
+            : Math.round(p.precio * factor * 100) / 100,
+      })),
+    );
+
+    setEditandoTotal(false);
+    toast.success("Total actualizado y precios redistribuidos");
+  };
+
+  const cancelarEditTotal = () => setEditandoTotal(false);
+
+  const handleKeyEditTotal = (e) => {
+    if (e.key === "Enter") { e.preventDefault(); confirmarEditTotal(); }
+    if (e.key === "Escape") cancelarEditTotal();
+  };
+
+  // ── Venta ─────────────────────────────────────────────────────────────────
 
   const finalizarVenta = async () => {
     if (carrito.length === 0) return toast.warn("No hay productos en la venta");
@@ -218,6 +319,8 @@ function NuevaVenta() {
                 setBusqueda("");
                 setProductoSeleccionado(null);
                 setCantidad(1);
+                setEditandoPrecio(null);
+                setEditandoTotal(false);
                 toast.success("Venta reiniciada");
                 closeToast();
               }}
@@ -235,15 +338,19 @@ function NuevaVenta() {
   };
 
   const removerProducto = (index, name) => {
+    if (editandoPrecio?.index === index) setEditandoPrecio(null);
     setCarrito(carrito.filter((_, i) => i !== index));
     toast.success(`Producto eliminado del carrito: ${name}`);
   };
 
   const totalUnidades = carrito.reduce((acc, p) => acc + p.cantidad, 0);
 
+  // ── Helper: ¿el precio fue modificado? ───────────────────────────────────
+  const precioModificado = (item) =>
+    item.precioOriginal !== undefined && item.precio !== item.precioOriginal;
+
   return (
     <div>
-      {/* Modal de ticket — se muestra tras venta exitosa */}
       {ticketData && (
         <TicketModal
           ticket={ticketData}
@@ -258,7 +365,6 @@ function NuevaVenta() {
         />
       )}
 
-      {/* Header */}
       <BackButton dir="/" />
       <div className="d-flex align-items-center gap-3 mb-4">
         <div
@@ -414,40 +520,150 @@ function NuevaVenta() {
                         <tr>
                           <th>Producto</th>
                           <th className="text-center">Cant.</th>
-                          <th className="text-end">Precio</th>
+                          {/* Precio unitario */}
+                          <th className="text-end">
+                            Precio{" "}
+                            <span
+                              className="text-muted"
+                              style={{ fontSize: 10, fontWeight: 400 }}
+                            >
+                              (u.)
+                            </span>
+                          </th>
+                          {/* Subtotal */}
                           <th className="text-end">Subtotal</th>
                           <th></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {carrito.map((p, i) => (
-                          <tr key={i}>
-                            <td className="fw-semibold">{p.nombre}</td>
-                            <td className="text-center">
-                              <span className="badge bg-secondary">
-                                {p.cantidad}
-                              </span>
-                            </td>
-                            <td
-                              className="text-end text-muted"
-                              style={{ fontSize: 13 }}
-                            >
-                              ${p.precio.toLocaleString("es-AR")}
-                            </td>
-                            <td className="text-end fw-semibold">
-                              ${(p.precio * p.cantidad).toLocaleString("es-AR")}
-                            </td>
-                            <td className="text-center">
-                              <button
-                                className="btn btn-sm btn-danger d-flex align-items-center"
-                                style={{ padding: "3px 7px" }}
-                                onClick={() => removerProducto(i, p.nombre)}
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                        {carrito.map((p, i) => {
+                          const editandoEsteItemPrecio =
+                            editandoPrecio?.index === i &&
+                            editandoPrecio?.campo === "precio";
+                          const editandoEsteItemSubtotal =
+                            editandoPrecio?.index === i &&
+                            editandoPrecio?.campo === "subtotal";
+
+                          return (
+                            <tr key={i}>
+                              <td className="fw-semibold" style={{ verticalAlign: "middle" }}>
+                                {p.nombre}
+                                {precioModificado(p) && (
+                                  <span
+                                    className="badge bg-warning text-dark ms-1"
+                                    style={{ fontSize: 9, verticalAlign: "middle" }}
+                                    title={`Precio original: $${p.precioOriginal?.toLocaleString("es-AR")}`}
+                                  >
+                                    modificado
+                                  </span>
+                                )}
+                              </td>
+                              <td className="text-center" style={{ verticalAlign: "middle" }}>
+                                <span className="badge bg-secondary">
+                                  {p.cantidad}
+                                </span>
+                              </td>
+
+                              {/* ── Precio unitario editable ── */}
+                              <td className="text-end" style={{ verticalAlign: "middle", minWidth: 110 }}>
+                                {editandoEsteItemPrecio ? (
+                                  <div className="d-flex align-items-center justify-content-end gap-1">
+                                    <span className="text-muted" style={{ fontSize: 12 }}>$</span>
+                                    <input
+                                      ref={inputPrecioRef}
+                                      type="number"
+                                      className="form-control form-control-sm text-end"
+                                      style={{ width: 80, fontSize: 13 }}
+                                      defaultValue={p.precio}
+                                      min={0}
+                                      onKeyDown={handleKeyEditPrecio}
+                                    />
+                                    <button
+                                      className="btn btn-sm btn-success p-1"
+                                      style={{ lineHeight: 1 }}
+                                      onClick={confirmarEditPrecio}
+                                      title="Confirmar"
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-outline-secondary p-1"
+                                      style={{ lineHeight: 1 }}
+                                      onClick={cancelarEditPrecio}
+                                      title="Cancelar"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    className="btn btn-link btn-sm p-0 text-muted d-inline-flex align-items-center gap-1"
+                                    style={{ fontSize: 13, textDecoration: "none" }}
+                                    onClick={() => iniciarEditPrecio(i, "precio")}
+                                    title="Editar precio unitario"
+                                  >
+                                    ${p.precio.toLocaleString("es-AR")}
+                                    <Pencil size={11} className="opacity-50" />
+                                  </button>
+                                )}
+                              </td>
+
+                              {/* ── Subtotal editable ── */}
+                              <td className="text-end fw-semibold" style={{ verticalAlign: "middle", minWidth: 110 }}>
+                                {editandoEsteItemSubtotal ? (
+                                  <div className="d-flex align-items-center justify-content-end gap-1">
+                                    <span className="text-muted" style={{ fontSize: 12 }}>$</span>
+                                    <input
+                                      ref={inputPrecioRef}
+                                      type="number"
+                                      className="form-control form-control-sm text-end"
+                                      style={{ width: 80, fontSize: 13 }}
+                                      defaultValue={p.precio * p.cantidad}
+                                      min={0}
+                                      onKeyDown={handleKeyEditPrecio}
+                                    />
+                                    <button
+                                      className="btn btn-sm btn-success p-1"
+                                      style={{ lineHeight: 1 }}
+                                      onClick={confirmarEditPrecio}
+                                      title="Confirmar"
+                                    >
+                                      <Check size={12} />
+                                    </button>
+                                    <button
+                                      className="btn btn-sm btn-outline-secondary p-1"
+                                      style={{ lineHeight: 1 }}
+                                      onClick={cancelarEditPrecio}
+                                      title="Cancelar"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button
+                                    className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1"
+                                    style={{ fontSize: 13, textDecoration: "none", color: "inherit" }}
+                                    onClick={() => iniciarEditPrecio(i, "subtotal")}
+                                    title="Editar subtotal"
+                                  >
+                                    ${(p.precio * p.cantidad).toLocaleString("es-AR")}
+                                    <Pencil size={11} className="opacity-50" />
+                                  </button>
+                                )}
+                              </td>
+
+                              <td className="text-center" style={{ verticalAlign: "middle" }}>
+                                <button
+                                  className="btn btn-sm btn-danger d-flex align-items-center"
+                                  style={{ padding: "3px 7px" }}
+                                  onClick={() => removerProducto(i, p.nombre)}
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -557,6 +773,7 @@ function NuevaVenta() {
                       </div>
                     )}
 
+                    {/* ── Total editable ── */}
                     <div className="d-flex justify-content-between align-items-end mb-3">
                       <small className="text-muted">
                         {carrito.length} producto
@@ -574,12 +791,71 @@ function NuevaVenta() {
                         >
                           Total
                         </div>
-                        <div
-                          className="text-success fw-bold"
-                          style={{ fontSize: "1.6rem", lineHeight: 1.1 }}
-                        >
-                          ${total.toLocaleString("es-AR")}
-                        </div>
+
+                        {editandoTotal ? (
+                          <div className="d-flex align-items-center gap-1 justify-content-end">
+                            <span
+                              className="fw-bold text-success"
+                              style={{ fontSize: "1.3rem" }}
+                            >
+                              $
+                            </span>
+                            <input
+                              ref={inputTotalRef}
+                              type="number"
+                              className="form-control form-control-sm text-end fw-bold"
+                              style={{
+                                width: 110,
+                                fontSize: "1.2rem",
+                                color: "var(--bs-success)",
+                                borderColor: "var(--bs-success)",
+                              }}
+                              defaultValue={total}
+                              min={0}
+                              onKeyDown={handleKeyEditTotal}
+                            />
+                            <div className="d-flex flex-column gap-1">
+                              <button
+                                className="btn btn-sm btn-success p-1"
+                                style={{ lineHeight: 1 }}
+                                onClick={confirmarEditTotal}
+                                title="Confirmar total"
+                              >
+                                <Check size={13} />
+                              </button>
+                              <button
+                                className="btn btn-sm btn-outline-secondary p-1"
+                                style={{ lineHeight: 1 }}
+                                onClick={cancelarEditTotal}
+                                title="Cancelar"
+                              >
+                                <X size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            className="btn btn-link p-0 d-inline-flex align-items-center gap-2"
+                            style={{ textDecoration: "none" }}
+                            onClick={iniciarEditTotal}
+                            title="Editar total"
+                          >
+                            <span
+                              className="text-success fw-bold"
+                              style={{ fontSize: "1.6rem", lineHeight: 1.1 }}
+                            >
+                              ${total.toLocaleString("es-AR")}
+                            </span>
+                            <Pencil size={14} className="text-muted opacity-75" />
+                          </button>
+                        )}
+
+                        {/* Aviso si el total fue modificado manualmente */}
+                        {carrito.some(precioModificado) && (
+                          <div style={{ fontSize: 10 }} className="text-warning mt-1">
+                            ⚠ Precios personalizados activos
+                          </div>
+                        )}
                       </div>
                     </div>
 

@@ -121,7 +121,7 @@ function Productos() {
   const stockColor = (stock) => {
     if (stock === 0) return "text-danger fw-bold";
     if (stock <= stockAlerta) return "text-warning fw-bold";
-    return "text-success fw-bold";
+    return "fw-bold";
   };
 
   if (productos.length === 0) {
