@@ -177,7 +177,10 @@ function NuevaVenta() {
     setCantidad(1);
   };
 
+  const totalManualRef = useRef(false);
+
   useEffect(() => {
+    if (totalManualRef.current) return; // total fue editado manualmente, no recalcular
     setTotal(carrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0));
   }, [carrito]);
 
@@ -226,7 +229,6 @@ function NuevaVenta() {
 
   const confirmarEditTotal = () => {
     if (!inputTotalRef.current) return;
-    // Leer el valor DIRECTO del DOM — sin closures stale
     const num = parseFloat(inputTotalRef.current.value);
 
     if (isNaN(num) || num < 0) {
@@ -235,21 +237,10 @@ function NuevaVenta() {
       return;
     }
 
-    const factor = total === 0 ? 0 : num / total;
-    const totalUnids = carrito.reduce((acc, p) => acc + p.cantidad, 0);
-
-    setCarrito(
-      carrito.map((p) => ({
-        ...p,
-        precio:
-          total === 0
-            ? Math.round((num / totalUnids) * 100) / 100
-            : Math.round(p.precio * factor * 100) / 100,
-      })),
-    );
-
+    setTotal(num);
+    totalManualRef.current = true;
     setEditandoTotal(false);
-    toast.success("Total actualizado y precios redistribuidos");
+    toast.success("Total actualizado");
   };
 
   const cancelarEditTotal = () => setEditandoTotal(false);
@@ -316,6 +307,7 @@ function NuevaVenta() {
               onClick={() => {
                 setCarrito([]);
                 setTotal(0);
+                totalManualRef.current = false;
                 setBusqueda("");
                 setProductoSeleccionado(null);
                 setCantidad(1);
@@ -358,6 +350,7 @@ function NuevaVenta() {
             setTicketData(null);
             setCarrito([]);
             setTotal(0);
+            totalManualRef.current = false;
             setMedioPago("efectivo");
             setMontoEfectivo("");
             setMontoTransferencia("");

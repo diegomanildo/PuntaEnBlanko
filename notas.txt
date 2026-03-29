@@ -4,7 +4,7 @@
 - Agregar opción efectivo o transferencia, o mix ✅
 - Presupuesto (parecido a venta) VENTA ✅
 - Presupuesto: Imprimir ticket al cargar el presupuessto, luego, al vender, no ✅
-- Editar precio al momento de venta (No descuento)
+- Editar precio al momento de venta (No descuento) ✅
 - Jaboneria Color Verde
 - Eliminar ventas (Nota de credito)
 - Cargar clientes junto a su compra (Razon social, domicilio, localidad, cuit, telefono)
