@@ -1,5 +1,13 @@
+/* eslint-disable no-unused-vars */
 import express from "express";
 import db from "../db.js";
+
+const capitalizarNombre = (str) =>
+  str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 
 const router = express.Router();
 
@@ -106,9 +114,17 @@ router.post("/", (req, res) => {
       .json({ message: "Todos los campos son obligatorios" });
   }
 
+  const nombreFormateado = capitalizarNombre(nombre);
+
   db.query(
     "INSERT INTO productos(nombre, precio, stock, tiene_stock, codigo_barras) VALUES(?, ?, ?, ?, ?)",
-    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0, codigo_barras],
+    [
+      nombreFormateado,
+      precio,
+      tiene_stock ? stock : 0,
+      tiene_stock ? 1 : 0,
+      codigo_barras,
+    ],
     (err, result) => {
       if (err) {
         return res.status(500).json(err);
@@ -124,9 +140,24 @@ router.put("/:id", (req, res) => {
   const { id } = req.params;
   const { nombre, precio, stock, tiene_stock, codigo_barras } = req.body;
 
+  if (!nombre || !precio || (tiene_stock && !stock)) {
+    return res
+      .status(400)
+      .json({ message: "Todos los campos son obligatorios" });
+  }
+  
+  const nombreFormateado = capitalizarNombre(nombre);
+
   db.query(
     "UPDATE productos SET nombre=?, precio=?, stock=?, tiene_stock=?, codigo_barras=? WHERE id=?",
-    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0, codigo_barras, id],
+    [
+      nombreFormateado,
+      precio,
+      tiene_stock ? stock : 0,
+      tiene_stock ? 1 : 0,
+      codigo_barras,
+      id,
+    ],
     (err, result) => {
       if (err) {
         res.status(500).json(err);
@@ -142,8 +173,9 @@ router.put("/:id", (req, res) => {
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
   db.query("SELECT nombre FROM productos WHERE id = ?", [id], (err, result) => {
-    if (err || result.length === 0) return res.status(404).json({ message: "Producto no encontrado" });
-    
+    if (err || result.length === 0)
+      return res.status(404).json({ message: "Producto no encontrado" });
+
     const nombre = result[0].nombre;
     db.query("DELETE FROM productos WHERE id = ?", [id], (err) => {
       if (err) return res.status(500).json(err);
@@ -160,9 +192,10 @@ router.get("/barcode/:codigo", (req, res) => {
     [codigo],
     (err, result) => {
       if (err) return res.status(500).json(err);
-      if (result.length === 0) return res.status(404).json({ message: "Producto no encontrado" });
+      if (result.length === 0)
+        return res.status(404).json({ message: "Producto no encontrado" });
       res.json(result[0]);
-    }
+    },
   );
 });
 
