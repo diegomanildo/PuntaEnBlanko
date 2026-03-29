@@ -3,6 +3,7 @@ import { ShoppingCart, Plus, Trash2 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
+import BackButton from "../components/UI/BackButton";
 import TicketModal from "../components/modals/TicketModal";
 
 // ── Componente principal ──────────────────────────────────────────────────────
@@ -18,6 +19,73 @@ function NuevaVenta() {
   const [medioPago, setMedioPago] = useState("efectivo");
   const [montoEfectivo, setMontoEfectivo] = useState("");
   const [montoTransferencia, setMontoTransferencia] = useState("");
+  const barcodeBufferRef = useRef("");
+  const barcodeTimerRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") {
+        const codigo = barcodeBufferRef.current.trim();
+        barcodeBufferRef.current = "";
+        clearTimeout(barcodeTimerRef.current);
+
+        // Si el buffer tiene menos de 3 chars, probablemente no es un escáner
+        if (codigo.length < 3) return;
+
+        // ✅ Evitar que el Enter llegue al input
+        e.preventDefault();
+
+        const producto = productos.find((p) => p.codigo_barras === codigo);
+
+        if (!producto) {
+          toast.error(`Producto con código "${codigo}" no encontrado`);
+          return;
+        }
+
+        if (producto.tiene_stock !== 0 && producto.stock === 0) {
+          toast.error(`"${producto.nombre}" no tiene stock`);
+          return;
+        }
+
+        const yaEnCarrito = carrito.findIndex((p) => p.id === producto.id);
+        if (yaEnCarrito !== -1) {
+          const nuevaCantidad = carrito[yaEnCarrito].cantidad + 1;
+          if (producto.tiene_stock !== 0 && nuevaCantidad > producto.stock) {
+            toast.warning(`Solo hay ${producto.stock} unidades disponibles`);
+            return;
+          }
+          const nuevoCarrito = [...carrito];
+          nuevoCarrito[yaEnCarrito].cantidad = nuevaCantidad;
+          setCarrito(nuevoCarrito);
+        } else {
+          setCarrito((prev) => [
+            ...prev,
+            {
+              id: producto.id,
+              nombre: producto.nombre,
+              precio: producto.precio,
+              cantidad: 1,
+            },
+          ]);
+        }
+
+        toast.success(`"${producto.nombre}" agregado`);
+
+        // ✅ Limpiar el input de búsqueda por si el escáner escribió ahí
+        setBusqueda("");
+        setMostrarLista(false);
+      } else if (e.key.length === 1) {
+        barcodeBufferRef.current += e.key;
+        clearTimeout(barcodeTimerRef.current);
+        barcodeTimerRef.current = setTimeout(() => {
+          barcodeBufferRef.current = "";
+        }, 100);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [productos, carrito]);
 
   // Estado del ticket para el modal
   const [ticketData, setTicketData] = useState(null);
@@ -53,15 +121,36 @@ function NuevaVenta() {
         );
     }
 
-    setCarrito([
-      ...carrito,
-      {
-        id: productoSeleccionado.id,
-        nombre: productoSeleccionado.nombre,
-        precio: productoSeleccionado.precio,
-        cantidad,
-      },
-    ]);
+    // ✅ Verificar si ya está en el carrito
+    const yaEnCarrito = carrito.findIndex(
+      (p) => p.id === productoSeleccionado.id,
+    );
+
+    if (yaEnCarrito !== -1) {
+      const nuevaCantidad = carrito[yaEnCarrito].cantidad + Number(cantidad);
+      if (
+        productoSeleccionado.tiene_stock !== 0 &&
+        nuevaCantidad > productoSeleccionado.stock
+      ) {
+        return toast.warning(
+          `Solo hay ${productoSeleccionado.stock} unidades disponibles (ya tenés ${carrito[yaEnCarrito].cantidad} en el carrito)`,
+        );
+      }
+      const nuevoCarrito = [...carrito];
+      nuevoCarrito[yaEnCarrito].cantidad = nuevaCantidad;
+      setCarrito(nuevoCarrito);
+    } else {
+      setCarrito([
+        ...carrito,
+        {
+          id: productoSeleccionado.id,
+          nombre: productoSeleccionado.nombre,
+          precio: productoSeleccionado.precio,
+          cantidad: Number(cantidad),
+        },
+      ]);
+    }
+
     setBusqueda("");
     setProductoSeleccionado(null);
     setCantidad(1);
@@ -170,6 +259,7 @@ function NuevaVenta() {
       )}
 
       {/* Header */}
+      <BackButton dir="/" />
       <div className="d-flex align-items-center gap-3 mb-4">
         <div
           className="d-flex align-items-center justify-content-center rounded-3 bg-success bg-opacity-10"

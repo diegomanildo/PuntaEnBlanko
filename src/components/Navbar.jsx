@@ -22,7 +22,7 @@ const navLinks = [
   { to: "/ventas/nueva", icon: ShoppingCart, label: "Nueva Venta" },
   { to: "/presupuestos", icon: ClipboardList, label: "Presupuestos" },
   { to: "/productos", icon: Package, label: "Productos" },
-  { to: `/facturacion/${fechaHoy()}`, icon: Receipt, label: "Hoy" },
+  { to: `/facturacion/${fechaHoy()}`, icon: Receipt, label: "Hoy", state: { backDir: "/" } },
   { to: "/facturacion/mes", icon: TrendingUp, label: "Este mes" },
 ];
 
@@ -53,7 +53,7 @@ function Navbar({ toggleTheme, theme }) {
         {/* Links */}
         <div className="navbar-nav d-flex flex-row align-items-center flex-wrap" style={{ gap: "2px", flex: 1 }}>
           {/* eslint-disable-next-line no-unused-vars */}
-          {navLinks.map(({ to, icon: Icon, label }) => {
+          {navLinks.map(({ to, icon: Icon, label, state }) => {
             const isActive =
               location.pathname === to ||
               (to !== "/" && location.pathname.startsWith(to));
@@ -61,6 +61,7 @@ function Navbar({ toggleTheme, theme }) {
               <Link
                 key={to}
                 to={to}
+                state={state}
                 className="nav-link d-flex align-items-center"
                 style={{
                   gap: "6px",

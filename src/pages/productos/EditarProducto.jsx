@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Package, Save } from "lucide-react";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
+import BackButton from "../../components/UI/BackButton";
 
 function EditarProducto() {
   const { id } = useParams();
@@ -12,6 +13,7 @@ function EditarProducto() {
   const [precio, setPrecio] = useState("");
   const [stock, setStock] = useState("");
   const [tieneStock, setTieneStock] = useState(true);
+  const [codigoBarras, setCodigoBarras] = useState("");
 
   useEffect(() => {
     const cargarProducto = async () => {
@@ -22,6 +24,7 @@ function EditarProducto() {
       setPrecio(data.precio);
       setStock(data.stock);
       setTieneStock(data.tiene_stock === 1);
+      setCodigoBarras(data.codigo_barras);
     };
 
     cargarProducto();
@@ -32,7 +35,13 @@ function EditarProducto() {
       const res = await fetch(`http://localhost:${PORT}/productos/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, precio, stock, tiene_stock: tieneStock }),
+        body: JSON.stringify({
+          nombre,
+          precio,
+          stock,
+          tiene_stock: tieneStock,
+          codigo_barras: codigoBarras,
+        }),
       });
 
       const data = await res.json();
@@ -50,6 +59,7 @@ function EditarProducto() {
 
   return (
     <div className="container">
+      <BackButton dir="/productos" />
       <h2 className="d-flex align-items-center gap-2 mb-4">
         <Package />
         Editar producto
@@ -57,13 +67,36 @@ function EditarProducto() {
 
       <div className="card p-4">
         <div className="mb-3">
+          <label className="form-label">Codigo de barras</label>
+          <input
+            className="form-control"
+            value={codigoBarras}
+            onChange={(e) => setCodigoBarras(e.target.value)}
+            autoFocus
+          />
+          <small
+            style={{ fontSize: "12px" }}
+            className="d-block mt-1 text-danger"
+          >
+            ⚠️ IMPORTANTE! Debe cargar el codigo de barras para ingresar un
+            nuevo producto!
+          </small>
+        </div>
+
+        <div className="mb-3">
           <label className="form-label">Nombre</label>
           <input
             className="form-control"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            autoFocus
           />
+          <small
+            style={{ fontSize: "12px" }}
+            className="text-muted d-block mt-1"
+          >
+            ⚠️ Los acentos y la letra ñ no funcionan correctamente apareceran
+            como "?"
+          </small>
         </div>
 
         <div className="mb-3">
@@ -113,13 +146,6 @@ function EditarProducto() {
         )}
 
         <div className="d-flex gap-3">
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/productos")}
-          >
-            <ArrowLeft size={18} /> Volver
-          </button>
-
           <button className="btn btn-success" onClick={actualizarProducto}>
             <Save size={18} /> Guardar
           </button>

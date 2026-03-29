@@ -1,10 +1,4 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  useNavigate,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Productos from "./pages/Productos";
@@ -13,7 +7,6 @@ import NuevoProducto from "./pages/productos/NuevoProducto";
 import EditarProducto from "./pages/productos/EditarProducto";
 import { useEffect, useState } from "react";
 import { ToastContainer } from "react-toastify";
-import BackButton from "./components/UI/BackButton";
 import FacturacionDia from "./pages/FacturacionDia";
 import FacturacionMes from "./pages/FacturacionMes";
 import NuevoPresupuesto from "./pages/presupuesto/NuevoPresupuesto";
@@ -37,15 +30,17 @@ function App() {
       <Navbar toggleTheme={toggleTheme} theme={theme} />
 
       <div className="container mt-4">
-        <BackButton />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/ventas/nueva" element={<NuevaVenta />} />
-          
+
           <Route path="/presupuestos" element={<Presupuestos />} />
           <Route path="/presupuestos/nuevo" element={<NuevoPresupuesto />} />
-          <Route path="/presupuestos/editar/:id" element={<EditarPresupuesto />} />
-          
+          <Route
+            path="/presupuestos/editar/:id"
+            element={<EditarPresupuesto />}
+          />
+
           <Route path="/facturacion/:fecha" element={<FacturacionDia />} />
           <Route path="/facturacion/mes" element={<FacturacionMes />} />
 

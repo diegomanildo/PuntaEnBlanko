@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Save, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
+import BackButton from "../../components/UI/BackButton";
 
 function NuevoProducto() {
   const navigate = useNavigate();
@@ -12,12 +13,20 @@ function NuevoProducto() {
   const [stock, setStock] = useState("");
   const [tieneStock, setTieneStock] = useState(true);
   const [errores, setErrores] = useState({});
+  const [codigoBarras, setCodigoBarras] = useState("");
+  const codigoRef = useRef(null);
+
+  useEffect(() => {
+    codigoRef.current?.focus(); // foco inicial en el campo de escaneo
+  }, []);
 
   const guardarProducto = async () => {
     const nuevosErrores = {};
     if (!nombre) nuevosErrores.nombre = "El nombre es obligatorio";
     if (!precio) nuevosErrores.precio = "El precio es obligatorio";
     if (tieneStock && !stock) nuevosErrores.stock = "El stock es obligatorio";
+    if (!codigoBarras)
+      nuevosErrores.codigoBarras = "El código de barras es obligatorio";
 
     setErrores(nuevosErrores);
 
@@ -28,7 +37,13 @@ function NuevoProducto() {
       const res = await fetch(`http://localhost:${PORT}/productos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, precio, stock, tiene_stock: tieneStock }),
+        body: JSON.stringify({
+          nombre,
+          precio,
+          stock,
+          tiene_stock: tieneStock,
+          codigo_barras: codigoBarras,
+        }),
       });
 
       const data = await res.json();
@@ -42,9 +57,40 @@ function NuevoProducto() {
 
   return (
     <div className="container">
+      <BackButton dir="/productos" />
+
       <h2 className="mb-4">Nuevo Producto</h2>
 
       <div className="card p-4">
+        <div className="mb-3">
+          <label>Codigo de barras</label>
+          <input
+            ref={codigoRef}
+            className={`form-control ${errores.codigoBarras ? "is-invalid" : ""}`}
+            value={codigoBarras}
+            onChange={(e) => {
+              setCodigoBarras(e.target.value);
+              if (errores.codigoBarras) {
+                setErrores((prev) => ({ ...prev, codigoBarras: null }));
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault(); // 👈 bloquea el Enter del escáner
+              }
+            }}
+          />
+          {errores.codigoBarras && (
+            <div className="invalid-feedback">{errores.codigoBarras}</div>
+          )}
+          <small
+            style={{ fontSize: "12px" }}
+            className="d-block mt-1 text-danger"
+          >
+            ⚠️ IMPORTANTE! Debe cargar el codigo de barras para ingresar un
+            nuevo producto!
+          </small>
+        </div>
         <div className="mb-3">
           <label>Nombre</label>
           <input
@@ -57,6 +103,9 @@ function NuevoProducto() {
               }
             }}
           />
+          {errores.nombre && (
+            <div className="invalid-feedback">{errores.nombre}</div>
+          )}
           <small
             style={{ fontSize: "12px" }}
             className="text-muted d-block mt-1"
@@ -64,9 +113,6 @@ function NuevoProducto() {
             ⚠️ Los acentos y la letra ñ no funcionan correctamente apareceran
             como "?"
           </small>
-          {errores.nombre && (
-            <div className="invalid-feedback">{errores.nombre}</div>
-          )}
         </div>
 
         <div className="mb-3">
@@ -129,13 +175,6 @@ function NuevoProducto() {
         )}
 
         <div className="d-flex gap-3">
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigate("/productos")}
-          >
-            <ArrowLeft size={18} /> Volver
-          </button>
-
           <button className="btn btn-success" onClick={guardarProducto}>
             <Save size={18} /> Guardar
           </button>

@@ -60,6 +60,7 @@ function Home() {
       to: `/facturacion/${fechaHoy()}`,
       icon: <Receipt size={22} />,
       label: "Facturación del día",
+      state: { backDir: "/" },
       sub: "Resumen de ventas de hoy",
       iconBg: "bg-warning bg-opacity-10",
       iconColor: "text-warning",
@@ -168,10 +169,11 @@ function Home() {
         }}
       >
         {navItems.map(
-          ({ to, icon, label, sub, iconBg, iconColor, iconStyle }, index) => (
+          ({ to, icon, label, sub, iconBg, iconColor, iconStyle, state }, index) => (
             <Link
               key={to}
               to={to}
+              state={state}
               className="card text-decoration-none d-flex flex-row align-items-center gap-3 p-3"
               style={{
                 borderRadius: "12px",

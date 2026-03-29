@@ -51,7 +51,6 @@ router.put("/config", (req, res) => {
 });
 
 // GET /productos/stock-bajo
-// GET /productos/stock-bajo
 router.get("/stock-bajo", (req, res) => {
   db.query(
     "SELECT stock_alerta FROM configuracion WHERE id = 1",
@@ -99,17 +98,17 @@ router.get("/:id", (req, res) => {
 
 // POST /productos
 router.post("/", (req, res) => {
-  const { nombre, precio, stock, tiene_stock } = req.body;
+  const { nombre, precio, stock, tiene_stock, codigo_barras } = req.body;
 
-  if (!nombre || !precio) {
+  if (!nombre || !precio || (tiene_stock && !stock) || !codigo_barras) {
     return res
       .status(400)
       .json({ message: "Todos los campos son obligatorios" });
   }
 
   db.query(
-    "INSERT INTO productos(nombre, precio, stock, tiene_stock) VALUES(?, ?, ?, ?)",
-    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0],
+    "INSERT INTO productos(nombre, precio, stock, tiene_stock, codigo_barras) VALUES(?, ?, ?, ?, ?)",
+    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0, codigo_barras],
     (err, result) => {
       if (err) {
         return res.status(500).json(err);
@@ -123,11 +122,11 @@ router.post("/", (req, res) => {
 // PUT /productos/:id
 router.put("/:id", (req, res) => {
   const { id } = req.params;
-  const { nombre, precio, stock, tiene_stock } = req.body;
+  const { nombre, precio, stock, tiene_stock, codigo_barras } = req.body;
 
   db.query(
-    "UPDATE productos SET nombre=?, precio=?, stock=?, tiene_stock=? WHERE id=?",
-    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0, id],
+    "UPDATE productos SET nombre=?, precio=?, stock=?, tiene_stock=?, codigo_barras=? WHERE id=?",
+    [nombre, precio, tiene_stock ? stock : 0, tiene_stock ? 1 : 0, codigo_barras, id],
     (err, result) => {
       if (err) {
         res.status(500).json(err);
@@ -142,21 +141,29 @@ router.put("/:id", (req, res) => {
 // DELETE /productos/:id
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
-
-  db.query("DELETE FROM productos WHERE id = ?", [id], (err, result) => {
-    if (err) {
-      res.status(500).json(err);
-      return;
-    }
-
-    db.query(
-      "SELECT nombre FROM productos WHERE id = ?",
-      [id],
-      (err, nombre) => {
-        res.json({ message: `Producto ${nombre} eliminado` });
-      },
-    );
+  db.query("SELECT nombre FROM productos WHERE id = ?", [id], (err, result) => {
+    if (err || result.length === 0) return res.status(404).json({ message: "Producto no encontrado" });
+    
+    const nombre = result[0].nombre;
+    db.query("DELETE FROM productos WHERE id = ?", [id], (err) => {
+      if (err) return res.status(500).json(err);
+      res.json({ message: `Producto "${nombre}" eliminado` });
+    });
   });
+});
+
+// GET /productos/barcode/:codigo
+router.get("/barcode/:codigo", (req, res) => {
+  const { codigo } = req.params;
+  db.query(
+    "SELECT * FROM productos WHERE codigo_barras = ?",
+    [codigo],
+    (err, result) => {
+      if (err) return res.status(500).json(err);
+      if (result.length === 0) return res.status(404).json({ message: "Producto no encontrado" });
+      res.json(result[0]);
+    }
+  );
 });
 
 export default router;

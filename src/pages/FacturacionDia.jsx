@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { PORT } from "../../backend/config";
 import { ChevronDown, ChevronUp, Receipt } from "lucide-react";
+import BackButton from "../components/UI/BackButton";
 
 function FacturacionDia() {
+  const location = useLocation();
+  const backDir = location.state?.backDir;
+
   const { fecha } = useParams();
   const [ventas, setVentas] = useState([]);
   const [total, setTotal] = useState(0);
@@ -45,8 +49,10 @@ function FacturacionDia() {
   const ticketPromedio =
     ventas.length > 0 ? Math.round(total / ventas.length) : 0;
 
+  console.log(backDir);
   return (
     <div>
+      <BackButton dir={backDir} />
       {/* Header */}
       <div className="d-flex align-items-center gap-3 mb-4">
         <div
@@ -216,13 +222,17 @@ function FacturacionDia() {
                             className="badge bg-success bg-opacity-75"
                             style={{ fontSize: 10 }}
                           >
-                            💵 ${Number(v.monto_efectivo).toLocaleString("es-AR")}
+                            💵 $
+                            {Number(v.monto_efectivo).toLocaleString("es-AR")}
                           </span>
                           <span
                             className="badge bg-primary bg-opacity-75"
                             style={{ fontSize: 10 }}
                           >
-                            📲 ${Number(v.monto_transferencia).toLocaleString("es-AR")}
+                            📲 $
+                            {Number(v.monto_transferencia).toLocaleString(
+                              "es-AR",
+                            )}
                           </span>
                         </div>
                       )}

@@ -14,6 +14,7 @@ import { useState, useEffect } from "react";
 import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import TicketModal from "../components/modals/TicketModal";
+import BackButton from "../components/UI/BackButton";
 
 function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
@@ -147,8 +148,13 @@ function Presupuestos() {
               presupuesto.monto_efectivo != null && (
                 <span>
                   {" "}
-                  (Ef: ${Number(presupuesto.monto_efectivo).toLocaleString("es-AR")} /
-                  Tr: ${Number(presupuesto.monto_transferencia).toLocaleString("es-AR")})
+                  (Ef: $
+                  {Number(presupuesto.monto_efectivo).toLocaleString("es-AR")} /
+                  Tr: $
+                  {Number(presupuesto.monto_transferencia).toLocaleString(
+                    "es-AR",
+                  )}
+                  )
                 </span>
               )}
           </p>
@@ -250,26 +256,29 @@ function Presupuestos() {
 
   if (presupuestos.length === 0) {
     return (
-      <div className="text-center mt-5">
-        <div
-          className="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
-          style={{
-            width: 56,
-            height: 56,
-            background: "rgba(99, 102, 241, 0.12)",
-            color: "#6366f1",
-          }}
-        >
-          <ClipboardList size={26} />
+      <div>
+        <BackButton dir="/" />
+        <div className="text-center mt-5">
+          <div
+            className="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
+            style={{
+              width: 56,
+              height: 56,
+              background: "rgba(99, 102, 241, 0.12)",
+              color: "#6366f1",
+            }}
+          >
+            <ClipboardList size={26} />
+          </div>
+          <h2 className="fw-bold mb-1">Presupuestos</h2>
+          <p className="text-muted mb-4">No hay presupuestos registrados</p>
+          <Link
+            className="btn btn-success d-inline-flex align-items-center gap-2"
+            to="/presupuestos/nuevo"
+          >
+            <Plus size={18} /> Nuevo presupuesto
+          </Link>
         </div>
-        <h2 className="fw-bold mb-1">Presupuestos</h2>
-        <p className="text-muted mb-4">No hay presupuestos registrados</p>
-        <Link
-          className="btn btn-success d-inline-flex align-items-center gap-2"
-          to="/presupuestos/nuevo"
-        >
-          <Plus size={18} /> Nuevo presupuesto
-        </Link>
       </div>
     );
   }
@@ -279,6 +288,8 @@ function Presupuestos() {
       {ticketData && (
         <TicketModal ticket={ticketData} onClose={() => setTicketData(null)} />
       )}
+
+      <BackButton dir="/" />
 
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
@@ -371,7 +382,8 @@ function Presupuestos() {
                 <td>
                   <span
                     className={`badge ${
-                      !presupuesto.medio_pago || presupuesto.medio_pago === "efectivo"
+                      !presupuesto.medio_pago ||
+                      presupuesto.medio_pago === "efectivo"
                         ? "bg-success"
                         : presupuesto.medio_pago === "transferencia"
                           ? "bg-primary"
@@ -388,7 +400,7 @@ function Presupuestos() {
                 </td>
 
                 {/* Total — con desglose mix igual a FacturacionDia */}
-                <td className="text-end fw-bold text-success">
+                <td className="fw-bold text-success">
                   ${Number(presupuesto.total).toLocaleString("es-AR")}
                   {presupuesto.medio_pago === "mix" && (
                     <div className="d-flex flex-column align-items-end gap-1 mt-1">
@@ -396,13 +408,19 @@ function Presupuestos() {
                         className="badge bg-success bg-opacity-75"
                         style={{ fontSize: 10 }}
                       >
-                        💵 ${Number(presupuesto.monto_efectivo).toLocaleString("es-AR")}
+                        💵 $
+                        {Number(presupuesto.monto_efectivo).toLocaleString(
+                          "es-AR",
+                        )}
                       </span>
                       <span
                         className="badge bg-primary bg-opacity-75"
                         style={{ fontSize: 10 }}
                       >
-                        📲 ${Number(presupuesto.monto_transferencia).toLocaleString("es-AR")}
+                        📲 $
+                        {Number(presupuesto.monto_transferencia).toLocaleString(
+                          "es-AR",
+                        )}
                       </span>
                     </div>
                   )}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import TicketModal from "../../components/modals/TicketModal";
+import BackButton from "../../components/UI/BackButton";
 
 function NuevoPresupuesto() {
   const [productos, setProductos] = useState([]);
@@ -19,6 +20,57 @@ function NuevoPresupuesto() {
   const [montoEfectivo, setMontoEfectivo] = useState("");
   const [montoTransferencia, setMontoTransferencia] = useState("");
   const [ticketData, setTicketData] = useState(null);
+  const barcodeBufferRef = useRef("");
+  const barcodeTimerRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") {
+        const codigo = barcodeBufferRef.current.trim();
+        barcodeBufferRef.current = "";
+        clearTimeout(barcodeTimerRef.current);
+
+        if (codigo.length < 3) return;
+        e.preventDefault();
+
+        const producto = productos.find((p) => p.codigo_barras === codigo);
+        if (!producto) {
+          toast.error(`Producto con código "${codigo}" no encontrado`);
+          return;
+        }
+
+        const yaEnCarrito = carrito.findIndex((p) => p.id === producto.id);
+        if (yaEnCarrito !== -1) {
+          const nuevoCarrito = [...carrito];
+          nuevoCarrito[yaEnCarrito].cantidad += 1;
+          setCarrito(nuevoCarrito);
+        } else {
+          setCarrito((prev) => [
+            ...prev,
+            {
+              id: producto.id,
+              nombre: producto.nombre,
+              precio: producto.precio,
+              cantidad: 1,
+            },
+          ]);
+        }
+
+        toast.success(`"${producto.nombre}" agregado`);
+        setBusqueda("");
+        setMostrarLista(false);
+      } else if (e.key.length === 1) {
+        barcodeBufferRef.current += e.key;
+        clearTimeout(barcodeTimerRef.current);
+        barcodeTimerRef.current = setTimeout(() => {
+          barcodeBufferRef.current = "";
+        }, 100);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [productos, carrito]);
 
   useEffect(() => {
     fetch(`http://localhost:${PORT}/productos`)
@@ -42,15 +94,26 @@ function NuevoPresupuesto() {
   const agregarProducto = () => {
     if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
 
-    setCarrito([
-      ...carrito,
-      {
-        id: productoSeleccionado.id,
-        nombre: productoSeleccionado.nombre,
-        precio: productoSeleccionado.precio,
-        cantidad,
-      },
-    ]);
+    const yaEnCarrito = carrito.findIndex(
+      (p) => p.id === productoSeleccionado.id,
+    );
+
+    if (yaEnCarrito !== -1) {
+      const nuevoCarrito = [...carrito];
+      nuevoCarrito[yaEnCarrito].cantidad += Number(cantidad);
+      setCarrito(nuevoCarrito);
+    } else {
+      setCarrito([
+        ...carrito,
+        {
+          id: productoSeleccionado.id,
+          nombre: productoSeleccionado.nombre,
+          precio: productoSeleccionado.precio,
+          cantidad: Number(cantidad),
+        },
+      ]);
+    }
+
     setBusqueda("");
     setProductoSeleccionado(null);
     setCantidad(1);
@@ -170,6 +233,7 @@ function NuevoPresupuesto() {
         />
       )}
 
+      <BackButton dir="/presupuestos" />
       {/* Header */}
       <div className="d-flex align-items-center gap-3 mb-4">
         <div

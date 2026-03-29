@@ -9,30 +9,31 @@ CREATE TABLE productos (
     nombre VARCHAR(100),
     precio DECIMAL(10,2),
     tiene_stock TINYINT(1) DEFAULT 1,
+    codigo_barras VARCHAR(50) DEFAULT NULL,
     stock INT
 );
 
-INSERT INTO productos (nombre, precio, tiene_stock, stock) VALUES
-    ('Lavandina Concentrada Bidon de 5 litros', 4400, 1, 20),
-    ('Desodorante de piso esencia concentrada', 4100, 1, 15),
-    ('Lavandina litro', 850, 1, 75),
-    ('Detergente liquido ropa 1 litro', 1200, 1, 50),
-    ('Jabon en polvo 5kg', 5500, 1, 25),
-    ('Suavizante concentrado 1 litro', 900, 1, 40),
-    ('Fregasuelos aromatico 1 litro', 1100, 1, 30),
-    ('Guantes de latex x12', 1500, 1, 60),
-    ('Esponjas multiuso x10', 800, 1, 100),
-    ('Panios microfibra x5', 950, 1, 80),
-    ('Limpiador multiuso 500ml', 700, 1, 90),
-    ('Ambientador aerosol 300ml', 650, 1, 45),
-    ('Cera para pisos 1 litro', 2300, 1, 20),
-    ('Trapo de piso industrial', 400, 1, 75),
-    ('Escoba de cerdas duras', 1200, 1, 35),
-    ('Recogedor plastico', 450, 1, 50),
-    ('Mopa de microfibra', 1500, 1, 40),
-    ('Limpiador de vidrios 500ml', 750, 1, 60),
-    ('Desinfectante en spray 500ml', 1100, 1, 55),
-    ('Bolsas de basura 50 litros x20', 1300, 1, 70);
+-- INSERT INTO productos (nombre, precio, tiene_stock, stock) VALUES
+--     ('Lavandina Concentrada Bidon de 5 litros', 4400, 1, 20),
+--     ('Desodorante de piso esencia concentrada', 4100, 1, 15),
+--     ('Lavandina litro', 850, 1, 75),
+--     ('Detergente liquido ropa 1 litro', 1200, 1, 50),
+--     ('Jabon en polvo 5kg', 5500, 1, 25),
+--     ('Suavizante concentrado 1 litro', 900, 1, 40),
+--     ('Fregasuelos aromatico 1 litro', 1100, 1, 30),
+--     ('Guantes de latex x12', 1500, 1, 60),
+--     ('Esponjas multiuso x10', 800, 1, 100),
+--     ('Panios microfibra x5', 950, 1, 80),
+--     ('Limpiador multiuso 500ml', 700, 1, 90),
+--     ('Ambientador aerosol 300ml', 650, 1, 45),
+--     ('Cera para pisos 1 litro', 2300, 1, 20),
+--     ('Trapo de piso industrial', 400, 1, 75),
+--     ('Escoba de cerdas duras', 1200, 1, 35),
+--     ('Recogedor plastico', 450, 1, 50),
+--     ('Mopa de microfibra', 1500, 1, 40),
+--     ('Limpiador de vidrios 500ml', 750, 1, 60),
+--     ('Desinfectante en spray 500ml', 1100, 1, 55),
+--     ('Bolsas de basura 50 litros x20', 1300, 1, 70);
 
 -- ── Configuracion ─────────────────────────────────────────────────────────────
 CREATE TABLE configuracion (

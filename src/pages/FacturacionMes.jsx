@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PORT } from "../../backend/config";
 import { BarChart3, TrendingUp, Star } from "lucide-react";
 import GraficoVentasMes from "../components/GraficoVentasMes";
+import BackButton from "../components/UI/BackButton";
 
 function FacturacionMes() {
   const [datos, setDatos] = useState(null);
@@ -73,6 +74,7 @@ function FacturacionMes() {
 
   return (
     <div>
+      <BackButton dir="/" />
       {/* Header */}
       <div className="d-flex align-items-center gap-3 mb-4">
         <div
@@ -278,7 +280,7 @@ function FacturacionMes() {
                       <td>
                         <button
                           className="btn btn-primary btn-sm d-flex align-items-center gap-1"
-                          onClick={() => navigate(`/facturacion/${d.dia}`)}
+                          onClick={() => navigate(`/facturacion/${d.dia}`, { state: { backDir: "/facturacion/mes" } })}
                         >
                           Ver →
                         </button>

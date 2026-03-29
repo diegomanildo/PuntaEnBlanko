@@ -11,6 +11,7 @@ import {
 import { useState, useEffect } from "react";
 import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
+import BackButton from "../components/UI/BackButton";
 
 function Productos() {
   const [productos, setProductos] = useState([]);
@@ -125,27 +126,31 @@ function Productos() {
 
   if (productos.length === 0) {
     return (
-      <div className="text-center mt-5">
-        <div
-          className="d-inline-flex align-items-center justify-content-center rounded-3 bg-primary bg-opacity-10 mb-3"
-          style={{ width: 56, height: 56 }}
-        >
-          <Package size={26} className="text-primary" />
+      <div className="container">
+        <BackButton dir="/" />
+        <div className="text-center mt-5">
+          <div
+            className="d-inline-flex align-items-center justify-content-center rounded-3 bg-primary bg-opacity-10 mb-3"
+            style={{ width: 56, height: 56 }}
+          >
+            <Package size={26} className="text-primary" />
+          </div>
+          <h2 className="fw-bold mb-1">Productos</h2>
+          <p className="text-muted mb-4">No hay productos registrados</p>
+          <Link
+            className="btn btn-success d-inline-flex align-items-center gap-2"
+            to="/productos/nuevo"
+          >
+            <Plus size={18} /> Agregar producto
+          </Link>
         </div>
-        <h2 className="fw-bold mb-1">Productos</h2>
-        <p className="text-muted mb-4">No hay productos registrados</p>
-        <Link
-          className="btn btn-success d-inline-flex align-items-center gap-2"
-          to="/productos/nuevo"
-        >
-          <Plus size={18} /> Agregar producto
-        </Link>
       </div>
     );
   }
 
   return (
     <div>
+      <BackButton dir="/" />
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div className="d-flex align-items-center gap-3">
@@ -263,7 +268,9 @@ function Productos() {
                     <span className="fw-semibold">{producto.nombre}</span>
                   </div>
                 </td>
-                <td>${producto.precio.toLocaleString("es-AR")}</td>
+                <td className="fw-bold text-success">
+                  ${producto.precio.toLocaleString("es-AR")}
+                </td>
                 <td>
                   {producto.tiene_stock === 0 ? (
                     <span className="text-muted fw-bold">
