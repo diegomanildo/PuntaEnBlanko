@@ -3,7 +3,6 @@ CREATE DATABASE punta_en_blanco;
 
 USE punta_en_blanco;
 
--- ── Productos ─────────────────────────────────────────────────────────────────
 CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100),
@@ -44,14 +43,28 @@ CREATE TABLE configuracion (
 INSERT INTO configuracion (id, stock_alerta)
 VALUES (1, 5);
 
--- ── Ventas ────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS clientes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    razon_social VARCHAR(150) NOT NULL,
+    domicilio VARCHAR(200) DEFAULT NULL,
+    localidad VARCHAR(100) DEFAULT NULL,
+    cuit VARCHAR(13) NOT NULL,          -- formato XX-XXXXXXXX-X
+    telefono VARCHAR(30) DEFAULT NULL,
+    mail VARCHAR(100) DEFAULT NULL,
+    fecha_alta DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE ventas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
     total DECIMAL(10,2),
     medio_pago VARCHAR(20) DEFAULT 'efectivo',
     monto_efectivo DECIMAL(10,2) DEFAULT NULL,
-    monto_transferencia DECIMAL(10,2) DEFAULT NULL
+    monto_transferencia DECIMAL(10,2) DEFAULT NULL,
+
+    cliente_id INT DEFAULT NULL,
+
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE SET NULL
 );
 
 -- INSERT INTO ventas (fecha, total, medio_pago) VALUES
@@ -63,7 +76,6 @@ CREATE TABLE ventas (
 --     ('2026-03-22 11:05:00', 2100.00, 'transferencia'),
 --     ('2026-03-25 16:30:00', 4750.00, 'efectivo');
 
--- ── Detalle ventas ────────────────────────────────────────────────────────────
 CREATE TABLE detalle_ventas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     venta_id INT,
@@ -75,7 +87,6 @@ CREATE TABLE detalle_ventas (
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
 );
 
--- ── Presupuestos ─────────────────────────────────────────────────────────────
 CREATE TABLE presupuestos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -89,7 +100,6 @@ CREATE TABLE presupuestos (
     FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE SET NULL
 );
 
--- ── Detalle presupuestos ──────────────────────────────────────────────────────
 CREATE TABLE detalle_presupuestos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     presupuesto_id INT,

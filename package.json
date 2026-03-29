@@ -28,6 +28,7 @@
     "cors": "^2.8.6",
     "electron-builder": "^26.8.1",
     "express": "^5.2.1",
+    "libphonenumber-js": "^1.12.41",
     "lucide-react": "^0.577.0",
     "mysql2": "^3.19.1",
     "react": "^19.2.4",

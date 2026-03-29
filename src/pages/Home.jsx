@@ -6,6 +6,7 @@ import {
   TrendingUp,
   FileText,
   ClipboardList,
+  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PORT } from "../../backend/config";
@@ -40,6 +41,15 @@ function Home() {
       sub: "Registrar una transacción",
       iconBg: "bg-success bg-opacity-10",
       iconColor: "text-success",
+      big: true,
+    },
+    {
+      to: "/clientes",
+      icon: <Users size={22} />,
+      label: "Clientes",
+      sub: "Ver, agregar y gestionar clientes",
+      iconStyle: { background: "rgba(249, 115, 22, 0.12)", color: "#f97316" },
+      big: true,
     },
     {
       to: "/presupuestos",
@@ -47,6 +57,7 @@ function Home() {
       label: "Presupuestos",
       sub: "Ver, agregar, aceptar o eliminar presupuestos",
       iconStyle: { background: "rgba(99, 102, 241, 0.12)", color: "#6366f1" },
+      big: false,
     },
     {
       to: "/productos",
@@ -55,6 +66,7 @@ function Home() {
       sub: "Ver, agregar o editar productos",
       iconBg: "bg-primary bg-opacity-10",
       iconColor: "text-primary",
+      big: false,
     },
     {
       to: `/facturacion/${fechaHoy()}`,
@@ -64,6 +76,7 @@ function Home() {
       sub: "Resumen de ventas de hoy",
       iconBg: "bg-warning bg-opacity-10",
       iconColor: "text-warning",
+      big: false,
     },
     {
       to: "/facturacion/mes",
@@ -72,6 +85,7 @@ function Home() {
       sub: "Ventas y estadísticas mensuales",
       iconBg: "bg-info bg-opacity-10",
       iconColor: "text-info",
+      big: false,
     },
   ];
 
@@ -169,7 +183,17 @@ function Home() {
         }}
       >
         {navItems.map(
-          ({ to, icon, label, sub, iconBg, iconColor, iconStyle, state }, index) => (
+          ({
+            to,
+            icon,
+            label,
+            sub,
+            iconBg,
+            iconColor,
+            iconStyle,
+            state,
+            big,
+          }) => (
             <Link
               key={to}
               to={to}
@@ -177,7 +201,9 @@ function Home() {
               className="card text-decoration-none d-flex flex-row align-items-center gap-3 p-3"
               style={{
                 borderRadius: "12px",
-                ...(index === 0 ? { gridColumn: "1 / -1", justifyContent: "center" } : {}),
+                ...(big
+                  ? { gridColumn: "1 / -1", justifyContent: "center" }
+                  : {}),
               }}
             >
               <div
@@ -191,6 +217,7 @@ function Home() {
               >
                 {icon}
               </div>
+
               <div className="flex-grow-1">
                 <p className="mb-0" style={{ fontSize: "0.95rem" }}>
                   {label}
@@ -199,6 +226,7 @@ function Home() {
                   {sub}
                 </p>
               </div>
+
               <span className="text-muted">›</span>
             </Link>
           ),

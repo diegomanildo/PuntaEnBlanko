@@ -1,13 +1,25 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { ShoppingCart, Plus, Trash2, Pencil, Check, X } from "lucide-react";
+import {
+  ShoppingCart,
+  Plus,
+  Trash2,
+  Pencil,
+  Check,
+  X,
+  User,
+  UserPlus,
+} from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../components/UI/BackButton";
 import TicketModal from "../components/modals/TicketModal";
+import { useNavigate } from "react-router-dom";
 
 // ── Componente principal ──────────────────────────────────────────────────────
 function NuevaVenta() {
+  const navigate = useNavigate();
+
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [mostrarLista, setMostrarLista] = useState(false);
@@ -23,11 +35,23 @@ function NuevaVenta() {
   const barcodeTimerRef = useRef(null);
 
   // ── Estados para edición de precios ──────────────────────────────────────
-  // Solo guarda QUÉ se edita; el valor se lee directo del DOM via ref
-  const [editandoPrecio, setEditandoPrecio] = useState(null); // { index, campo }
+  const [editandoPrecio, setEditandoPrecio] = useState(null);
   const [editandoTotal, setEditandoTotal] = useState(false);
   const inputPrecioRef = useRef(null);
   const inputTotalRef = useRef(null);
+
+  // ── Cliente ───────────────────────────────────────────────────────────────
+  const [clientes, setClientes] = useState([]);
+  const [clienteId, setClienteId] = useState(null);
+  const [busquedaCliente, setBusquedaCliente] = useState("");
+  const [mostrarListaClientes, setMostrarListaClientes] = useState(false);
+  const clienteBuscadorRef = useRef(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:${PORT}/clientes`)
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setClientes(data));
+  }, []);
 
   // Focus automático al abrir edición
   useEffect(() => {
@@ -43,9 +67,9 @@ function NuevaVenta() {
       inputTotalRef.current.select();
     }
   }, [editandoTotal]);
+
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Si el foco está en un input o textarea, no interceptar (edición de precios, búsqueda, etc.)
       const tag = document.activeElement?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
 
@@ -55,7 +79,6 @@ function NuevaVenta() {
         clearTimeout(barcodeTimerRef.current);
 
         if (codigo.length < 3) return;
-
         e.preventDefault();
 
         const producto = productos.find((p) => p.codigo_barras === codigo);
@@ -117,10 +140,16 @@ function NuevaVenta() {
       .then((data) => setProductos(data));
   }, []);
 
+  // ── Click outside — cierra AMBAS listas ──────────────────────────────────
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (buscadorRef.current && !buscadorRef.current.contains(event.target))
         setMostrarLista(false);
+      if (
+        clienteBuscadorRef.current &&
+        !clienteBuscadorRef.current.contains(event.target)
+      )
+        setMostrarListaClientes(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -128,6 +157,10 @@ function NuevaVenta() {
 
   const productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(busqueda.toLowerCase()),
+  );
+
+  const clientesFiltrados = clientes.filter((c) =>
+    c.razon_social.toLowerCase().includes(busquedaCliente.toLowerCase()),
   );
 
   const agregarProducto = () => {
@@ -180,20 +213,18 @@ function NuevaVenta() {
   const totalManualRef = useRef(false);
 
   useEffect(() => {
-    if (totalManualRef.current) return; // total fue editado manualmente, no recalcular
+    if (totalManualRef.current) return;
     setTotal(carrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0));
   }, [carrito]);
 
-  // ── Handlers de edición de precio por producto ────────────────────────────
+  // ── Edición de precio por producto ────────────────────────────────────────
 
-  const iniciarEditPrecio = (index, campo) => {
+  const iniciarEditPrecio = (index, campo) =>
     setEditandoPrecio({ index, campo });
-  };
 
   const confirmarEditPrecio = () => {
     if (!editandoPrecio || !inputPrecioRef.current) return;
     const { index, campo } = editandoPrecio;
-    // Leer el valor DIRECTO del DOM — sin closures stale
     const num = parseFloat(inputPrecioRef.current.value);
 
     if (isNaN(num) || num < 0) {
@@ -205,7 +236,6 @@ function NuevaVenta() {
     const nuevoCarrito = carrito.map((p, i) => {
       if (i !== index) return p;
       if (campo === "precio") return { ...p, precio: num };
-      // subtotal → recalcular precio unitario
       return { ...p, precio: Math.round((num / p.cantidad) * 100) / 100 };
     });
     setCarrito(nuevoCarrito);
@@ -216,11 +246,14 @@ function NuevaVenta() {
   const cancelarEditPrecio = () => setEditandoPrecio(null);
 
   const handleKeyEditPrecio = (e) => {
-    if (e.key === "Enter") { e.preventDefault(); confirmarEditPrecio(); }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      confirmarEditPrecio();
+    }
     if (e.key === "Escape") cancelarEditPrecio();
   };
 
-  // ── Handlers de edición de total ─────────────────────────────────────────
+  // ── Edición de total ──────────────────────────────────────────────────────
 
   const iniciarEditTotal = () => {
     if (carrito.length === 0) return;
@@ -246,7 +279,10 @@ function NuevaVenta() {
   const cancelarEditTotal = () => setEditandoTotal(false);
 
   const handleKeyEditTotal = (e) => {
-    if (e.key === "Enter") { e.preventDefault(); confirmarEditTotal(); }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      confirmarEditTotal();
+    }
     if (e.key === "Escape") cancelarEditTotal();
   };
 
@@ -272,12 +308,12 @@ function NuevaVenta() {
           monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
           monto_transferencia:
             medioPago === "mix" ? Number(montoTransferencia) : null,
+          cliente_id: clienteId ?? null,
         }),
       });
       const data = await res.json();
       if (data.success) {
         toast.success(data.message || "Venta realizada");
-
         setTicketData({
           id: data.id ?? Date.now(),
           fecha: new Date().toISOString(),
@@ -313,6 +349,8 @@ function NuevaVenta() {
                 setCantidad(1);
                 setEditandoPrecio(null);
                 setEditandoTotal(false);
+                setClienteId(null);
+                setBusquedaCliente("");
                 toast.success("Venta reiniciada");
                 closeToast();
               }}
@@ -337,7 +375,6 @@ function NuevaVenta() {
 
   const totalUnidades = carrito.reduce((acc, p) => acc + p.cantidad, 0);
 
-  // ── Helper: ¿el precio fue modificado? ───────────────────────────────────
   const precioModificado = (item) =>
     item.precioOriginal !== undefined && item.precio !== item.precioOriginal;
 
@@ -354,6 +391,8 @@ function NuevaVenta() {
             setMedioPago("efectivo");
             setMontoEfectivo("");
             setMontoTransferencia("");
+            setClienteId(null);
+            setBusquedaCliente("");
           }}
         />
       )}
@@ -377,7 +416,7 @@ function NuevaVenta() {
       </div>
 
       <div className="row g-4">
-        {/* Columna izquierda — buscador */}
+        {/* Columna izquierda */}
         <div className="col-md-5">
           <div className="card p-4" style={{ borderRadius: 12 }}>
             <p
@@ -392,6 +431,87 @@ function NuevaVenta() {
               Agregar producto
             </p>
 
+            {/* ── Buscador de cliente ── */}
+            <div className="mb-3 position-relative" ref={clienteBuscadorRef}>
+              <label className="form-label" style={{ fontSize: 13 }}>
+                Cliente{" "}
+                <span className="text-muted" style={{ fontSize: 11 }}>
+                  (opcional)
+                </span>
+              </label>
+
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Buscar cliente..."
+                  value={busquedaCliente}
+                  onFocus={() => setMostrarListaClientes(true)}
+                  onChange={(e) => {
+                    setBusquedaCliente(e.target.value);
+                    setClienteId(null);
+                    setMostrarListaClientes(true);
+                  }}
+                />
+
+                <button
+                  className="btn btn-success d-flex align-items-center justify-content-center"
+                  onClick={() => navigate("/clientes/nuevo", { state: { backDir: "/ventas/nueva" } })}
+                >
+                  <UserPlus size={16} />
+                </button>
+              </div>
+
+              {clienteId && (
+                <small
+                  className="text-success d-block mt-1"
+                  style={{ fontSize: 11 }}
+                >
+                  ✓ Cliente seleccionado
+                </small>
+              )}
+
+              {mostrarListaClientes && (
+                <div
+                  className="card position-absolute w-100 shadow"
+                  style={{
+                    zIndex: 100,
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    top: "100%",
+                    marginTop: 4,
+                  }}
+                >
+                  {clientesFiltrados.length === 0 ? (
+                    <div className="p-3 text-muted" style={{ fontSize: 13 }}>
+                      No se encontraron clientes
+                    </div>
+                  ) : (
+                    clientesFiltrados.slice(0, 5).map((c) => (
+                      <button
+                        key={c.id}
+                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                        style={{
+                          fontSize: 13,
+                          padding: "9px 14px",
+                          border: "none",
+                        }}
+                        onClick={() => {
+                          setClienteId(c.id);
+                          setBusquedaCliente(c.razon_social);
+                          setMostrarListaClientes(false);
+                        }}
+                      >
+                        <span className="fw-semibold">{c.razon_social}</span>
+                        <code style={{ fontSize: 10 }}>{c.cuit}</code>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── Buscador de producto ── */}
             <div className="mb-3 position-relative" ref={buscadorRef}>
               <label className="form-label" style={{ fontSize: 13 }}>
                 Buscar producto
@@ -404,7 +524,6 @@ function NuevaVenta() {
                 onFocus={() => setMostrarLista(true)}
                 onChange={(e) => setBusqueda(e.target.value)}
               />
-
               {mostrarLista && productosFiltrados.length > 0 && (
                 <div
                   className="card position-absolute w-100 shadow"
@@ -513,7 +632,6 @@ function NuevaVenta() {
                         <tr>
                           <th>Producto</th>
                           <th className="text-center">Cant.</th>
-                          {/* Precio unitario */}
                           <th className="text-end">
                             Precio{" "}
                             <span
@@ -523,7 +641,6 @@ function NuevaVenta() {
                               (u.)
                             </span>
                           </th>
-                          {/* Subtotal */}
                           <th className="text-end">Subtotal</th>
                           <th></th>
                         </tr>
@@ -539,29 +656,49 @@ function NuevaVenta() {
 
                           return (
                             <tr key={i}>
-                              <td className="fw-semibold" style={{ verticalAlign: "middle" }}>
+                              <td
+                                className="fw-semibold"
+                                style={{ verticalAlign: "middle" }}
+                              >
                                 {p.nombre}
                                 {precioModificado(p) && (
                                   <span
                                     className="badge bg-warning text-dark ms-1"
-                                    style={{ fontSize: 9, verticalAlign: "middle" }}
+                                    style={{
+                                      fontSize: 9,
+                                      verticalAlign: "middle",
+                                    }}
                                     title={`Precio original: $${p.precioOriginal?.toLocaleString("es-AR")}`}
                                   >
                                     modificado
                                   </span>
                                 )}
                               </td>
-                              <td className="text-center" style={{ verticalAlign: "middle" }}>
+                              <td
+                                className="text-center"
+                                style={{ verticalAlign: "middle" }}
+                              >
                                 <span className="badge bg-secondary">
                                   {p.cantidad}
                                 </span>
                               </td>
 
-                              {/* ── Precio unitario editable ── */}
-                              <td className="text-end" style={{ verticalAlign: "middle", minWidth: 110 }}>
+                              {/* Precio unitario editable */}
+                              <td
+                                className="text-end"
+                                style={{
+                                  verticalAlign: "middle",
+                                  minWidth: 110,
+                                }}
+                              >
                                 {editandoEsteItemPrecio ? (
                                   <div className="d-flex align-items-center justify-content-end gap-1">
-                                    <span className="text-muted" style={{ fontSize: 12 }}>$</span>
+                                    <span
+                                      className="text-muted"
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      $
+                                    </span>
                                     <input
                                       ref={inputPrecioRef}
                                       type="number"
@@ -591,8 +728,13 @@ function NuevaVenta() {
                                 ) : (
                                   <button
                                     className="btn btn-link btn-sm p-0 text-muted d-inline-flex align-items-center gap-1"
-                                    style={{ fontSize: 13, textDecoration: "none" }}
-                                    onClick={() => iniciarEditPrecio(i, "precio")}
+                                    style={{
+                                      fontSize: 13,
+                                      textDecoration: "none",
+                                    }}
+                                    onClick={() =>
+                                      iniciarEditPrecio(i, "precio")
+                                    }
                                     title="Editar precio unitario"
                                   >
                                     ${p.precio.toLocaleString("es-AR")}
@@ -601,11 +743,22 @@ function NuevaVenta() {
                                 )}
                               </td>
 
-                              {/* ── Subtotal editable ── */}
-                              <td className="text-end fw-semibold" style={{ verticalAlign: "middle", minWidth: 110 }}>
+                              {/* Subtotal editable */}
+                              <td
+                                className="text-end fw-semibold"
+                                style={{
+                                  verticalAlign: "middle",
+                                  minWidth: 110,
+                                }}
+                              >
                                 {editandoEsteItemSubtotal ? (
                                   <div className="d-flex align-items-center justify-content-end gap-1">
-                                    <span className="text-muted" style={{ fontSize: 12 }}>$</span>
+                                    <span
+                                      className="text-muted"
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      $
+                                    </span>
                                     <input
                                       ref={inputPrecioRef}
                                       type="number"
@@ -635,17 +788,29 @@ function NuevaVenta() {
                                 ) : (
                                   <button
                                     className="btn btn-link btn-sm p-0 d-inline-flex align-items-center gap-1"
-                                    style={{ fontSize: 13, textDecoration: "none", color: "inherit" }}
-                                    onClick={() => iniciarEditPrecio(i, "subtotal")}
+                                    style={{
+                                      fontSize: 13,
+                                      textDecoration: "none",
+                                      color: "inherit",
+                                    }}
+                                    onClick={() =>
+                                      iniciarEditPrecio(i, "subtotal")
+                                    }
                                     title="Editar subtotal"
                                   >
-                                    ${(p.precio * p.cantidad).toLocaleString("es-AR")}
+                                    $
+                                    {(p.precio * p.cantidad).toLocaleString(
+                                      "es-AR",
+                                    )}
                                     <Pencil size={11} className="opacity-50" />
                                   </button>
                                 )}
                               </td>
 
-                              <td className="text-center" style={{ verticalAlign: "middle" }}>
+                              <td
+                                className="text-center"
+                                style={{ verticalAlign: "middle" }}
+                              >
                                 <button
                                   className="btn btn-sm btn-danger d-flex align-items-center"
                                   style={{ padding: "3px 7px" }}
@@ -766,7 +931,7 @@ function NuevaVenta() {
                       </div>
                     )}
 
-                    {/* ── Total editable ── */}
+                    {/* Total editable */}
                     <div className="d-flex justify-content-between align-items-end mb-3">
                       <small className="text-muted">
                         {carrito.length} producto
@@ -839,13 +1004,18 @@ function NuevaVenta() {
                             >
                               ${total.toLocaleString("es-AR")}
                             </span>
-                            <Pencil size={14} className="text-muted opacity-75" />
+                            <Pencil
+                              size={14}
+                              className="text-muted opacity-75"
+                            />
                           </button>
                         )}
 
-                        {/* Aviso si el total fue modificado manualmente */}
                         {carrito.some(precioModificado) && (
-                          <div style={{ fontSize: 10 }} className="text-warning mt-1">
+                          <div
+                            style={{ fontSize: 10 }}
+                            className="text-warning mt-1"
+                          >
                             ⚠ Precios personalizados activos
                           </div>
                         )}

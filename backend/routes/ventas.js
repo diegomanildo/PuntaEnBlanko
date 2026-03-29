@@ -5,12 +5,18 @@ const router = express.Router();
 
 // POST /ventas
 router.post("/", (req, res) => {
-  const { productos, total, medio_pago, monto_efectivo, monto_transferencia } =
+  const { productos, total, medio_pago, monto_efectivo, monto_transferencia, cliente_id } =
     req.body;
 
   db.query(
-    "INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia) VALUES (?, ?, ?, ?)",
-    [total, medio_pago, monto_efectivo ?? null, monto_transferencia ?? null],
+    "INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia, cliente_id) VALUES (?, ?, ?, ?, ?)",
+    [
+      total,
+      medio_pago,
+      monto_efectivo ?? null,
+      monto_transferencia ?? null,
+      cliente_id ?? null,
+    ],
     (err, result) => {
       if (err) {
         console.error(err);
@@ -54,30 +60,28 @@ router.post("/", (req, res) => {
 // GET /ventas/hoy
 router.get("/hoy", (req, res) => {
   db.query(
-    `SELECT * FROM ventas
-     WHERE DATE(fecha) = CURDATE()
-     ORDER BY fecha DESC`,
+    `SELECT v.*, c.razon_social AS cliente_nombre
+     FROM ventas v
+     LEFT JOIN clientes c ON v.cliente_id = c.id
+     WHERE DATE(v.fecha) = CURDATE()
+     ORDER BY v.fecha DESC`,
     (err, ventas) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
       db.query(
         `SELECT SUM(total) as total
          FROM ventas
          WHERE DATE(fecha) = CURDATE()`,
         (err, totalResult) => {
-          if (err) {
-            return res.status(500).json(err);
-          }
+          if (err) return res.status(500).json(err);
 
           res.json({
             ventas,
             total: totalResult[0].total || 0,
           });
-        },
+        }
       );
-    },
+    }
   );
 });
 
@@ -130,7 +134,11 @@ router.get("/dia/:fecha", (req, res) => {
   const { fecha } = req.params;
 
   db.query(
-    `SELECT * FROM ventas WHERE DATE(fecha) = ? ORDER BY fecha DESC`,
+    `SELECT v.*, c.razon_social AS cliente_nombre
+     FROM ventas v
+     LEFT JOIN clientes c ON v.cliente_id = c.id
+     WHERE DATE(v.fecha) = ?
+     ORDER BY v.fecha DESC`,
     [fecha],
     (err, ventas) => {
       if (err) return res.status(500).json(err);
@@ -145,9 +153,9 @@ router.get("/dia/:fecha", (req, res) => {
             ventas,
             total: totalResult[0].total || 0,
           });
-        },
+        }
       );
-    },
+    }
   );
 });
 
@@ -155,23 +163,39 @@ router.get("/dia/:fecha", (req, res) => {
 router.get("/:id", (req, res) => {
   const { id } = req.params;
 
+  // Obtener venta + cliente
   db.query(
-    `SELECT 
-      dv.cantidad,
-      dv.precio,
-      p.nombre
-     FROM detalle_ventas dv
-     JOIN productos p ON dv.producto_id = p.id
-     WHERE dv.venta_id = ?`,
+    `SELECT v.*, c.razon_social AS cliente_nombre
+     FROM ventas v
+     LEFT JOIN clientes c ON v.cliente_id = c.id
+     WHERE v.id = ?`,
     [id],
-    (err, rows) => {
+    (err, ventaDatos) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ error: "Error obteniendo detalle" });
+        return res.status(500).json({ error: "Error obteniendo venta" });
       }
 
-      res.json(rows);
-    },
+      // Obtener detalle
+      db.query(
+        `SELECT dv.cantidad, dv.precio, p.nombre
+         FROM detalle_ventas dv
+         JOIN productos p ON dv.producto_id = p.id
+         WHERE dv.venta_id = ?`,
+        [id],
+        (err, detalles) => {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ error: "Error obteniendo detalle" });
+          }
+
+          res.json({
+            ...ventaDatos[0],
+            detalles
+          });
+        }
+      );
+    }
   );
 });
 

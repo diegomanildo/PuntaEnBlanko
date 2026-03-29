@@ -12,6 +12,9 @@ import FacturacionMes from "./pages/FacturacionMes";
 import NuevoPresupuesto from "./pages/presupuesto/NuevoPresupuesto";
 import Presupuestos from "./pages/Presupuestos";
 import EditarPresupuesto from "./pages/presupuesto/EditarPresupuesto";
+import Clientes from "./pages/Clientes";
+import NuevoCliente from "./pages/clientes/NuevoCliente";
+import EditarCliente from "./pages/clientes/EditarCliente";
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
@@ -47,6 +50,10 @@ function App() {
           <Route path="/productos" element={<Productos />} />
           <Route path="/productos/nuevo" element={<NuevoProducto />} />
           <Route path="/productos/editar/:id" element={<EditarProducto />} />
+
+          <Route path="/clientes" element={<Clientes />} />
+          <Route path="/clientes/nuevo" element={<NuevoCliente />} />
+          <Route path="/clientes/editar/:id" element={<EditarCliente />} />
         </Routes>
       </div>
 

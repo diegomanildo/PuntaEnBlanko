@@ -24,17 +24,22 @@ function FacturacionDia() {
   }, [fecha]);
 
   const toggleDetalle = async (id) => {
-    if (ventaAbierta === id) {
-      setVentaAbierta(null);
-      return;
-    }
-    if (!detalles[id]) {
-      const res = await fetch(`http://localhost:${PORT}/ventas/${id}`);
-      const data = await res.json();
-      setDetalles({ ...detalles, [id]: data });
-    }
-    setVentaAbierta(id);
-  };
+  if (ventaAbierta === id) {
+    setVentaAbierta(null);
+    return;
+  }
+
+  if (!detalles[id]) {
+    const res = await fetch(`http://localhost:${PORT}/ventas/${id}`);
+    const data = await res.json();
+
+    console.log("DETALLE RECIBIDO:", data); // <── AGREGA ESTO
+
+    setDetalles({ ...detalles, [id]: data });
+  }
+
+  setVentaAbierta(id);
+};
 
   const fechaFormateada = new Date(fecha + "T12:00:00").toLocaleDateString(
     "es-AR",
@@ -154,6 +159,7 @@ function FacturacionDia() {
               <tr>
                 <th style={{ width: 44 }}></th>
                 <th>ID</th>
+                <th>Cliente</th>
                 <th>Hora</th>
                 <th>Pago</th>
                 <th className="text-end">Total</th>
@@ -188,6 +194,13 @@ function FacturacionDia() {
                         #
                       </span>
                       <span className="fw-bold">{v.id}</span>
+                    </td>
+                    <td>
+                      {v.cliente_nombre ? (
+                        <span className="fw-semibold">{v.cliente_nombre}</span>
+                      ) : (
+                        <span className="text-muted fst-italic">-</span>
+                      )}
                     </td>
                     <td>
                       {new Date(v.fecha).toLocaleTimeString([], {
@@ -258,7 +271,7 @@ function FacturacionDia() {
                               </tr>
                             </thead>
                             <tbody>
-                              {detalles[v.id].map((d, i) => (
+                              {detalles[v.id].detalles?.map((d, i) => (
                                 <tr key={i}>
                                   <td className="fw-semibold">{d.nombre}</td>
                                   <td className="text-center">

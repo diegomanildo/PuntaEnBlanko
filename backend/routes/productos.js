@@ -1,13 +1,7 @@
 /* eslint-disable no-unused-vars */
 import express from "express";
 import db from "../db.js";
-
-const capitalizarNombre = (str) =>
-  str
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+import { capitalizarNombre } from "../utils/utils.js";
 
 const router = express.Router();
 
