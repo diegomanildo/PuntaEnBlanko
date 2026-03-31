@@ -7,7 +7,7 @@
 - Editar precio al momento de venta (No descuento) ✅
 - Jaboneria Color Verde
 - Eliminar ventas (Nota de credito)
-- Cargar clientes junto a su compra (Razon social, domicilio, localidad, cuit, telefono)
+- Cargar clientes junto a su compra (Razon social, domicilio, localidad, cuit, telefono) ✅
 
-- Listado de productos vendidos en el dia
+- Listado de productos vendidos en el dia 
 - Mail del clientes para marketing
