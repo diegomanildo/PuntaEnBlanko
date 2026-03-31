@@ -21,8 +21,8 @@ const fechaHoy = () => {
 
 const navLinks = [
   { to: "/ventas/nueva", icon: ShoppingCart, label: "Nueva Venta" },
-  { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/presupuestos", icon: ClipboardList, label: "Presupuestos" },
+  { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/productos", icon: Package, label: "Productos" },
   {
     to: `/facturacion/${fechaHoy()}`,
