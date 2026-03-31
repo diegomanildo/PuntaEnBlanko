@@ -7,6 +7,7 @@ import {
   Trash2,
   AlertTriangle,
   Save,
+  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PORT } from "../../backend/config";
@@ -19,6 +20,7 @@ function Productos() {
   const [stockAlerta, setStockAlerta] = useState(0);
   const [nuevoStockAlerta, setNuevoStockAlerta] = useState(0);
   const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarProductos = async () => {
     const res = await fetch(`http://localhost:${PORT}/productos`);
@@ -125,6 +127,10 @@ function Productos() {
     return "fw-bold";
   };
 
+  const productosFiltrados = productos.filter((p) =>
+    p.nombre.toLowerCase().includes(busquedaFiltro.toLowerCase()),
+  );
+
   if (productos.length === 0) {
     return (
       <div className="container">
@@ -152,6 +158,7 @@ function Productos() {
   return (
     <div>
       <BackButton dir="/" />
+
       {/* Header */}
       <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div className="d-flex align-items-center gap-3">
@@ -209,6 +216,24 @@ function Productos() {
         </Link>
       </div>
 
+      <div className="d-flex gap-2 mb-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Buscar producto..."
+          value={busquedaFiltro}
+          onChange={(e) => setBusquedaFiltro(e.target.value)}
+        />
+        {busquedaFiltro && (
+          <button
+            className="btn btn-outline-secondary d-flex align-items-center gap-1"
+            onClick={() => setBusquedaFiltro("")}
+          >
+            <X size={15} /> Limpiar
+          </button>
+        )}
+      </div>
+
       {/* Tabla */}
       <div
         className="card shadow-sm"
@@ -242,7 +267,7 @@ function Productos() {
             </tr>
           </thead>
           <tbody>
-            {productos.map((producto) => {
+            {productosFiltrados.map((producto) => {
               const esNormal =
                 producto.tiene_stock !== 0 &&
                 producto.stock > 0 &&
@@ -281,7 +306,10 @@ function Productos() {
                       <span className="fw-semibold">{producto.nombre}</span>
                     </div>
                   </td>
-                  <td className={`fw-bold text-success ${celdaClass}`} style={celdaStyle}>
+                  <td
+                    className={`fw-bold text-success ${celdaClass}`}
+                    style={celdaStyle}
+                  >
                     ${producto.precio.toLocaleString("es-AR")}
                   </td>
                   <td className={celdaClass} style={celdaStyle}>

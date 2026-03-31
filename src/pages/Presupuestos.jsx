@@ -9,6 +9,7 @@ import {
   Clock,
   ClipboardList,
   Printer,
+  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PORT } from "../../backend/config";
@@ -20,6 +21,7 @@ function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
   const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
   const [ticketData, setTicketData] = useState(null);
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarPresupuestos = async () => {
     const res = await fetch(`http://localhost:${PORT}/presupuestos`);
@@ -283,6 +285,14 @@ function Presupuestos() {
     );
   }
 
+  const presupuestosFiltrados = presupuestos.filter(
+    (p) =>
+      (p.cliente_nombre ?? "")
+        .toLowerCase()
+        .includes(busquedaFiltro.toLowerCase()) ||
+      p.estado.toLowerCase().includes(busquedaFiltro.toLowerCase()),
+  );
+
   return (
     <div>
       {ticketData && (
@@ -326,6 +336,24 @@ function Presupuestos() {
         </Link>
       </div>
 
+      <div className="d-flex gap-2 mb-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Buscar por cliente..."
+          value={busquedaFiltro}
+          onChange={(e) => setBusquedaFiltro(e.target.value)}
+        />
+        {busquedaFiltro && (
+          <button
+            className="btn btn-outline-secondary d-flex align-items-center gap-1"
+            onClick={() => setBusquedaFiltro("")}
+          >
+            <X size={15} /> Limpiar
+          </button>
+        )}
+      </div>
+
       {/* Tabla */}
       <div
         className="card shadow-sm"
@@ -362,7 +390,7 @@ function Presupuestos() {
             </tr>
           </thead>
           <tbody>
-            {presupuestos.map((presupuesto) => (
+            {presupuestosFiltrados.map((presupuesto) => (
               <tr
                 key={presupuesto.id}
                 className={
