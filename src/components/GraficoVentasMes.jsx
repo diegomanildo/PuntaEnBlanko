@@ -10,43 +10,25 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
+// Paleta de colores para las barras del gráfico
+const COLORES_BARRAS = [
+  "rgba(0, 180, 90, 0.5)",
+  "rgba(79, 158, 255, 0.5)",
+  "rgba(245, 158, 11, 0.5)",
+  "rgba(239, 68, 68, 0.5)",
+  "rgba(168, 85, 247, 0.5)",
+  "rgba(20, 184, 166, 0.5)",
+  "rgba(249, 115, 22, 0.5)",
+  "rgba(236, 72, 153, 0.5)",
+  "rgba(234, 179, 8, 0.5)",
+  "rgba(6, 182, 212, 0.5)",
+];
+
+const COLOR_HOY = "rgba(13, 202, 240, 1.0)";
+
 function GraficoVentasMes({ porDia }) {
   const hoy = new Date();
   const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
-
-  const colores = [
-    "rgba(0, 180, 90, 0.5)",
-    "rgba(79, 158, 255, 0.5)",
-    "rgba(245, 158, 11, 0.5)",
-    "rgba(239, 68, 68, 0.5)",
-    "rgba(168, 85, 247, 0.5)",
-    "rgba(20, 184, 166, 0.5)",
-    "rgba(249, 115, 22, 0.5)",
-    "rgba(236, 72, 153, 0.5)",
-    "rgba(234, 179, 8, 0.5)",
-    "rgba(6, 182, 212, 0.5)",
-    "rgba(16, 185, 129, 0.5)",
-    "rgba(99, 102, 241, 0.5)",
-    "rgba(244, 63, 94, 0.5)",
-    "rgba(251, 146, 60, 0.5)",
-    "rgba(52, 211, 153, 0.5)",
-    "rgba(129, 140, 248, 0.5)",
-    "rgba(251, 113, 133, 0.5)",
-    "rgba(34, 211, 238, 0.5)",
-    "rgba(163, 230, 53, 0.5)",
-    "rgba(232, 121, 249, 0.5)",
-    "rgba(45, 212, 191, 0.5)",
-    "rgba(251, 191, 36, 0.5)",
-    "rgba(248, 113, 113, 0.5)",
-    "rgba(96, 165, 250, 0.5)",
-    "rgba(74, 222, 128, 0.5)",
-    "rgba(167, 139, 250, 0.5)",
-    "rgba(249, 168, 212, 0.5)",
-    "rgba(103, 232, 249, 0.5)",
-    "rgba(190, 242, 100, 0.5)",
-    "rgba(217, 70, 239, 0.5)",
-    "rgba(0, 150, 136, 0.5)",
-  ];
 
   const chartData = {
     labels: porDia.map((d) => {
@@ -63,9 +45,7 @@ function GraficoVentasMes({ porDia }) {
         label: "Total del día",
         data: porDia.map((d) => d.total),
         backgroundColor: porDia.map((d, i) =>
-          d.dia === hoyStr
-            ? "rgba(13, 202, 240, 1.0)"
-            : colores[i % colores.length],
+          d.dia === hoyStr ? COLOR_HOY : COLORES_BARRAS[i % COLORES_BARRAS.length],
         ),
         borderRadius: 6,
         borderSkipped: false,
@@ -87,10 +67,8 @@ function GraficoVentasMes({ porDia }) {
       x: {
         grid: { display: true },
         ticks: {
-          color: (ctx) =>
-            porDia[ctx.index]?.dia === hoyStr ? "#0dcaf0" : "#666",
-          font: (ctx) =>
-            porDia[ctx.index]?.dia === hoyStr ? { weight: "bold" } : {},
+          color: (ctx) => (porDia[ctx.index]?.dia === hoyStr ? "#0dcaf0" : "#666"),
+          font: (ctx) => (porDia[ctx.index]?.dia === hoyStr ? { weight: "bold" } : {}),
         },
       },
       y: {

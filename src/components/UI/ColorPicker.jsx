@@ -1,11 +1,11 @@
 const COLORES = [
-  { valor: null,     label: "Sin color",  bg: "transparent", border: "#aaa" },
-  { valor: "blue",   label: "Azul",       bg: "#2563EB" },
-  { valor: "green",  label: "Verde",      bg: "#16A34A" },
-  { valor: "purple", label: "Violeta",    bg: "#7C3AED" },
-  { valor: "teal",   label: "Turquesa",   bg: "#0891B2" },
-  { valor: "orange", label: "Naranja",    bg: "#EA580C" },
-  { valor: "pink",   label: "Rosa",       bg: "#DB2777" },
+  { valor: null,     label: "Sin color", bg: "transparent", border: "#aaa" },
+  { valor: "blue",   label: "Azul",      bg: "#2563EB" },
+  { valor: "green",  label: "Verde",     bg: "#16A34A" },
+  { valor: "purple", label: "Violeta",   bg: "#7C3AED" },
+  { valor: "teal",   label: "Turquesa",  bg: "#0891B2" },
+  { valor: "orange", label: "Naranja",   bg: "#EA580C" },
+  { valor: "pink",   label: "Rosa",      bg: "#DB2777" },
 ];
 
 export function ColorPicker({ value, onChange }) {
