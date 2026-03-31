@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import BackButton from "../components/UI/BackButton";
 import TicketModal from "../components/modals/TicketModal";
 import { useNavigate } from "react-router-dom";
+import { rowStyle } from "../utils/colorUtils";
 
 // ── Componente principal ──────────────────────────────────────────────────────
 function NuevaVenta() {
@@ -456,7 +457,11 @@ function NuevaVenta() {
 
                 <button
                   className="btn btn-success d-flex align-items-center justify-content-center"
-                  onClick={() => navigate("/clientes/nuevo", { state: { backDir: "/ventas/nueva" } })}
+                  onClick={() =>
+                    navigate("/clientes/nuevo", {
+                      state: { backDir: "/ventas/nueva" },
+                    })
+                  }
                 >
                   <UserPlus size={16} />
                 </button>
@@ -538,7 +543,7 @@ function NuevaVenta() {
                   {productosFiltrados.slice(0, 6).map((p) => (
                     <button
                       key={p.id}
-                      className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                      className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center${p.color ? ` dropdown-prod-${p.color}` : ""}`}
                       style={{
                         fontSize: 13,
                         padding: "9px 14px",

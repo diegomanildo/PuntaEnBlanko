@@ -401,3 +401,38 @@ td.d-flex .btn {
   color: #444444;
   font-weight: bold;
 }
+
+/* Colores personalizados de producto — modo oscuro */
+.dark .table > :not(caption) > * > .prod-blue   { background-color: #1a2a3a !important; }
+.dark .table > :not(caption) > * > .prod-green  { background-color: #1a2e1a !important; }
+.dark .table > :not(caption) > * > .prod-purple { background-color: #251a3a !important; }
+.dark .table > :not(caption) > * > .prod-teal   { background-color: #0d2a22 !important; }
+.dark .table > :not(caption) > * > .prod-orange { background-color: #2e1f0a !important; }
+.dark .table > :not(caption) > * > .prod-pink   { background-color: #2e0f1a !important; }
+
+/* Modo claro */
+.light .table > :not(caption) > * > .prod-blue   { background-color: #dceefb !important; }
+.light .table > :not(caption) > * > .prod-green  { background-color: #eaf3de !important; }
+.light .table > :not(caption) > * > .prod-purple { background-color: #eeedfe !important; }
+.light .table > :not(caption) > * > .prod-teal   { background-color: #e1f5ee !important; }
+.light .table > :not(caption) > * > .prod-orange { background-color: #faeeda !important; }
+.light .table > :not(caption) > * > .prod-pink   { background-color: #fbeaf0 !important; }
+
+.dark .list-group-item {
+  background: #1e1e1e;
+}
+
+/* Dropdown búsqueda — colores de producto */
+.light .dropdown-prod-blue   { background-color: #dceefb !important; }
+.light .dropdown-prod-green  { background-color: #eaf3de !important; }
+.light .dropdown-prod-purple { background-color: #eeedfe !important; }
+.light .dropdown-prod-teal   { background-color: #e1f5ee !important; }
+.light .dropdown-prod-orange { background-color: #faeeda !important; }
+.light .dropdown-prod-pink   { background-color: #fbeaf0 !important; }
+
+.dark .dropdown-prod-blue   { background-color: #1a2a3a !important; }
+.dark .dropdown-prod-green  { background-color: #1a2e1a !important; }
+.dark .dropdown-prod-purple { background-color: #251a3a !important; }
+.dark .dropdown-prod-teal   { background-color: #0d2a22 !important; }
+.dark .dropdown-prod-orange { background-color: #2e1f0a !important; }
+.dark .dropdown-prod-pink   { background-color: #2e0f1a !important; }

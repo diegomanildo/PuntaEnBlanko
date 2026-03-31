@@ -9,6 +9,7 @@ CREATE TABLE productos (
     precio DECIMAL(10,2),
     tiene_stock TINYINT(1) DEFAULT 1,
     codigo_barras VARCHAR(50) DEFAULT NULL,
+    color VARCHAR(50) DEFAULT NULL,
     stock INT
 );
 

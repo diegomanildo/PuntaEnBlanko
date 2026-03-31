@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../components/UI/BackButton";
+import { rowStyle } from "../utils/colorUtils";
 
 function Productos() {
   const [productos, setProductos] = useState([]);
@@ -164,7 +165,7 @@ function Productos() {
             <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
               Productos
             </h2>
-            
+
             <small className="text-muted">
               {productos.length} producto
               {productos.length !== 1 ? "s" : ""} registrado
@@ -241,68 +242,78 @@ function Productos() {
             </tr>
           </thead>
           <tbody>
-            {productos.map((producto) => (
-              <tr
-                key={producto.id}
-                className={
-                  producto.tiene_stock === 0
-                    ? ""
-                    : producto.stock === 0
-                      ? "table-danger"
-                      : producto.stock <= stockAlerta
-                        ? "table-warning"
-                        : ""
-                }
-              >
-                <td>
-                  <div className="d-flex align-items-center gap-2">
-                    {producto.tiene_stock !== 0 && producto.stock === 0 && (
-                      <span className="badge bg-danger d-flex align-items-center gap-1">
-                        <AlertTriangle size={11} /> SIN STOCK
-                      </span>
-                    )}
-                    {producto.tiene_stock !== 0 &&
-                      producto.stock > 0 &&
-                      producto.stock <= stockAlerta && (
-                        <span className="badge bg-warning text-dark d-flex align-items-center gap-1">
-                          <AlertTriangle size={11} /> STOCK BAJO
+            {productos.map((producto) => {
+              const esNormal =
+                producto.tiene_stock !== 0 &&
+                producto.stock > 0 &&
+                producto.stock > stockAlerta;
+              const celdaStyle = esNormal ? rowStyle(producto.color) : {};
+              const celdaClass =
+                esNormal && producto.color ? `prod-${producto.color}` : "";
+
+              return (
+                <tr
+                  key={producto.id}
+                  className={
+                    producto.tiene_stock === 0
+                      ? ""
+                      : producto.stock === 0
+                        ? "table-danger"
+                        : producto.stock <= stockAlerta
+                          ? "table-warning"
+                          : ""
+                  }
+                >
+                  <td className={celdaClass} style={celdaStyle}>
+                    <div className="d-flex align-items-center gap-2">
+                      {producto.tiene_stock !== 0 && producto.stock === 0 && (
+                        <span className="badge bg-danger d-flex align-items-center gap-1">
+                          <AlertTriangle size={11} /> SIN STOCK
                         </span>
                       )}
-                    <span className="fw-semibold">{producto.nombre}</span>
-                  </div>
-                </td>
-                <td className="fw-bold text-success">
-                  ${producto.precio.toLocaleString("es-AR")}
-                </td>
-                <td>
-                  {producto.tiene_stock === 0 ? (
-                    <span className="text-muted fw-bold">
-                      Sin manejo de stock
-                    </span>
-                  ) : (
-                    <span className={stockColor(producto.stock)}>
-                      {producto.stock}
-                    </span>
-                  )}
-                </td>
-                <td>
-                  <div className="d-flex gap-2">
-                    <Link
-                      to={`/productos/editar/${producto.id}`}
-                      className="btn btn-primary btn-sm d-flex align-items-center gap-1"
-                    >
-                      <Pencil size={13} /> Editar
-                    </Link>
-                    <button
-                      className="btn btn-danger btn-sm d-flex align-items-center gap-1"
-                      onClick={() => confirmarEliminar(producto.id)}
-                    >
-                      <Trash2 size={13} /> Eliminar
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      {producto.tiene_stock !== 0 &&
+                        producto.stock > 0 &&
+                        producto.stock <= stockAlerta && (
+                          <span className="badge bg-warning text-dark d-flex align-items-center gap-1">
+                            <AlertTriangle size={11} /> STOCK BAJO
+                          </span>
+                        )}
+                      <span className="fw-semibold">{producto.nombre}</span>
+                    </div>
+                  </td>
+                  <td className={`fw-bold text-success ${celdaClass}`} style={celdaStyle}>
+                    ${producto.precio.toLocaleString("es-AR")}
+                  </td>
+                  <td className={celdaClass} style={celdaStyle}>
+                    {producto.tiene_stock === 0 ? (
+                      <span className="text-muted fw-bold">
+                        Sin manejo de stock
+                      </span>
+                    ) : (
+                      <span className={stockColor(producto.stock)}>
+                        {producto.stock}
+                      </span>
+                    )}
+                  </td>
+                  <td className={celdaClass} style={celdaStyle}>
+                    <div className="d-flex gap-2">
+                      <Link
+                        to={`/productos/editar/${producto.id}`}
+                        className="btn btn-primary btn-sm d-flex align-items-center gap-1"
+                      >
+                        <Pencil size={13} /> Editar
+                      </Link>
+                      <button
+                        className="btn btn-danger btn-sm d-flex align-items-center gap-1"
+                        onClick={() => confirmarEliminar(producto.id)}
+                      >
+                        <Trash2 size={13} /> Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

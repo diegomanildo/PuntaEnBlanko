@@ -314,7 +314,7 @@ function NuevoPresupuesto() {
                   {productosFiltrados.slice(0, 6).map((p) => (
                     <button
                       key={p.id}
-                      className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                      className={`list-group-item list-group-item-action d-flex justify-content-between align-items-center${p.color ? ` dropdown-prod-${p.color}` : ""}`}
                       style={{
                         fontSize: 13,
                         padding: "9px 14px",

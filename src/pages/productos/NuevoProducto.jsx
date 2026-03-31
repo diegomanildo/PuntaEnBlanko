@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../../components/UI/BackButton";
+import { ColorPicker } from "../../components/UI/ColorPicker";
 
 function NuevoProducto() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ function NuevoProducto() {
   const [errores, setErrores] = useState({});
   const [codigoBarras, setCodigoBarras] = useState("");
   const codigoRef = useRef(null);
+  const [color, setColor] = useState(null);
 
   useEffect(() => {
     codigoRef.current?.focus(); // foco inicial en el campo de escaneo
@@ -41,6 +43,7 @@ function NuevoProducto() {
           stock,
           tiene_stock: tieneStock,
           codigo_barras: codigoBarras,
+          color,
         }),
       });
 
@@ -169,6 +172,10 @@ function NuevoProducto() {
             )}
           </div>
         )}
+        
+        <div className="mb-3">
+          <ColorPicker value={color} onChange={setColor} />
+        </div>
 
         <div className="d-flex gap-3">
           <button className="btn btn-success" onClick={guardarProducto}>

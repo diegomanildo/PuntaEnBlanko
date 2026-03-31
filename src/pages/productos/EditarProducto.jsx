@@ -4,6 +4,7 @@ import { ArrowLeft, Package, Save } from "lucide-react";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../../components/UI/BackButton";
+import { ColorPicker } from "../../components/UI/ColorPicker";
 
 function EditarProducto() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ function EditarProducto() {
   const [stock, setStock] = useState("");
   const [tieneStock, setTieneStock] = useState(true);
   const [codigoBarras, setCodigoBarras] = useState("");
+  const [color, setColor] = useState(null);
 
   useEffect(() => {
     const cargarProducto = async () => {
@@ -25,6 +27,7 @@ function EditarProducto() {
       setStock(data.stock);
       setTieneStock(data.tiene_stock === 1);
       setCodigoBarras(data.codigo_barras);
+      setColor(data.color ?? null);
     };
 
     cargarProducto();
@@ -41,6 +44,7 @@ function EditarProducto() {
           stock,
           tiene_stock: tieneStock,
           codigo_barras: codigoBarras,
+          color,
         }),
       });
 
@@ -145,6 +149,10 @@ function EditarProducto() {
             />
           </div>
         )}
+
+        <div className="mb-3">
+          <ColorPicker value={color} onChange={setColor} />
+        </div>
 
         <div className="d-flex gap-3">
           <button className="btn btn-success" onClick={actualizarProducto}>

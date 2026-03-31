@@ -100,9 +100,9 @@ router.get("/:id", (req, res) => {
 
 // POST /productos
 router.post("/", (req, res) => {
-  const { nombre, precio, stock, tiene_stock, codigo_barras } = req.body;
+  const { nombre, precio, stock, tiene_stock, codigo_barras, color } = req.body;
 
-  if (!nombre || !precio || (tiene_stock && !stock)) {
+  if (!nombre || !precio || (tiene_stock && (stock === undefined || stock === null || stock === ""))) {
     return res
       .status(400)
       .json({ message: "Todos los campos son obligatorios" });
@@ -111,13 +111,14 @@ router.post("/", (req, res) => {
   const nombreFormateado = capitalizarNombre(nombre);
 
   db.query(
-    "INSERT INTO productos(nombre, precio, stock, tiene_stock, codigo_barras) VALUES(?, ?, ?, ?, ?)",
+    "INSERT INTO productos(nombre, precio, stock, tiene_stock, codigo_barras, color) VALUES(?, ?, ?, ?, ?, ?)",
     [
       nombreFormateado,
       precio,
       tiene_stock ? stock : 0,
       tiene_stock ? 1 : 0,
       codigo_barras,
+      color ?? null,
     ],
     (err, result) => {
       if (err) {
@@ -132,24 +133,25 @@ router.post("/", (req, res) => {
 // PUT /productos/:id
 router.put("/:id", (req, res) => {
   const { id } = req.params;
-  const { nombre, precio, stock, tiene_stock, codigo_barras } = req.body;
+  const { nombre, precio, stock, tiene_stock, codigo_barras, color } = req.body;
 
-  if (!nombre || !precio || (tiene_stock && !stock)) {
+  if (!nombre || !precio || (tiene_stock && (stock === undefined || stock === null || stock === ""))) {
     return res
       .status(400)
       .json({ message: "Todos los campos son obligatorios" });
   }
-  
+
   const nombreFormateado = capitalizarNombre(nombre);
 
   db.query(
-    "UPDATE productos SET nombre=?, precio=?, stock=?, tiene_stock=?, codigo_barras=? WHERE id=?",
+    "UPDATE productos SET nombre=?, precio=?, stock=?, tiene_stock=?, codigo_barras=?, color=? WHERE id=?",
     [
       nombreFormateado,
       precio,
       tiene_stock ? stock : 0,
       tiene_stock ? 1 : 0,
       codigo_barras,
+      color ?? null,
       id,
     ],
     (err, result) => {
