@@ -44,19 +44,19 @@ function Home() {
       big: true,
     },
     {
-      to: "/clientes",
-      icon: <Users size={22} />,
-      label: "Clientes",
-      sub: "Ver, agregar y gestionar clientes",
-      iconStyle: { background: "rgba(249, 115, 22, 0.12)", color: "#f97316" },
-      big: true,
-    },
-    {
       to: "/presupuestos",
       icon: <ClipboardList size={22} />,
       label: "Presupuestos",
       sub: "Ver, agregar, aceptar o eliminar presupuestos",
       iconStyle: { background: "rgba(99, 102, 241, 0.12)", color: "#6366f1" },
+      big: true,
+    },
+    {
+      to: "/clientes",
+      icon: <Users size={22} />,
+      label: "Clientes",
+      sub: "Ver, agregar y gestionar clientes",
+      iconStyle: { background: "rgba(249, 115, 22, 0.12)", color: "#f97316" },
       big: false,
     },
     {
