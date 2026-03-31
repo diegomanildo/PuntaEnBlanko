@@ -1,12 +1,15 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { FileText, Plus, Save, Printer, Trash2 } from "lucide-react";
+import { FileText, Plus, Save, Trash2, UserPlus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import TicketModal from "../../components/modals/TicketModal";
 import BackButton from "../../components/UI/BackButton";
+import { useNavigate } from "react-router-dom";
 
 function NuevoPresupuesto() {
+  const navigate = useNavigate();
+
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [mostrarLista, setMostrarLista] = useState(false);
@@ -15,13 +18,25 @@ function NuevoPresupuesto() {
   const [cantidad, setCantidad] = useState(1);
   const [carrito, setCarrito] = useState([]);
   const [total, setTotal] = useState(0);
-  const [clienteNombre, setClienteNombre] = useState("");
   const [medioPago, setMedioPago] = useState("efectivo");
   const [montoEfectivo, setMontoEfectivo] = useState("");
   const [montoTransferencia, setMontoTransferencia] = useState("");
   const [ticketData, setTicketData] = useState(null);
   const barcodeBufferRef = useRef("");
   const barcodeTimerRef = useRef(null);
+
+  // ── Cliente ───────────────────────────────────────────────────────────────
+  const [clientes, setClientes] = useState([]);
+  const [clienteId, setClienteId] = useState(null);
+  const [busquedaCliente, setBusquedaCliente] = useState("");
+  const [mostrarListaClientes, setMostrarListaClientes] = useState(false);
+  const clienteBuscadorRef = useRef(null);
+
+  useEffect(() => {
+    fetch(`http://localhost:${PORT}/clientes`)
+      .then((r) => r.json())
+      .then((data) => Array.isArray(data) && setClientes(data));
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -82,6 +97,11 @@ function NuevoPresupuesto() {
     const handleClickOutside = (event) => {
       if (buscadorRef.current && !buscadorRef.current.contains(event.target))
         setMostrarLista(false);
+      if (
+        clienteBuscadorRef.current &&
+        !clienteBuscadorRef.current.contains(event.target)
+      )
+        setMostrarListaClientes(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -89,6 +109,10 @@ function NuevoPresupuesto() {
 
   const productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(busqueda.toLowerCase()),
+  );
+
+  const clientesFiltrados = clientes.filter((c) =>
+    c.razon_social.toLowerCase().includes(busquedaCliente.toLowerCase()),
   );
 
   const agregarProducto = () => {
@@ -126,7 +150,8 @@ function NuevoPresupuesto() {
   const resetForm = () => {
     setCarrito([]);
     setTotal(0);
-    setClienteNombre("");
+    setClienteId(null);
+    setBusquedaCliente("");
     setBusqueda("");
     setProductoSeleccionado(null);
     setCantidad(1);
@@ -136,8 +161,6 @@ function NuevoPresupuesto() {
   };
 
   const guardarPresupuesto = async () => {
-    if (!clienteNombre.trim())
-      return toast.warn("Ingresá el nombre del cliente");
     if (carrito.length === 0)
       return toast.warn("No hay productos en el presupuesto");
 
@@ -154,7 +177,7 @@ function NuevoPresupuesto() {
         body: JSON.stringify({
           productos: carrito,
           total,
-          cliente_nombre: clienteNombre.trim() || null,
+          cliente_id: clienteId ?? null,
           medio_pago: medioPago,
           monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
           monto_transferencia:
@@ -163,13 +186,13 @@ function NuevoPresupuesto() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(`Presupuesto de "${clienteNombre.trim()}" guardado`);
+        const nombreCliente = busquedaCliente.trim() || "Sin nombre";
+        toast.success(`Presupuesto de "${nombreCliente}" guardado`);
 
-        // Mostrar ticket de presupuesto
         setTicketData({
           id: data.id,
           fecha: new Date().toISOString(),
-          cliente_nombre: clienteNombre.trim(),
+          cliente_nombre: busquedaCliente.trim() || null,
           productos: carrito,
           total,
           medio_pago: medioPago,
@@ -177,8 +200,6 @@ function NuevoPresupuesto() {
           monto_transferencia:
             medioPago === "mix" ? Number(montoTransferencia) : null,
         });
-
-        // El form se resetea cuando el usuario cierre el modal
       } else {
         toast.error(data.message || "Error al guardar el presupuesto");
       }
@@ -273,17 +294,89 @@ function NuevoPresupuesto() {
               Agregar producto
             </p>
 
-            <div className="mb-3">
+            {/* ── Buscador de cliente ── */}
+            <div className="mb-3 position-relative" ref={clienteBuscadorRef}>
               <label className="form-label" style={{ fontSize: 13 }}>
-                Cliente
+                Cliente{" "}
+                <span className="text-muted" style={{ fontSize: 11 }}>
+                  (opcional)
+                </span>
               </label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Nombre del cliente..."
-                value={clienteNombre}
-                onChange={(e) => setClienteNombre(e.target.value)}
-              />
+
+              <div className="input-group">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Buscar cliente..."
+                  value={busquedaCliente}
+                  onFocus={() => setMostrarListaClientes(true)}
+                  onChange={(e) => {
+                    setBusquedaCliente(e.target.value);
+                    setClienteId(null);
+                    setMostrarListaClientes(true);
+                  }}
+                />
+                <button
+                  className="btn d-flex align-items-center justify-content-center"
+                  style={{ background: "#6366f1", color: "#fff", border: "none" }}
+                  onClick={() =>
+                    navigate("/clientes/nuevo", {
+                      state: { backDir: "/presupuestos/nuevo" },
+                    })
+                  }
+                  title="Nuevo cliente"
+                >
+                  <UserPlus size={16} />
+                </button>
+              </div>
+
+              {clienteId && (
+                <small
+                  className="text-success d-block mt-1"
+                  style={{ fontSize: 11 }}
+                >
+                  ✓ Cliente seleccionado
+                </small>
+              )}
+
+              {mostrarListaClientes && (
+                <div
+                  className="card position-absolute w-100 shadow"
+                  style={{
+                    zIndex: 100,
+                    borderRadius: 10,
+                    overflow: "hidden",
+                    top: "100%",
+                    marginTop: 4,
+                  }}
+                >
+                  {clientesFiltrados.length === 0 ? (
+                    <div className="p-3 text-muted" style={{ fontSize: 13 }}>
+                      No se encontraron clientes
+                    </div>
+                  ) : (
+                    clientesFiltrados.slice(0, 5).map((c) => (
+                      <button
+                        key={c.id}
+                        className="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                        style={{
+                          fontSize: 13,
+                          padding: "9px 14px",
+                          border: "none",
+                        }}
+                        onClick={() => {
+                          setClienteId(c.id);
+                          setBusquedaCliente(c.razon_social);
+                          setMostrarListaClientes(false);
+                        }}
+                      >
+                        <span className="fw-semibold">{c.razon_social}</span>
+                        <code style={{ fontSize: 10 }}>{c.cuit}</code>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Buscador de productos */}
