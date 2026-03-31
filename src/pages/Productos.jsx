@@ -240,7 +240,7 @@ function Productos() {
         style={{
           borderRadius: 12,
           overflow: "hidden",
-          maxHeight: 620,
+          maxHeight: 560,
           overflowY: "auto",
         }}
       >
