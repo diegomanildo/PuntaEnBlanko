@@ -19,13 +19,13 @@ function Productos() {
   const [productos, setProductos] = useState([]);
   const [stockAlerta, setStockAlerta] = useState(0);
   const [nuevoStockAlerta, setNuevoStockAlerta] = useState(0);
-  const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
+  const [orden, setOrden] = useState({ columna: "nombre", direccion: "asc" });
   const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarProductos = async () => {
     const res = await fetch(`http://localhost:${PORT}/productos`);
     const data = await res.json();
-    setProductos(data);
+    setProductos(data.sort((a, b) => a.nombre.localeCompare(b.nombre)));
   };
 
   const cargarConfig = async () => {

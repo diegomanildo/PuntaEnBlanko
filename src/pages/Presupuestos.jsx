@@ -19,14 +19,21 @@ import BackButton from "../components/UI/BackButton";
 
 function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
-  const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
+  const [orden, setOrden] = useState({
+    columna: "cliente_nombre",
+    direccion: "asc",
+  });
   const [ticketData, setTicketData] = useState(null);
   const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarPresupuestos = async () => {
     const res = await fetch(`http://localhost:${PORT}/presupuestos`);
     const data = await res.json();
-    setPresupuestos(data);
+    setPresupuestos(
+      data.sort((a, b) =>
+        (a.cliente_nombre ?? "").localeCompare(b.cliente_nombre ?? ""),
+      ),
+    );
   };
 
   useEffect(() => {
