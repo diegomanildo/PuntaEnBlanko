@@ -14,6 +14,7 @@ import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../components/UI/BackButton";
 import { rowStyle } from "../utils/colorUtils";
+import SearchBar from "../components/SearchBar";
 
 function Productos() {
   const [productos, setProductos] = useState([]);
@@ -216,23 +217,11 @@ function Productos() {
         </Link>
       </div>
 
-      <div className="d-flex gap-2 mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Buscar producto..."
-          value={busquedaFiltro}
-          onChange={(e) => setBusquedaFiltro(e.target.value)}
-        />
-        {busquedaFiltro && (
-          <button
-            className="btn btn-outline-secondary d-flex align-items-center gap-1"
-            onClick={() => setBusquedaFiltro("")}
-          >
-            <X size={15} /> Limpiar
-          </button>
-        )}
-      </div>
+      <SearchBar
+        value={busquedaFiltro}
+        onChange={setBusquedaFiltro}
+        placeholder="Buscar producto..."
+      />
 
       {/* Tabla */}
       <div

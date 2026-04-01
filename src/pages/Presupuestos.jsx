@@ -16,6 +16,7 @@ import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import TicketModal from "../components/modals/TicketModal";
 import BackButton from "../components/UI/BackButton";
+import SearchBar from "../components/SearchBar";
 
 function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
@@ -343,23 +344,11 @@ function Presupuestos() {
         </Link>
       </div>
 
-      <div className="d-flex gap-2 mb-3">
-        <input
-          type="text"
-          className="form-control"
-          placeholder="Buscar por cliente..."
-          value={busquedaFiltro}
-          onChange={(e) => setBusquedaFiltro(e.target.value)}
-        />
-        {busquedaFiltro && (
-          <button
-            className="btn btn-outline-secondary d-flex align-items-center gap-1"
-            onClick={() => setBusquedaFiltro("")}
-          >
-            <X size={15} /> Limpiar
-          </button>
-        )}
-      </div>
+      <SearchBar
+        value={busquedaFiltro}
+        onChange={setBusquedaFiltro}
+        placeholder="Buscar por cliente..."
+      />
 
       {/* Tabla */}
       <div

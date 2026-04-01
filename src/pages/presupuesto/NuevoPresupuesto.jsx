@@ -178,6 +178,7 @@ function NuevoPresupuesto() {
           productos: carrito,
           total,
           cliente_id: clienteId ?? null,
+          cliente_nombre: busquedaCliente.trim() || null,
           medio_pago: medioPago,
           monto_efectivo: medioPago === "mix" ? Number(montoEfectivo) : null,
           monto_transferencia:
@@ -186,13 +187,23 @@ function NuevoPresupuesto() {
       });
       const data = await res.json();
       if (data.success) {
-        const nombreCliente = busquedaCliente.trim() || "Sin nombre";
+        const nombreCliente = clienteId
+          ? clientes.find((c) => c.id === clienteId)?.razon_social
+          : busquedaCliente.trim();
+
+        // Si no puso nada, bloquear
+        if (!nombreCliente || nombreCliente.trim() === "") {
+          return toast.error(
+            "Ingresá un nombre de cliente o seleccioná uno de la lista",
+          );
+        }
+
         toast.success(`Presupuesto de "${nombreCliente}" guardado`);
 
         setTicketData({
           id: data.id,
           fecha: new Date().toISOString(),
-          cliente_nombre: busquedaCliente.trim() || null,
+          cliente_nombre: nombreCliente,
           productos: carrito,
           total,
           medio_pago: medioPago,
@@ -297,10 +308,7 @@ function NuevoPresupuesto() {
             {/* ── Buscador de cliente ── */}
             <div className="mb-3 position-relative" ref={clienteBuscadorRef}>
               <label className="form-label" style={{ fontSize: 13 }}>
-                Cliente{" "}
-                <span className="text-muted" style={{ fontSize: 11 }}>
-                  (opcional)
-                </span>
+                Cliente
               </label>
 
               <div className="input-group">
@@ -318,7 +326,11 @@ function NuevoPresupuesto() {
                 />
                 <button
                   className="btn d-flex align-items-center justify-content-center"
-                  style={{ background: "#6366f1", color: "#fff", border: "none" }}
+                  style={{
+                    background: "#6366f1",
+                    color: "#fff",
+                    border: "none",
+                  }}
                   onClick={() =>
                     navigate("/clientes/nuevo", {
                       state: { backDir: "/presupuestos/nuevo" },
