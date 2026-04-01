@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Package, Save } from "lucide-react";
 import { PORT } from "../../../backend/config";
@@ -34,11 +34,12 @@ function EditarProducto() {
     cargarProducto();
   }, [id]);
 
-  const actualizarProducto = async () => {
+  const actualizarProducto = useCallback(async () => {
     const nuevosErrores = {};
     if (!nombre) nuevosErrores.nombre = "El nombre es obligatorio";
     if (!precio) nuevosErrores.precio = "El precio es obligatorio";
-    if (tieneStock && (stock === undefined || stock === null || stock === "")) nuevosErrores.stock = "El stock es obligatorio";
+    if (tieneStock && (stock === undefined || stock === null || stock === ""))
+      nuevosErrores.stock = "El stock es obligatorio";
 
     setErrores(nuevosErrores);
 
@@ -69,7 +70,15 @@ function EditarProducto() {
     } catch (error) {
       toast.error("Error al actualizar el producto: " + error.message);
     }
-  };
+  }, [nombre, precio, stock, tieneStock, codigoBarras, color, id, navigate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") actualizarProducto();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [nombre, precio, stock, tieneStock, codigoBarras, color, actualizarProducto]);
 
   return (
     <div className="container">
@@ -90,8 +99,12 @@ function EditarProducto() {
             autoFocus
           />
           {codigoBarras === "" && (
-            <small className="d-block mt-1 text-danger" style={{ fontSize: 12 }}>
-              ⚠️ IMPORTANTE: Si no se carga el código de barras, el producto no se podrá escanear.
+            <small
+              className="d-block mt-1 text-danger"
+              style={{ fontSize: 12 }}
+            >
+              ⚠️ IMPORTANTE: Si no se carga el código de barras, el producto no
+              se podrá escanear.
             </small>
           )}
         </div>
@@ -104,14 +117,16 @@ function EditarProducto() {
             value={nombre}
             onChange={(e) => {
               setNombre(e.target.value);
-              if (errores.nombre) setErrores((prev) => ({ ...prev, nombre: null }));
+              if (errores.nombre)
+                setErrores((prev) => ({ ...prev, nombre: null }));
             }}
           />
           {errores.nombre ? (
             <div className="invalid-feedback">{errores.nombre}</div>
           ) : (
             <small className="text-muted d-block mt-1" style={{ fontSize: 12 }}>
-              ⚠️ Los acentos y la letra ñ no funcionan correctamente, aparecerán como "?"
+              ⚠️ Los acentos y la letra ñ no funcionan correctamente, aparecerán
+              como "?"
             </small>
           )}
         </div>
@@ -125,7 +140,8 @@ function EditarProducto() {
             value={precio}
             onChange={(e) => {
               setPrecio(e.target.value);
-              if (errores.precio) setErrores((prev) => ({ ...prev, precio: null }));
+              if (errores.precio)
+                setErrores((prev) => ({ ...prev, precio: null }));
             }}
           />
           {errores.precio && (
@@ -164,7 +180,8 @@ function EditarProducto() {
               value={stock}
               onChange={(e) => {
                 setStock(e.target.value);
-                if (errores.stock) setErrores((prev) => ({ ...prev, stock: null }));
+                if (errores.stock)
+                  setErrores((prev) => ({ ...prev, stock: null }));
               }}
             />
             {errores.stock && (
@@ -179,7 +196,10 @@ function EditarProducto() {
         </div>
 
         <div className="d-flex gap-3">
-          <button className="btn btn-success d-flex align-items-center gap-2" onClick={actualizarProducto}>
+          <button
+            className="btn btn-success d-flex align-items-center gap-2"
+            onClick={actualizarProducto}
+          >
             <Save size={18} /> Guardar
           </button>
         </div>

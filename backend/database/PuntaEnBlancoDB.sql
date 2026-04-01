@@ -63,6 +63,7 @@ CREATE TABLE ventas (
     medio_pago VARCHAR(20) DEFAULT 'efectivo',
     monto_efectivo DECIMAL(10,2) DEFAULT NULL,
     monto_transferencia DECIMAL(10,2) DEFAULT NULL,
+    estado ENUM('normal', 'anulada') DEFAULT 'normal',
 
     cliente_id INT DEFAULT NULL,
 

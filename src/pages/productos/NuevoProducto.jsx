@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Save, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { PORT } from "../../../backend/config";
@@ -22,7 +22,7 @@ function NuevoProducto() {
     codigoRef.current?.focus(); // foco inicial en el campo de escaneo
   }, []);
 
-  const guardarProducto = async () => {
+  const guardarProducto = useCallback(async () => {
     const nuevosErrores = {};
     if (!nombre) nuevosErrores.nombre = "El nombre es obligatorio";
     if (!precio) nuevosErrores.precio = "El precio es obligatorio";
@@ -54,7 +54,15 @@ function NuevoProducto() {
     } catch (error) {
       toast.error("Error al guardar el producto: " + error.message);
     }
-  };
+  }, [nombre, precio, stock, tieneStock, codigoBarras, color, navigate]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") guardarProducto();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [nombre, precio, stock, tieneStock, codigoBarras, color, guardarProducto]);
 
   return (
     <div className="container">
@@ -77,14 +85,15 @@ function NuevoProducto() {
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                e.preventDefault(); // 👈 bloquea el Enter del escáner
+                e.preventDefault();
+                e.stopPropagation();
               }
             }}
           />
           {codigoBarras === "" && (
             <small
               style={{ fontSize: "12px" }}
-              className="d-block mt-1 text-danger"
+              className="d-block mt-1 text-warning fw-semibold"
             >
               ⚠️ IMPORTANTE! Si no se carga el código de barras, el producto no se podrá escanear.
             </small>
@@ -107,7 +116,7 @@ function NuevoProducto() {
           )}
           <small
             style={{ fontSize: "12px" }}
-            className="text-muted d-block mt-1"
+            className="d-block mt-1 text-warning fw-semibold"
           >
             ⚠️ Los acentos y la letra ñ no funcionan correctamente apareceran
             como "?"
