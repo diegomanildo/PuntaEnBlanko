@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ChevronUp,
   ShoppingBag,
+  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PORT } from "../../backend/config";
@@ -16,14 +17,20 @@ import BackButton from "../components/UI/BackButton";
 
 function Clientes() {
   const [clientes, setClientes] = useState([]);
-  const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
+  const [orden, setOrden] = useState({
+    columna: "razon_social",
+    direccion: "asc",
+  });
   const [expandido, setExpandido] = useState(null);
   const [compras, setCompras] = useState({});
+  const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarClientes = async () => {
     const res = await fetch(`http://localhost:${PORT}/clientes`);
     const data = await res.json();
-    setClientes(data);
+    setClientes(
+      data.sort((a, b) => a.razon_social.localeCompare(b.razon_social)),
+    );
   };
 
   useEffect(() => {
@@ -36,7 +43,9 @@ function Clientes() {
       return;
     }
     if (!compras[id]) {
-      const res = await fetch(`http://localhost:${PORT}/clientes/${id}/compras`);
+      const res = await fetch(
+        `http://localhost:${PORT}/clientes/${id}/compras`,
+      );
       const data = await res.json();
       setCompras((prev) => ({ ...prev, [id]: data }));
     }
@@ -70,13 +79,17 @@ function Clientes() {
           </p>
           {Number(cliente.cantidad_compras) > 0 && (
             <p className="text-muted mb-2" style={{ fontSize: 12 }}>
-              Las {cliente.cantidad_compras} compra(s) asociadas se desvinculará(n) pero no se eliminarán.
+              Las {cliente.cantidad_compras} compra(s) asociadas se
+              desvinculará(n) pero no se eliminarán.
             </p>
           )}
           <div className="d-flex gap-2">
             <button
               className="btn btn-danger btn-sm"
-              onClick={() => { eliminarCliente(id); closeToast(); }}
+              onClick={() => {
+                eliminarCliente(id);
+                closeToast();
+              }}
             >
               Eliminar
             </button>
@@ -97,7 +110,9 @@ function Clientes() {
       const valA = a[columna] ?? "";
       const valB = b[columna] ?? "";
       if (typeof valA === "string")
-        return direccion === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return direccion === "asc"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
       return direccion === "asc" ? valA - valB : valB - valA;
     });
     setClientes(ordenados);
@@ -105,7 +120,8 @@ function Clientes() {
   };
 
   const iconoOrden = (columna) => {
-    if (orden.columna !== columna) return <span style={{ opacity: 0.3 }}>↕</span>;
+    if (orden.columna !== columna)
+      return <span style={{ opacity: 0.3 }}>↕</span>;
     return orden.direccion === "asc" ? "▲" : "▼";
   };
 
@@ -129,6 +145,10 @@ function Clientes() {
     });
   };
 
+  const clientesFiltrados = clientes.filter((c) =>
+    c.razon_social.toLowerCase().includes(busquedaFiltro.toLowerCase()),
+  );
+
   if (clientes.length === 0) {
     return (
       <div>
@@ -136,7 +156,12 @@ function Clientes() {
         <div className="text-center mt-5">
           <div
             className="d-inline-flex align-items-center justify-content-center rounded-3 mb-3"
-            style={{ width: 56, height: 56, background: "rgba(249, 115, 22, 0.12)", color: "#f97316" }}
+            style={{
+              width: 56,
+              height: 56,
+              background: "rgba(249, 115, 22, 0.12)",
+              color: "#f97316",
+            }}
           >
             <Users size={26} />
           </div>
@@ -163,14 +188,23 @@ function Clientes() {
         <div className="d-flex align-items-center gap-3">
           <div
             className="d-flex align-items-center justify-content-center rounded-3"
-            style={{ width: 42, height: 42, flexShrink: 0, background: "rgba(249, 115, 22, 0.12)", color: "#f97316" }}
+            style={{
+              width: 42,
+              height: 42,
+              flexShrink: 0,
+              background: "rgba(249, 115, 22, 0.12)",
+              color: "#f97316",
+            }}
           >
             <Users size={20} />
           </div>
           <div>
-            <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>Clientes</h2>
+            <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
+              Clientes
+            </h2>
             <small className="text-muted">
-              {clientes.length} cliente{clientes.length !== 1 ? "s" : ""} registrado{clientes.length !== 1 ? "s" : ""}
+              {clientes.length} cliente{clientes.length !== 1 ? "s" : ""}{" "}
+              registrado{clientes.length !== 1 ? "s" : ""}
             </small>
           </div>
         </div>
@@ -184,10 +218,34 @@ function Clientes() {
         </Link>
       </div>
 
+      {/* Buscador */}
+      <div className="d-flex gap-2 mb-3">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Buscar cliente..."
+          value={busquedaFiltro}
+          onChange={(e) => setBusquedaFiltro(e.target.value)}
+        />
+        {busquedaFiltro && (
+          <button
+            className="btn btn-outline-secondary d-flex align-items-center gap-1"
+            onClick={() => setBusquedaFiltro("")}
+          >
+            <X size={15} /> Limpiar
+          </button>
+        )}
+      </div>
+
       {/* Tabla */}
       <div
         className="card shadow-sm"
-        style={{ borderRadius: 12, overflow: "hidden", maxHeight: 680, overflowY: "auto" }}
+        style={{
+          borderRadius: 12,
+          overflow: "hidden",
+          maxHeight: 680,
+          overflowY: "auto",
+        }}
       >
         <table className="table mb-0">
           <thead>
@@ -208,7 +266,8 @@ function Clientes() {
                   className={col === "total_gastado" ? "text-end" : ""}
                 >
                   <span className="d-flex align-items-center gap-1">
-                    {label} <span style={{ fontSize: 11 }}>{iconoOrden(col)}</span>
+                    {label}{" "}
+                    <span style={{ fontSize: 11 }}>{iconoOrden(col)}</span>
                   </span>
                 </th>
               ))}
@@ -216,7 +275,7 @@ function Clientes() {
             </tr>
           </thead>
           <tbody>
-            {clientes.map((cliente) => (
+            {clientesFiltrados.map((cliente) => (
               <>
                 <tr key={cliente.id}>
                   {/* Botón expandir compras */}
@@ -227,18 +286,28 @@ function Clientes() {
                       onClick={() => toggleCompras(cliente.id)}
                       title="Ver historial de compras"
                     >
-                      {expandido === cliente.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                      {expandido === cliente.id ? (
+                        <ChevronUp size={14} />
+                      ) : (
+                        <ChevronDown size={14} />
+                      )}
                     </button>
                   </td>
 
                   <td>
                     <div>
-                      <span className="fw-semibold">{cliente.razon_social}</span>
+                      <span className="fw-semibold">
+                        {cliente.razon_social}
+                      </span>
                       {cliente.mail && (
-                        <div className="text-muted" style={{ fontSize: 11 }}>{cliente.mail}</div>
+                        <div className="text-muted" style={{ fontSize: 11 }}>
+                          {cliente.mail}
+                        </div>
                       )}
                       {cliente.telefono && (
-                        <div className="text-muted" style={{ fontSize: 11 }}>📞 {cliente.telefono}</div>
+                        <div className="text-muted" style={{ fontSize: 11 }}>
+                          📞 {cliente.telefono}
+                        </div>
                       )}
                     </div>
                   </td>
@@ -252,16 +321,25 @@ function Clientes() {
                       <span>
                         {cliente.localidad}
                         {cliente.domicilio && (
-                          <div className="text-muted" style={{ fontSize: 11 }}>{cliente.domicilio}</div>
+                          <div className="text-muted" style={{ fontSize: 11 }}>
+                            {cliente.domicilio}
+                          </div>
                         )}
                       </span>
                     ) : (
-                      <span className="text-muted fst-italic" style={{ fontSize: 12 }}>—</span>
+                      <span
+                        className="text-muted fst-italic"
+                        style={{ fontSize: 12 }}
+                      >
+                        —
+                      </span>
                     )}
                   </td>
 
                   <td>
-                    <span className="badge bg-secondary">{cliente.cantidad_compras}</span>
+                    <span className="badge bg-secondary">
+                      {cliente.cantidad_compras}
+                    </span>
                   </td>
 
                   <td className="fw-bold text-success">
@@ -293,15 +371,31 @@ function Clientes() {
                 {/* Fila expandible — historial de compras */}
                 {expandido === cliente.id && (
                   <tr key={`compras-${cliente.id}`}>
-                    <td colSpan={9} style={{ padding: "0 14px 14px 58px", background: "var(--bs-success-bg-subtle)" }}>
-                      {!compras[cliente.id] || compras[cliente.id].length === 0 ? (
-                        <div className="d-flex align-items-center gap-2 py-3 text-muted" style={{ fontSize: 13 }}>
+                    <td
+                      colSpan={9}
+                      style={{
+                        padding: "0 14px 14px 58px",
+                        background: "var(--bs-success-bg-subtle)",
+                      }}
+                    >
+                      {!compras[cliente.id] ||
+                      compras[cliente.id].length === 0 ? (
+                        <div
+                          className="d-flex align-items-center gap-2 py-3 text-muted"
+                          style={{ fontSize: 13 }}
+                        >
                           <ShoppingBag size={16} strokeWidth={1.5} />
                           Este cliente no tiene compras registradas aún.
                         </div>
                       ) : (
-                        <div className="card mt-2" style={{ borderRadius: 10, overflow: "hidden" }}>
-                          <table className="table table-sm mb-0" style={{ fontSize: 13 }}>
+                        <div
+                          className="card mt-2"
+                          style={{ borderRadius: 10, overflow: "hidden" }}
+                        >
+                          <table
+                            className="table table-sm mb-0"
+                            style={{ fontSize: 13 }}
+                          >
                             <thead>
                               <tr>
                                 <th>ID</th>
@@ -324,24 +418,36 @@ function Clientes() {
                                         v.medio_pago === "efectivo"
                                           ? "bg-success"
                                           : v.medio_pago === "transferencia"
-                                          ? "bg-primary"
-                                          : "bg-warning text-dark"
+                                            ? "bg-primary"
+                                            : "bg-warning text-dark"
                                       }`}
                                       style={{ fontSize: 11 }}
                                     >
                                       {v.medio_pago === "efectivo"
                                         ? "💵 Efectivo"
                                         : v.medio_pago === "transferencia"
-                                        ? "📲 Transfer."
-                                        : "🔀 Mix"}
+                                          ? "📲 Transfer."
+                                          : "🔀 Mix"}
                                     </span>
                                     {v.medio_pago === "mix" && (
                                       <div className="d-flex gap-1 mt-1">
-                                        <span className="badge bg-success bg-opacity-75" style={{ fontSize: 10 }}>
-                                          💵 ${Number(v.monto_efectivo).toLocaleString("es-AR")}
+                                        <span
+                                          className="badge bg-success bg-opacity-75"
+                                          style={{ fontSize: 10 }}
+                                        >
+                                          💵 $
+                                          {Number(
+                                            v.monto_efectivo,
+                                          ).toLocaleString("es-AR")}
                                         </span>
-                                        <span className="badge bg-primary bg-opacity-75" style={{ fontSize: 10 }}>
-                                          📲 ${Number(v.monto_transferencia).toLocaleString("es-AR")}
+                                        <span
+                                          className="badge bg-primary bg-opacity-75"
+                                          style={{ fontSize: 10 }}
+                                        >
+                                          📲 $
+                                          {Number(
+                                            v.monto_transferencia,
+                                          ).toLocaleString("es-AR")}
                                         </span>
                                       </div>
                                     )}
