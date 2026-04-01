@@ -64,6 +64,7 @@ router.get("/hoy", (req, res) => {
      FROM ventas v
      LEFT JOIN clientes c ON v.cliente_id = c.id
      WHERE DATE(v.fecha) = CURDATE()
+     AND v.estado = 'normal'
      ORDER BY v.fecha DESC`,
     (err, ventas) => {
       if (err) return res.status(500).json(err);
@@ -71,14 +72,11 @@ router.get("/hoy", (req, res) => {
       db.query(
         `SELECT SUM(total) as total
          FROM ventas
-         WHERE DATE(fecha) = CURDATE()`,
+         WHERE DATE(fecha) = CURDATE()
+         AND estado = 'normal'`,        // 👈
         (err, totalResult) => {
           if (err) return res.status(500).json(err);
-
-          res.json({
-            ventas,
-            total: totalResult[0].total || 0,
-          });
+          res.json({ ventas, total: totalResult[0].total || 0 });
         }
       );
     }
@@ -91,6 +89,7 @@ router.get("/mes", (req, res) => {
     `SELECT DATE_FORMAT(fecha, '%Y-%m-%d') as dia, COUNT(*) as cantidad, SUM(total) as total
     FROM ventas
     WHERE MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())
+    AND estado = 'normal'
     GROUP BY DATE(fecha)
     ORDER BY dia ASC;`,
     (err, porDia) => {
@@ -99,7 +98,8 @@ router.get("/mes", (req, res) => {
       db.query(
         `SELECT COUNT(*) as cantidad, SUM(total) as total
          FROM ventas
-         WHERE MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())`,
+         WHERE MONTH(fecha) = MONTH(CURDATE()) AND YEAR(fecha) = YEAR(CURDATE())
+         AND estado = 'normal'`,
         (err, resumen) => {
           if (err) return res.status(500).json(err);
 
@@ -109,6 +109,7 @@ router.get("/mes", (req, res) => {
               JOIN productos p ON dv.producto_id = p.id
               JOIN ventas v ON dv.venta_id = v.id
               WHERE MONTH(v.fecha) = MONTH(CURDATE()) AND YEAR(v.fecha) = YEAR(CURDATE())
+              AND v.estado = 'normal'
               GROUP BY p.nombre
               ORDER BY total_vendido DESC
               LIMIT 3`,
@@ -138,21 +139,81 @@ router.get("/dia/:fecha", (req, res) => {
      FROM ventas v
      LEFT JOIN clientes c ON v.cliente_id = c.id
      WHERE DATE(v.fecha) = ?
+     AND v.estado = 'normal'
      ORDER BY v.fecha DESC`,
     [fecha],
     (err, ventas) => {
       if (err) return res.status(500).json(err);
 
       db.query(
-        `SELECT SUM(total) as total FROM ventas WHERE DATE(fecha) = ?`,
+        `SELECT SUM(total) as total FROM ventas
+         WHERE DATE(fecha) = ?
+         AND estado = 'normal'`,        // 👈
         [fecha],
         (err, totalResult) => {
           if (err) return res.status(500).json(err);
+          res.json({ ventas, total: totalResult[0].total || 0 });
+        }
+      );
+    }
+  );
+});
 
-          res.json({
-            ventas,
-            total: totalResult[0].total || 0,
-          });
+// PUT /ventas/:id/anular
+router.put("/:id/anular", (req, res) => {
+  const id = Number(req.params.id);
+  const restaurarStock = req.body.restaurarStock === true || req.body.restaurarStock === "true";
+
+  db.query(
+    "SELECT id, estado FROM ventas WHERE id = ?",
+    [id],
+    (err, rows) => {
+      if (err) {
+        console.error("Error SELECT ventas:", err);
+        return res.status(500).json({ error: "Error al buscar venta", detalle: err.message });
+      }
+      if (!rows.length) return res.status(404).json({ error: "Venta no encontrada" });
+      if (rows[0].estado === "anulada")
+        return res.status(400).json({ error: "La venta ya está anulada" });
+
+      db.query(
+        "UPDATE ventas SET estado = 'anulada' WHERE id = ?",
+        [id],
+        (err) => {
+          if (err) {
+            console.error("Error UPDATE ventas:", err);
+            return res.status(500).json({ error: "Error al anular venta", detalle: err.message });
+          }
+
+          if (!restaurarStock) {
+            return res.json({ success: true });
+          }
+
+          db.query(
+            "SELECT producto_id, cantidad FROM detalle_ventas WHERE venta_id = ?",
+            [id],
+            (err, detalles) => {
+              if (err) {
+                console.error("Error SELECT detalle_ventas:", err);
+                return res.status(500).json({ error: "Error al obtener detalle", detalle: err.message });
+              }
+
+              if (detalles.length === 0) return res.json({ success: true });
+
+              let pendientes = detalles.length;
+              detalles.forEach((d) => {
+                db.query(
+                  "UPDATE productos SET stock = stock + ? WHERE id = ?",
+                  [d.cantidad, d.producto_id],
+                  (err) => {
+                    if (err) console.error("Error restaurando stock:", err);
+                    pendientes--;
+                    if (pendientes === 0) res.json({ success: true });
+                  }
+                );
+              });
+            }
+          );
         }
       );
     }

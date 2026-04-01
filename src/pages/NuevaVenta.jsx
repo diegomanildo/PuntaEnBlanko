@@ -47,6 +47,7 @@ function NuevaVenta() {
   const [busquedaCliente, setBusquedaCliente] = useState("");
   const [mostrarListaClientes, setMostrarListaClientes] = useState(false);
   const clienteBuscadorRef = useRef(null);
+  const [historialVentas, setHistorialVentas] = useState([]);
 
   useEffect(() => {
     fetch(`http://localhost:${PORT}/clientes`)
@@ -315,6 +316,7 @@ function NuevaVenta() {
       const data = await res.json();
       if (data.success) {
         toast.success(data.message || "Venta realizada");
+        cargarHistorial();
         setTicketData({
           id: data.id ?? Date.now(),
           fecha: new Date().toISOString(),
@@ -378,6 +380,76 @@ function NuevaVenta() {
 
   const precioModificado = (item) =>
     item.precioOriginal !== undefined && item.precio !== item.precioOriginal;
+
+  const cargarHistorial = () => {
+    fetch(`http://localhost:${PORT}/ventas/hoy`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.ventas)) {
+          setHistorialVentas(data.ventas.slice(0, 20));
+        }
+      });
+  };
+
+  const anularVenta = (venta) => {
+    toast(
+      ({ closeToast }) => (
+        <div>
+          <p className="mb-1 fw-semibold">¿Anular venta #{venta.id}?</p>
+          <p className="text-muted mb-2" style={{ fontSize: 12 }}>
+            ${Number(venta.total).toLocaleString("es-AR")} · {venta.medio_pago}
+          </p>
+          <p className="mb-2" style={{ fontSize: 13 }}>
+            ¿Restaurar el stock de los productos?
+          </p>
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-danger btn-sm"
+              onClick={() => confirmarAnulacion(venta.id, true, closeToast)}
+            >
+              Anular y restaurar stock
+            </button>
+            <button
+              className="btn btn-outline-danger btn-sm"
+              onClick={() => confirmarAnulacion(venta.id, false, closeToast)}
+            >
+              Anular sin restaurar
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={closeToast}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ),
+      { autoClose: false, closeOnClick: false, draggable: false },
+    );
+  };
+
+  const confirmarAnulacion = async (id, restaurarStock, closeToast) => {
+    closeToast();
+    try {
+      const res = await fetch(`http://localhost:${PORT}/ventas/${id}/anular`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ restaurarStock }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(
+          `Venta #${id} anulada${restaurarStock ? " · stock restaurado" : ""}`,
+        );
+        cargarHistorial();
+      } else {
+        toast.error(data.error || "Error al anular la venta");
+      }
+    } catch (err) {
+      toast.error("Error al anular: " + err.message);
+    }
+  };
+
+  useEffect(() => {
+    cargarHistorial();
+  }, []);
 
   return (
     <div>
@@ -1048,6 +1120,113 @@ function NuevaVenta() {
           </div>
         </div>
       </div>
+
+      {historialVentas.length > 0 && (
+        <div className="mt-4">
+          <div className="card" style={{ borderRadius: 12 }}>
+            <div className="card-body">
+              <p
+                className="text-muted mb-3"
+                style={{
+                  fontSize: "0.72rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontWeight: 600,
+                }}
+              >
+                Últimas ventas de hoy
+              </p>
+              <div style={{ overflowX: "auto" }}>
+                <table className="table table-sm mb-0">
+                  <thead>
+                    <tr>
+                      <th style={{ fontSize: 12 }}>#</th>
+                      <th style={{ fontSize: 12 }}>Hora</th>
+                      <th style={{ fontSize: 12 }}>Cliente</th>
+                      <th style={{ fontSize: 12 }}>Medio de pago</th>
+                      <th className="text-end" style={{ fontSize: 12 }}>
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+  {historialVentas.map((v) => {
+    const anulada = v.estado === "anulada";
+    return (
+      <tr
+        key={v.id}
+        style={anulada ? { opacity: 0.45 } : undefined}
+      >
+        <td className="text-muted" style={{ fontSize: 12 }}>
+          #{v.id}
+          {anulada && (
+            <span
+              className="badge bg-danger ms-1"
+              style={{ fontSize: 9 }}
+            >
+              anulada
+            </span>
+          )}
+        </td>
+        <td style={{ fontSize: 12 }}>
+          {new Date(v.fecha).toLocaleTimeString("es-AR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </td>
+        <td style={{ fontSize: 12 }}>
+          {v.cliente_nombre ? (
+            <span className="d-flex align-items-center gap-1">
+              <User size={11} className="text-muted" />
+              {v.cliente_nombre}
+            </span>
+          ) : (
+            <span className="text-muted">—</span>
+          )}
+        </td>
+        <td style={{ fontSize: 12 }}>
+          <span
+            className="badge bg-secondary bg-opacity-10 text-secondary fw-normal"
+            style={{ fontSize: 11 }}
+          >
+            {v.medio_pago === "efectivo"
+              ? "💵 Efectivo"
+              : v.medio_pago === "transferencia"
+                ? "📲 Transferencia"
+                : "🔀 Mix"}
+          </span>
+        </td>
+        <td
+          className="text-end fw-semibold"
+          style={{
+            fontSize: 13,
+            textDecoration: anulada ? "line-through" : "none",
+          }}
+        >
+          ${Number(v.total).toLocaleString("es-AR")}
+        </td>
+        <td className="text-center">
+          {!anulada && (
+            <button
+              className="btn btn-sm btn-outline-danger d-flex align-items-center"
+              style={{ padding: "2px 6px" }}
+              onClick={() => anularVenta(v)}
+              title="Anular venta"
+            >
+              <Trash2 size={12} />
+            </button>
+          )}
+        </td>
+      </tr>
+    );
+  })}
+</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
