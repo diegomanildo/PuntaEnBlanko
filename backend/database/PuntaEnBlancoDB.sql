@@ -1,7 +1,8 @@
 DROP DATABASE IF EXISTS punta_en_blanco;
-CREATE DATABASE punta_en_blanco;
+DROP DATABASE IF EXISTS punta_en_blanko;
+CREATE DATABASE punta_en_blanko;
 
-USE punta_en_blanco;
+USE punta_en_blanko;
 
 CREATE TABLE productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
