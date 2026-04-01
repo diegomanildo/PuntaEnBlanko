@@ -85,7 +85,7 @@ CREATE TABLE detalle_ventas (
     cantidad INT,
     precio DECIMAL(10,2),
 
-    FOREIGN KEY (venta_id) REFERENCES ventas(id),
+    FOREIGN KEY (venta_id) REFERENCES ventas(id) ON DELETE CASCADE,
     FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
 );
 
