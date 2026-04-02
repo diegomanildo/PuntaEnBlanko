@@ -5,10 +5,16 @@ const { spawn } = require('child_process');
 let backendProcess;
 
 function startBackend() {
-  const serverPath = path.join(__dirname, 'backend', 'server.js');
-  backendProcess = spawn('node', [serverPath], {
+  // Usar el ejecutable de Node que trae Electron
+  const nodePath = process.execPath;
+  
+  const serverPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'backend', 'server.js')
+    : path.join(__dirname, 'backend', 'server.js');
+
+  backendProcess = spawn(nodePath, [serverPath], {
     stdio: 'inherit',
-    env: { ...process.env, PORT: '3001' }
+    env: { ...process.env, PORT: '3001', ELECTRON_RUN_AS_NODE: '1' }
   });
 
   backendProcess.on('error', (err) => {
@@ -20,18 +26,16 @@ function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
-    show: false,          // no mostrar hasta que esté lista
+    show: false,
     icon: path.join(__dirname, 'public', 'minilogo.ico'),
     webPreferences: {
       contextIsolation: true,
     }
   });
 
-  win.maximize();         // maximizar
-
+  win.maximize();
   win.setMenu(null);
 
-  // En producción carga el build, en dev carga Vite
   if (app.isPackaged) {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   } else {
@@ -39,7 +43,8 @@ function createWindow() {
   }
 
   win.once('ready-to-show', () => {
-    win.show();           // mostrar recién cuando cargó todo
+    win.show();
+    win.webContents.openDevTools(); // sacá esto cuando funcione
   });
 }
 

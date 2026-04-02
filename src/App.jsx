@@ -29,7 +29,7 @@ function App() {
   };
 
   return (
-    <BrowserRouter>
+    <>
       <Navbar toggleTheme={toggleTheme} theme={theme} />
 
       <div className="container mt-4">
@@ -69,7 +69,7 @@ function App() {
         pauseOnHover
         theme="colored"
       />
-    </BrowserRouter>
+    </>
   );
 }
 
