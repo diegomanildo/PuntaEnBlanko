@@ -27,7 +27,7 @@
     ],
     "win": {
       "target": "nsis",
-      "icon": "assets/minilogo.ico"
+      "icon": "public/minilogo.ico"
     }
   },
   "dependencies": {

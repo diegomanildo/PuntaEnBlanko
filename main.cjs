@@ -42,6 +42,8 @@ app.on("ready", () => {
     },
   });
 
+  mainWindow.maximize();
+
   setTimeout(() => {
     mainWindow.loadURL(startUrl);
   }, 2000);
