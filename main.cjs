@@ -12,13 +12,16 @@ app.on("ready", () => {
 
   const nodeBin = process.platform === "win32" ? "node.exe" : "node";
 
-  const backend = spawn(nodeBin, [
-    path.join(process.resourcesPath, "backend", "server.js")
-  ], {
-    cwd: path.join(process.resourcesPath, "backend"),
-    env: { ...process.env },
-    shell: true,  // <-- esto es clave, deja que el shell resuelva "node"
-  });
+  const backend = spawn(
+    nodeBin,
+    [path.join(process.resourcesPath, "backend", "server.js")],
+    {
+      cwd: path.join(process.resourcesPath, "backend"),
+      env: { ...process.env },
+      shell: true,
+      DB_PATH: app.getPath("userData"), 
+    },
+  );
 
   backend.stdout.on("data", (data) => console.log("Backend:", data.toString()));
   backend.stderr.on("data", (data) =>
@@ -42,8 +45,4 @@ app.on("ready", () => {
   setTimeout(() => {
     mainWindow.loadURL(startUrl);
   }, 2000);
-
-  mainWindow.webContents.on("did-finish-load", () => {
-    mainWindow.webContents.setZoomFactor(1.1);
-  });
 });

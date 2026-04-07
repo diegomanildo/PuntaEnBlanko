@@ -3,238 +3,153 @@ import db from "../db.js";
 
 const router = express.Router();
 
-// POST /presupuestos — crear presupuesto
+// POST /presupuestos
 router.post("/", (req, res) => {
   const { productos, total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia } = req.body;
 
-  db.query(
-    `INSERT INTO presupuestos (total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia)
-     VALUES (?, ?, ?, ?, ?)`,
-    [
+  try {
+    const result = db.prepare(`
+      INSERT INTO presupuestos (total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(
       total,
       cliente_nombre ?? null,
       medio_pago ?? "efectivo",
       medio_pago === "mix" ? (monto_efectivo ?? null) : null,
-      medio_pago === "mix" ? (monto_transferencia ?? null) : null,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "Error al crear presupuesto" });
-      }
+      medio_pago === "mix" ? (monto_transferencia ?? null) : null
+    );
 
-      const presupuestoId = result.insertId;
-      let pendientes = productos.length;
+    const presupuestoId = result.lastInsertRowid;
+    const insertDetalle = db.prepare(
+      "INSERT INTO detalle_presupuestos (presupuesto_id, producto_id, cantidad, precio) VALUES (?, ?, ?, ?)"
+    );
 
-      productos.forEach((p) => {
-        db.query(
-          `INSERT INTO detalle_presupuestos (presupuesto_id, producto_id, cantidad, precio)
-           VALUES (?, ?, ?, ?)`,
-          [presupuestoId, p.id, p.cantidad, p.precio],
-          (err) => {
-            if (err) {
-              console.error(err);
-              return res
-                .status(500)
-                .json({ success: false, message: "Error en detalle presupuesto" });
-            }
-            pendientes--;
-            if (pendientes === 0) {
-              res.json({ success: true, id: presupuestoId, message: "Presupuesto guardado" });
-            }
-          },
-        );
-      });
-    },
-  );
+    const insertarTodo = db.transaction((productos) => {
+      for (const p of productos) insertDetalle.run(presupuestoId, p.id, p.cantidad, p.precio);
+    });
+    insertarTodo(productos);
+
+    res.json({ success: true, id: presupuestoId, message: "Presupuesto guardado" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// PUT /presupuestos/:id — actualizar presupuesto
+// PUT /presupuestos/:id
 router.put("/:id", (req, res) => {
   const { id } = req.params;
   const { productos, total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia } = req.body;
 
-  db.query(
-    `UPDATE presupuestos
-     SET total = ?, cliente_nombre = ?, medio_pago = ?, monto_efectivo = ?, monto_transferencia = ?
-     WHERE id = ?`,
-    [
+  try {
+    const result = db.prepare(`
+      UPDATE presupuestos SET total=?, cliente_nombre=?, medio_pago=?, monto_efectivo=?, monto_transferencia=?
+      WHERE id=?
+    `).run(
       total,
       cliente_nombre ?? null,
       medio_pago ?? "efectivo",
       medio_pago === "mix" ? (monto_efectivo ?? null) : null,
       medio_pago === "mix" ? (monto_transferencia ?? null) : null,
-      id,
-    ],
-    (err, result) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ success: false, message: "Error al actualizar presupuesto" });
-      }
-      if (result.affectedRows === 0)
-        return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
+      id
+    );
 
-      // Reemplazar detalle
-      db.query(
-        "DELETE FROM detalle_presupuestos WHERE presupuesto_id = ?",
-        [id],
-        (err) => {
-          if (err) {
-            console.error(err);
-            return res.status(500).json({ success: false, message: "Error al limpiar detalle" });
-          }
+    if (result.changes === 0) return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
 
-          let pendientes = productos.length;
+    db.prepare("DELETE FROM detalle_presupuestos WHERE presupuesto_id = ?").run(id);
 
-          productos.forEach((p) => {
-            db.query(
-              `INSERT INTO detalle_presupuestos (presupuesto_id, producto_id, cantidad, precio)
-               VALUES (?, ?, ?, ?)`,
-              [id, p.id, p.cantidad, p.precio],
-              (err) => {
-                if (err) {
-                  console.error(err);
-                  return res
-                    .status(500)
-                    .json({ success: false, message: "Error en detalle presupuesto" });
-                }
-                pendientes--;
-                if (pendientes === 0) {
-                  res.json({ success: true, message: "Presupuesto actualizado" });
-                }
-              },
-            );
-          });
-        },
-      );
-    },
-  );
+    const insertDetalle = db.prepare(
+      "INSERT INTO detalle_presupuestos (presupuesto_id, producto_id, cantidad, precio) VALUES (?, ?, ?, ?)"
+    );
+    const insertarTodo = db.transaction((productos) => {
+      for (const p of productos) insertDetalle.run(id, p.id, p.cantidad, p.precio);
+    });
+    insertarTodo(productos);
+
+    res.json({ success: true, message: "Presupuesto actualizado" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// POST /presupuestos/:id/convertir — convertir a venta
+// POST /presupuestos/:id/convertir
 router.post("/:id/convertir", (req, res) => {
   const { id } = req.params;
   const { medio_pago, monto_efectivo, monto_transferencia } = req.body ?? {};
 
-  db.query(
-    "SELECT * FROM presupuestos WHERE id = ?",
-    [id],
-    (err, presupuestos) => {
-      if (err || presupuestos.length === 0)
-        return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
+  try {
+    const presupuesto = db.prepare("SELECT * FROM presupuestos WHERE id = ?").get(id);
+    if (!presupuesto) return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
 
-      const presupuesto = presupuestos[0];
+    const medioPagoFinal = medio_pago ?? presupuesto.medio_pago ?? "efectivo";
+    const montoEfectivoFinal = medioPagoFinal === "mix" ? (monto_efectivo ?? presupuesto.monto_efectivo ?? null) : null;
+    const montoTransferenciaFinal = medioPagoFinal === "mix" ? (monto_transferencia ?? presupuesto.monto_transferencia ?? null) : null;
 
-      // Usar el medio de pago del body si se envió, o el guardado en el presupuesto
-      const medioPagoFinal = medio_pago ?? presupuesto.medio_pago ?? "efectivo";
-      const montoEfectivoFinal =
-        medioPagoFinal === "mix" ? (monto_efectivo ?? presupuesto.monto_efectivo ?? null) : null;
-      const montoTransferenciaFinal =
-        medioPagoFinal === "mix"
-          ? (monto_transferencia ?? presupuesto.monto_transferencia ?? null)
-          : null;
+    const detalle = db.prepare("SELECT * FROM detalle_presupuestos WHERE presupuesto_id = ?").all(id);
 
-      db.query(
-        "SELECT * FROM detalle_presupuestos WHERE presupuesto_id = ?",
-        [id],
-        (err, detalle) => {
-          if (err)
-            return res
-              .status(500)
-              .json({ success: false, message: "Error obteniendo detalle" });
+    const convertir = db.transaction(() => {
+      const ventaResult = db.prepare(
+        "INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia) VALUES (?, ?, ?, ?)"
+      ).run(presupuesto.total, medioPagoFinal, montoEfectivoFinal, montoTransferenciaFinal);
 
-          db.query(
-            `INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia)
-             VALUES (?, ?, ?, ?)`,
-            [presupuesto.total, medioPagoFinal, montoEfectivoFinal, montoTransferenciaFinal],
-            (err, result) => {
-              if (err)
-                return res
-                  .status(500)
-                  .json({ success: false, message: "Error al crear venta" });
+      const ventaId = ventaResult.lastInsertRowid;
 
-              const ventaId = result.insertId;
-              let pendientes = detalle.length;
+      for (const d of detalle) {
+        db.prepare(
+          "INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio) VALUES (?, ?, ?, ?)"
+        ).run(ventaId, d.producto_id, d.cantidad, d.precio);
 
-              detalle.forEach((d) => {
-                db.query(
-                  `INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio)
-                   VALUES (?, ?, ?, ?)`,
-                  [ventaId, d.producto_id, d.cantidad, d.precio],
-                  (err) => {
-                    if (err) {
-                      console.error(err);
-                      return res
-                        .status(500)
-                        .json({ success: false, message: "Error en detalle venta" });
-                    }
+        db.prepare("UPDATE productos SET stock = stock - ? WHERE id = ?").run(d.cantidad, d.producto_id);
+      }
 
-                    db.query(
-                      "UPDATE productos SET stock = stock - ? WHERE id = ?",
-                      [d.cantidad, d.producto_id],
-                    );
+      db.prepare("UPDATE presupuestos SET estado = 'convertido', venta_id = ? WHERE id = ?").run(ventaId, id);
 
-                    pendientes--;
-                    if (pendientes === 0) {
-                      db.query(
-                        "UPDATE presupuestos SET estado = 'convertido', venta_id = ? WHERE id = ?",
-                        [ventaId, id],
-                      );
-                      res.json({ success: true, venta_id: ventaId });
-                    }
-                  },
-                );
-              });
-            },
-          );
-        },
-      );
-    },
-  );
+      return ventaId;
+    });
+
+    const ventaId = convertir();
+    res.json({ success: true, venta_id: ventaId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// DELETE /presupuestos/:id — eliminar presupuesto
+// DELETE /presupuestos/:id
 router.delete("/:id", (req, res) => {
-  const { id } = req.params;
-
-  db.query("DELETE FROM presupuestos WHERE id = ?", [id], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ success: false, message: "Error al eliminar presupuesto" });
-    }
-    if (result.affectedRows === 0)
-      return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
-
+  try {
+    const result = db.prepare("DELETE FROM presupuestos WHERE id = ?").run(req.params.id);
+    if (result.changes === 0) return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
     res.json({ success: true, message: "Presupuesto eliminado" });
-  });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
 });
 
-// GET /presupuestos — listar todos
+// GET /presupuestos
 router.get("/", (req, res) => {
-  db.query(
-    `SELECT * FROM presupuestos ORDER BY fecha DESC`,
-    (err, rows) => {
-      if (err) return res.status(500).json(err);
-      res.json(rows);
-    },
-  );
+  try {
+    const rows = db.prepare("SELECT * FROM presupuestos ORDER BY fecha DESC").all();
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
-// GET /presupuestos/:id — detalle de un presupuesto
+// GET /presupuestos/:id
 router.get("/:id", (req, res) => {
-  const { id } = req.params;
-
-  db.query(
-    `SELECT dp.producto_id, dp.cantidad, dp.precio, p.nombre
-     FROM detalle_presupuestos dp
-     JOIN productos p ON dp.producto_id = p.id
-     WHERE dp.presupuesto_id = ?`,
-    [id],
-    (err, rows) => {
-      if (err) return res.status(500).json(err);
-      res.json(rows);
-    },
-  );
+  try {
+    const rows = db.prepare(`
+      SELECT dp.producto_id, dp.cantidad, dp.precio, p.nombre
+      FROM detalle_presupuestos dp
+      JOIN productos p ON dp.producto_id = p.id
+      WHERE dp.presupuesto_id = ?
+    `).all(req.params.id);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 export default router;
