@@ -1,0 +1,11 @@
+{
+  "name": "puntaenblanko-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.2.1",
+    "cors": "^2.8.6",
+    "mysql2": "^3.19.1",
+    "libphonenumber-js": "^1.12.41"
+  }
+}

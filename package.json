@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "main": "main.js",
+  "main": "main.cjs",
   "scripts": {
     "frontend": "vite",
     "backend": "node backend/server.js",
@@ -18,14 +18,12 @@
     "productName": "Punta En Blanco",
     "files": [
       "dist/**/*",
-      "main.js",
+      "main.cjs",
       "node_modules/**/*"
     ],
     "extraResources": [
-      {
-        "from": "backend",
-        "to": "backend"
-      }
+      { "from": "backend", "to": "backend" },
+      { "from": "backend/node_modules", "to": "backend/node_modules" }
     ],
     "win": {
       "target": "nsis",
@@ -49,6 +47,7 @@
     "wait-on": "^9.0.4"
   },
   "devDependencies": {
+    "@electron/node-gyp": "^10.2.0-electron.2",
     "@eslint/js": "^9.39.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
