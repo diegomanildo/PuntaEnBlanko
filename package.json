@@ -3,35 +3,35 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "main": "main.cjs",
+  "main": "main.js",
   "scripts": {
     "frontend": "vite",
     "backend": "node backend/server.js",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "dev:electron": "concurrently \"npm run backend\" \"electron . --dev\"",
+    "dev:electron": "node dev-electron.js",
     "build": "vite build",
     "lint": "eslint .",
     "dist": "npm run build && electron-builder"
   },
   "build": {
-  "appId": "com.puntaenblanko.pos",
-  "productName": "Punta En Blanco",
-  "files": [
-    "dist/**/*",
-    "main.cjs",
-    "node_modules/**/*"
-  ],
-  "extraResources": [
-    {
-      "from": "backend",
-      "to": "backend"
+    "appId": "com.puntaenblanko.pos",
+    "productName": "Punta En Blanco",
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/minilogo.ico"
     }
-  ],
-  "win": {
-    "target": "nsis",
-    "icon": "assets/minilogo.ico"
-  }
-},
+  },
   "dependencies": {
     "bootstrap": "^5.3.8",
     "chart.js": "^4.5.1",
@@ -53,6 +53,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.0",
+    "cross-env": "^10.1.0",
     "electron": "^41.1.1",
     "electron-builder": "^26.8.1",
     "eslint": "^9.39.4",
