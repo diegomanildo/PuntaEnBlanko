@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PORT } from "../../backend/config";
 import { BarChart3, TrendingUp, Star } from "lucide-react";
 import GraficoVentasMes from "../components/GraficoVentasMes";
 import BackButton from "../components/UI/BackButton";
+import API_URL from "../config";
 
 function FacturacionMes() {
   const [datos, setDatos] = useState(null);
@@ -57,7 +57,7 @@ function FacturacionMes() {
   };
 
   useEffect(() => {
-    fetch(`http://localhost:${PORT}/ventas/mes`)
+    fetch(`${API_URL}/ventas/mes`)
       .then((r) => r.json())
       .then(setDatos);
   }, []);

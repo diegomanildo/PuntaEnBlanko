@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Users, Save, Link2, Link2Off, ShoppingBag, ChevronDown, ChevronUp } from "lucide-react";
 import { parsePhoneNumber, isValidPhoneNumber } from "libphonenumber-js";
-import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../../components/UI/BackButton";
+import API_URL from "../../config";
 
 const formatearCuit = (valor) => {
   const soloDigitos = valor.replace(/\D/g, "").slice(0, 11);
@@ -50,8 +50,8 @@ function EditarCliente() {
   useEffect(() => {
     const cargar = async () => {
       const [resCliente, resCompras] = await Promise.all([
-        fetch(`http://localhost:${PORT}/clientes/${id}`),
-        fetch(`http://localhost:${PORT}/clientes/${id}/compras`),
+        fetch(`${API_URL}/clientes/${id}`),
+        fetch(`${API_URL}/clientes/${id}/compras`),
       ]);
       const cliente = await resCliente.json();
       const historial = await resCompras.json();
@@ -98,7 +98,7 @@ function EditarCliente() {
     if (Object.keys(nuevosErrores).length > 0) return;
 
     try {
-      const res = await fetch(`http://localhost:${PORT}/clientes/${id}`, {
+      const res = await fetch(`${API_URL}/clientes/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -125,7 +125,7 @@ function EditarCliente() {
 
     setVinculando(true);
     try {
-      const res = await fetch(`http://localhost:${PORT}/clientes/${id}/vincular-venta`, {
+      const res = await fetch(`${API_URL}/clientes/${id}/vincular-venta`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ venta_id: ventaId }),
@@ -135,8 +135,8 @@ function EditarCliente() {
         toast.success(data.message || "Venta vinculada");
         setVentaIdInput("");
         const [resCompras, resCliente] = await Promise.all([
-          fetch(`http://localhost:${PORT}/clientes/${id}/compras`),
-          fetch(`http://localhost:${PORT}/clientes/${id}`),
+          fetch(`${API_URL}/clientes/${id}/compras`),
+          fetch(`${API_URL}/clientes/${id}`),
         ]);
         setCompras(await resCompras.json());
         const cli = await resCliente.json();
@@ -153,7 +153,7 @@ function EditarCliente() {
 
   const desvincularVenta = async (ventaId) => {
     try {
-      const res = await fetch(`http://localhost:${PORT}/clientes/desvincular-venta/${ventaId}`, {
+      const res = await fetch(`${API_URL}/clientes/desvincular-venta/${ventaId}`, {
         method: "DELETE",
       });
       const data = await res.json();

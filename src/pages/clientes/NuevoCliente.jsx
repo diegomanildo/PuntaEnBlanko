@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Users, Save } from "lucide-react";
-import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../../components/UI/BackButton";
 import {
   parsePhoneNumberWithError,
   isValidPhoneNumber,
 } from "libphonenumber-js";
+import API_URL from "../../config";
 
 /** Formatea CUIT automáticamente mientras el usuario escribe: XX-XXXXXXXX-X */
 const formatearCuit = (valor) => {
@@ -75,7 +75,7 @@ function NuevoCliente() {
     if (Object.keys(nuevosErrores).length > 0) return;
 
     try {
-      const res = await fetch(`http://localhost:${PORT}/clientes`, {
+      const res = await fetch(`${API_URL}/clientes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

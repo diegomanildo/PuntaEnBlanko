@@ -10,12 +10,11 @@ import {
   UserPlus,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../components/UI/BackButton";
 import TicketModal from "../components/modals/TicketModal";
 import { useNavigate } from "react-router-dom";
-import { rowStyle } from "../utils/colorUtils";
+import API_URL from "../config";
 
 // ── Componente principal ──────────────────────────────────────────────────────
 function NuevaVenta() {
@@ -50,7 +49,7 @@ function NuevaVenta() {
   const [historialVentas, setHistorialVentas] = useState([]);
 
   useEffect(() => {
-    fetch(`http://localhost:${PORT}/clientes`)
+    fetch(`${API_URL}/clientes`)
       .then((r) => r.json())
       .then((data) => Array.isArray(data) && setClientes(data));
   }, []);
@@ -137,7 +136,7 @@ function NuevaVenta() {
   const [ticketData, setTicketData] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:${PORT}/productos`)
+    fetch(`${API_URL}/productos`)
       .then((res) => res.json())
       .then((data) => setProductos(data));
   }, []);
@@ -300,7 +299,7 @@ function NuevaVenta() {
     }
 
     try {
-      const res = await fetch(`http://localhost:${PORT}/ventas`, {
+      const res = await fetch(`${API_URL}/ventas`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -382,7 +381,7 @@ function NuevaVenta() {
     item.precioOriginal !== undefined && item.precio !== item.precioOriginal;
 
   const cargarHistorial = () => {
-    fetch(`http://localhost:${PORT}/ventas/hoy`)
+    fetch(`${API_URL}/ventas/hoy`)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data.ventas)) {
@@ -428,7 +427,7 @@ function NuevaVenta() {
   const confirmarAnulacion = async (id, restaurarStock, closeToast) => {
     closeToast();
     try {
-      const res = await fetch(`http://localhost:${PORT}/ventas/${id}/anular`, {
+      const res = await fetch(`${API_URL}/ventas/${id}/anular`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ restaurarStock }),

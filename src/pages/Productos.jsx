@@ -7,14 +7,13 @@ import {
   Trash2,
   AlertTriangle,
   Save,
-  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../components/UI/BackButton";
 import { rowStyle } from "../utils/colorUtils";
 import SearchBar from "../components/SearchBar";
+import API_URL from "../config";
 
 function Productos() {
   const [productos, setProductos] = useState([]);
@@ -24,13 +23,13 @@ function Productos() {
   const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarProductos = async () => {
-    const res = await fetch(`http://localhost:${PORT}/productos`);
+    const res = await fetch(`${API_URL}/productos`);
     const data = await res.json();
     setProductos(data.sort((a, b) => a.nombre.localeCompare(b.nombre)));
   };
 
   const cargarConfig = async () => {
-    const res = await fetch(`http://localhost:${PORT}/productos/config`);
+    const res = await fetch(`${API_URL}/productos/config`);
     const data = await res.json();
     setStockAlerta(data.stock_alerta);
     setNuevoStockAlerta(data.stock_alerta);
@@ -43,7 +42,7 @@ function Productos() {
 
   const guardarConfig = async () => {
     try {
-      const res = await fetch(`http://localhost:${PORT}/productos/config`, {
+      const res = await fetch(`${API_URL}/productos/config`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ stock_alerta: nuevoStockAlerta }),
@@ -58,7 +57,7 @@ function Productos() {
 
   const eliminarProducto = async (id) => {
     try {
-      const res = await fetch(`http://localhost:${PORT}/productos/${id}`, {
+      const res = await fetch(`${API_URL}/productos/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();

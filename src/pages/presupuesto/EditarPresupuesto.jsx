@@ -1,10 +1,10 @@
 import { FileText, Plus, Trash2, ShoppingCart, Printer } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import TicketModal from "../../components/modals/TicketModal";
 import BackButton from "../../components/UI/BackButton";
+import API_URL from "../../config";
 
 function EditarPresupuesto() {
   const { id } = useParams();
@@ -85,9 +85,9 @@ function EditarPresupuesto() {
   useEffect(() => {
     const cargarDatos = async () => {
       const [resDetalle, resTodos, resProd] = await Promise.all([
-        fetch(`http://localhost:${PORT}/presupuestos/${id}`),
-        fetch(`http://localhost:${PORT}/presupuestos`),
-        fetch(`http://localhost:${PORT}/productos`),
+        fetch(`${API_URL}/presupuestos/${id}`),
+        fetch(`${API_URL}/presupuestos`),
+        fetch(`${API_URL}/productos`),
       ]);
 
       const detalle = await resDetalle.json();
@@ -173,7 +173,7 @@ function EditarPresupuesto() {
 
     // Guardar cambios antes de imprimir
     try {
-      await fetch(`http://localhost:${PORT}/presupuestos/${id}`, {
+      await fetch(`${API_URL}/presupuestos/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -220,7 +220,7 @@ function EditarPresupuesto() {
 
     try {
       const resPut = await fetch(
-        `http://localhost:${PORT}/presupuestos/${id}`,
+        `${API_URL}/presupuestos/${id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -261,7 +261,7 @@ function EditarPresupuesto() {
                   closeToast();
                   try {
                     const res = await fetch(
-                      `http://localhost:${PORT}/presupuestos/${id}/convertir`,
+                      `${API_URL}/presupuestos/${id}/convertir`,
                       {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },

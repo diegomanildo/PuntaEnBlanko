@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Save, ArrowLeft } from "lucide-react";
+import { Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../../components/UI/BackButton";
 import { ColorPicker } from "../../components/UI/ColorPicker";
+import API_URL from "../../config";
 
 function NuevoProducto() {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ function NuevoProducto() {
     if (Object.keys(nuevosErrores).length > 0) return;
 
     try {
-      const res = await fetch(`http://localhost:${PORT}/productos`, {
+      const res = await fetch(`${API_URL}/productos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

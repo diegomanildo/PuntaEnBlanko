@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Package, Save } from "lucide-react";
-import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../../components/UI/BackButton";
 import { ColorPicker } from "../../components/UI/ColorPicker";
+import API_URL from "../../config";
 
 function EditarProducto() {
   const { id } = useParams();
@@ -20,7 +20,7 @@ function EditarProducto() {
 
   useEffect(() => {
     const cargarProducto = async () => {
-      const res = await fetch(`http://localhost:${PORT}/productos/${id}`);
+      const res = await fetch(`${API_URL}/productos/${id}`);
       const data = await res.json();
 
       setNombre(data.nombre);
@@ -46,7 +46,7 @@ function EditarProducto() {
     if (Object.keys(nuevosErrores).length > 0) return;
 
     try {
-      const res = await fetch(`http://localhost:${PORT}/productos/${id}`, {
+      const res = await fetch(`${API_URL}/productos/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

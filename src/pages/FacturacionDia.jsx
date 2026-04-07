@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { PORT } from "../../backend/config";
 import { ChevronDown, ChevronUp, Receipt } from "lucide-react";
 import BackButton from "../components/UI/BackButton";
+import API_URL from "../config";
 
 function FacturacionDia() {
   const location = useLocation();
@@ -15,7 +15,7 @@ function FacturacionDia() {
   const [ventaAbierta, setVentaAbierta] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:${PORT}/ventas/dia/${fecha}`)
+    fetch(`${API_URL}/ventas/dia/${fecha}`)
       .then((r) => r.json())
       .then((data) => {
         setVentas(data.ventas);
@@ -30,7 +30,7 @@ function FacturacionDia() {
     }
 
     if (!detalles[id]) {
-      const res = await fetch(`http://localhost:${PORT}/ventas/${id}`);
+      const res = await fetch(`${API_URL}/ventas/${id}`);
       const data = await res.json();
 
       setDetalles({ ...detalles, [id]: data });

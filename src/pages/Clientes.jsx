@@ -8,13 +8,12 @@ import {
   ChevronDown,
   ChevronUp,
   ShoppingBag,
-  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import BackButton from "../components/UI/BackButton";
 import SearchBar from "../components/SearchBar";
+import API_URL from "../config";
 
 function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -27,7 +26,7 @@ function Clientes() {
   const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarClientes = async () => {
-    const res = await fetch(`http://localhost:${PORT}/clientes`);
+    const res = await fetch(`${API_URL}/clientes`);
     const data = await res.json();
     setClientes(
       data.sort((a, b) => a.razon_social.localeCompare(b.razon_social)),
@@ -45,7 +44,7 @@ function Clientes() {
     }
     if (!compras[id]) {
       const res = await fetch(
-        `http://localhost:${PORT}/clientes/${id}/compras`,
+        `${API_URL}/clientes/${id}/compras`,
       );
       const data = await res.json();
       setCompras((prev) => ({ ...prev, [id]: data }));
@@ -55,7 +54,7 @@ function Clientes() {
 
   const eliminarCliente = async (id) => {
     try {
-      const res = await fetch(`http://localhost:${PORT}/clientes/${id}`, {
+      const res = await fetch(`${API_URL}/clientes/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();

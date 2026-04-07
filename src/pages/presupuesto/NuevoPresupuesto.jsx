@@ -1,11 +1,11 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { FileText, Plus, Save, Trash2, UserPlus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { PORT } from "../../../backend/config";
 import { toast } from "react-toastify";
 import TicketModal from "../../components/modals/TicketModal";
 import BackButton from "../../components/UI/BackButton";
 import { useNavigate } from "react-router-dom";
+import API_URL from "../../config";
 
 function NuevoPresupuesto() {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ function NuevoPresupuesto() {
   const clienteBuscadorRef = useRef(null);
 
   useEffect(() => {
-    fetch(`http://localhost:${PORT}/clientes`)
+    fetch(`${API_URL}/clientes`)
       .then((r) => r.json())
       .then((data) => Array.isArray(data) && setClientes(data));
   }, []);
@@ -88,7 +88,7 @@ function NuevoPresupuesto() {
   }, [productos, carrito]);
 
   useEffect(() => {
-    fetch(`http://localhost:${PORT}/productos`)
+    fetch(`${API_URL}/productos`)
       .then((res) => res.json())
       .then((data) => setProductos(data));
   }, []);
@@ -171,7 +171,7 @@ function NuevoPresupuesto() {
     }
 
     try {
-      const res = await fetch(`http://localhost:${PORT}/presupuestos`, {
+      const res = await fetch(`${API_URL}/presupuestos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

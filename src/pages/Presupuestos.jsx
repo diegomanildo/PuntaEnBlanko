@@ -9,14 +9,13 @@ import {
   Clock,
   ClipboardList,
   Printer,
-  X,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { PORT } from "../../backend/config";
 import { toast } from "react-toastify";
 import TicketModal from "../components/modals/TicketModal";
 import BackButton from "../components/UI/BackButton";
 import SearchBar from "../components/SearchBar";
+import API_URL from "../config";
 
 function Presupuestos() {
   const [presupuestos, setPresupuestos] = useState([]);
@@ -28,7 +27,7 @@ function Presupuestos() {
   const [busquedaFiltro, setBusquedaFiltro] = useState("");
 
   const cargarPresupuestos = async () => {
-    const res = await fetch(`http://localhost:${PORT}/presupuestos`);
+    const res = await fetch(`${API_URL}/presupuestos`);
     const data = await res.json();
     setPresupuestos(
       data.sort((a, b) =>
@@ -43,7 +42,7 @@ function Presupuestos() {
 
   const eliminarPresupuesto = async (id) => {
     try {
-      const res = await fetch(`http://localhost:${PORT}/presupuestos/${id}`, {
+      const res = await fetch(`${API_URL}/presupuestos/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();
@@ -91,7 +90,7 @@ function Presupuestos() {
       const presupuesto = presupuestos.find((p) => p.id === id);
 
       const res = await fetch(
-        `http://localhost:${PORT}/presupuestos/${id}/convertir`,
+        `${API_URL}/presupuestos/${id}/convertir`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -105,7 +104,7 @@ function Presupuestos() {
       const data = await res.json();
       if (data.success) {
         const resDetalle = await fetch(
-          `http://localhost:${PORT}/presupuestos/${id}`,
+          `${API_URL}/presupuestos/${id}`,
         );
         const detalle = await resDetalle.json();
 
@@ -246,7 +245,7 @@ function Presupuestos() {
 
   const verTicket = async (presupuesto) => {
     const res = await fetch(
-      `http://localhost:${PORT}/presupuestos/${presupuesto.id}`,
+      `${API_URL}/presupuestos/${presupuesto.id}`,
     );
     const detalle = await res.json();
     setTicketData({

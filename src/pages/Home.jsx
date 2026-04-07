@@ -4,12 +4,11 @@ import {
   Package,
   Receipt,
   TrendingUp,
-  FileText,
   ClipboardList,
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { PORT } from "../../backend/config";
+import API_URL from "../config";
 
 // Devuelve "YYYY-MM-DD" en hora local, sin desfase UTC
 const fechaHoy = () => {
@@ -24,7 +23,7 @@ function Home() {
   const [alertaStock, setAlertaStock] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:${PORT}/productos/stock-bajo`)
+    fetch(`${API_URL}/productos/stock-bajo`)
       .then((res) => {
         if (!res.ok) throw new Error("Error en la respuesta");
         return res.json();
