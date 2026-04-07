@@ -24,22 +24,20 @@ function FacturacionDia() {
   }, [fecha]);
 
   const toggleDetalle = async (id) => {
-  if (ventaAbierta === id) {
-    setVentaAbierta(null);
-    return;
-  }
+    if (ventaAbierta === id) {
+      setVentaAbierta(null);
+      return;
+    }
 
-  if (!detalles[id]) {
-    const res = await fetch(`http://localhost:${PORT}/ventas/${id}`);
-    const data = await res.json();
+    if (!detalles[id]) {
+      const res = await fetch(`http://localhost:${PORT}/ventas/${id}`);
+      const data = await res.json();
 
-    console.log("DETALLE RECIBIDO:", data); // <── AGREGA ESTO
+      setDetalles({ ...detalles, [id]: data });
+    }
 
-    setDetalles({ ...detalles, [id]: data });
-  }
-
-  setVentaAbierta(id);
-};
+    setVentaAbierta(id);
+  };
 
   const fechaFormateada = new Date(fecha + "T12:00:00").toLocaleDateString(
     "es-AR",
