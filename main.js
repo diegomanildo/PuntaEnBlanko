@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { app, BrowserWindow } from "electron";
 
 const isDev = process.env.NODE_ENV !== "production";
