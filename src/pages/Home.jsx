@@ -110,7 +110,7 @@ function Home() {
         (alertaStock.stockBajo > 0 || alertaStock.sinStock > 0) && (
           <div
             className="d-flex flex-column gap-2 mb-4"
-            style={{ width: "100%", maxWidth: "400px" }}
+            style={{ width: "100%", maxWidth: "800px" }}
           >
             {alertaStock.sinStock > 0 && (
               <div
