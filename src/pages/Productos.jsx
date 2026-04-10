@@ -256,13 +256,15 @@ function Productos() {
           </thead>
           <tbody>
             {productosFiltrados.map((producto) => {
-              const esNormal =
+              const tieneAlerta =
                 producto.tiene_stock !== 0 &&
-                producto.stock > 0 &&
-                producto.stock > stockAlerta;
-              const celdaStyle = esNormal ? rowStyle(producto.color) : {};
+                (producto.stock === 0 || producto.stock <= stockAlerta);
+
               const celdaClass =
-                esNormal && producto.color ? `prod-${producto.color}` : "";
+                !tieneAlerta && producto.color ? `prod-${producto.color}` : "";
+              const celdaStyle = !tieneAlerta
+                ? (rowStyle(producto.color) ?? {})
+                : {};
 
               return (
                 <tr
