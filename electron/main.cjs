@@ -12,7 +12,7 @@ process.env.DB_PATH = app.isPackaged
   : path.join(__dirname, "../backend");
 
 async function createWindow() {
-  const zoom = 1.2;
+  const zoom = 1.1;
   const { startServer } = require(path.join(backendPath, "server.cjs"));
   await startServer();
 
@@ -25,6 +25,7 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       zoomFactor: zoom,
+      devTools: true,
     },
   });
 

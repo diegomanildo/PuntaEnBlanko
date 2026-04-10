@@ -10,27 +10,25 @@ const dbPath = process.env.DB_PATH
 // Así todas tus routes quedan exactamente igual, sin tocar nada.
 
 function createWrapper(sqlDb) {
-  // Guarda el archivo en disco
+  let inTransaction = false;  // ← flag
+
   function save() {
+    if (inTransaction) return;  // ← no guardar en medio de una transacción
     const data = sqlDb.export();
     fs.writeFileSync(dbPath, Buffer.from(data));
   }
 
-  // Ejecuta SQL sin retorno (CREATE TABLE, PRAGMA, etc.)
   function exec(sql) {
     sqlDb.run(sql);
     save();
   }
 
-  // Ejecuta un PRAGMA
   function pragma(statement) {
     sqlDb.run(`PRAGMA ${statement}`);
   }
 
-  // Imita db.prepare(sql) — devuelve objeto con .all(), .get(), .run()
   function prepare(sql) {
     return {
-      // SELECT múltiples filas
       all(...params) {
         const stmt = sqlDb.prepare(sql);
         stmt.bind(params.flat());
@@ -38,7 +36,6 @@ function createWrapper(sqlDb) {
         const colNames = stmt.getColumnNames();
         while (stmt.step()) {
           const row = stmt.getAsObject();
-          // sql.js devuelve bigint en algunos casos, normalizamos
           const normalized = {};
           for (const k of colNames) {
             const v = row[k];
@@ -50,7 +47,6 @@ function createWrapper(sqlDb) {
         return rows;
       },
 
-      // SELECT una sola fila
       get(...params) {
         const stmt = sqlDb.prepare(sql);
         stmt.bind(params.flat());
@@ -66,14 +62,12 @@ function createWrapper(sqlDb) {
         return normalized;
       },
 
-      // INSERT / UPDATE / DELETE
       run(...params) {
         const stmt = sqlDb.prepare(sql);
         stmt.bind(params.flat());
         stmt.step();
         stmt.free();
-        save();
-        // Imita { changes, lastInsertRowid } de better-sqlite3
+        save();  // ← solo guarda si no hay transacción activa
         const changes = sqlDb.getRowsModified();
         const [[lastId]] = sqlDb.exec("SELECT last_insert_rowid()")[0]?.values ?? [[0]];
         return {
@@ -84,17 +78,19 @@ function createWrapper(sqlDb) {
     };
   }
 
-  // Imita db.transaction(fn) — ejecuta todo en una transacción SQLite
   function transaction(fn) {
     return function (arg) {
+      inTransaction = true;  // ← activar flag
       sqlDb.run("BEGIN");
       try {
         const result = fn(arg);
         sqlDb.run("COMMIT");
-        save();
+        inTransaction = false;  // ← desactivar flag
+        save();  // ← guardar una sola vez al final
         return result;
       } catch (err) {
-        sqlDb.run("ROLLBACK");
+        try { sqlDb.run("ROLLBACK"); } catch (_) {}
+        inTransaction = false;  // ← desactivar flag aunque falle
         throw err;
       }
     };
@@ -215,6 +211,6 @@ module.exports = {
   prepare: (sql) => getDb().prepare(sql),
   exec:    (sql) => getDb().exec(sql),
   pragma:  (s)   => getDb().pragma(s),
-  transaction: (fn) => (...args) => getDb().transaction(fn)(...args),
+  transaction: (fn) => getDb().transaction(fn),  // ← sin el doble wrapper
   initDb,
 };
