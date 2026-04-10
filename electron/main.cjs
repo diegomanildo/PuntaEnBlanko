@@ -6,7 +6,7 @@ const backendPath = app.isPackaged
   ? path.join(process.resourcesPath, "backend")
   : path.join(__dirname, "../backend");
 
-process.env.DB_PATH = backendPath; // tu db.cjs ya usa esta variable
+process.env.DB_PATH = backendPath;
 
 async function createWindow() {
   const { startServer } = require(path.join(backendPath, "server.cjs"));
@@ -20,6 +20,7 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
+      zoomFactor: 1.2,
     },
   });
 
@@ -30,7 +31,8 @@ async function createWindow() {
     win.loadFile(path.join(__dirname, "../dist/index.html"));
   }
 
-  // Doble seguro: ready-to-show + did-finish-load
+  win.maximize();
+  
   win.once("ready-to-show", () => {
     win.show();
     win.focus();
