@@ -1,7 +1,11 @@
 {
   "name": "puntaenblanko",
   "private": true,
+<<<<<<< HEAD
   "version": "1.0.2",
+=======
+  "version": "1.0.1",
+>>>>>>> 947ff53b75f03c13ff9311ee3e10fb4d5960da89
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
@@ -15,7 +19,7 @@
   },
   "build": {
     "appId": "com.puntaenblanko.pos",
-    "productName": "Punta En Blanko",
+    "productName": "Punta En Blanco",
     "files": [
       "dist/**/*",
       "electron/**/*",
