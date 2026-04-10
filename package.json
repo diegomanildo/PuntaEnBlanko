@@ -15,7 +15,8 @@
   },
   "build": {
     "appId": "com.puntaenblanko.pos",
-    "productName": "Punta En Blanco",
+    "productName": "Punta En Blanko",
+    "compression": "normal",
     "files": [
       "dist/**/*",
       "electron/**/*",
@@ -33,13 +34,6 @@
       {
         "from": "node_modules",
         "to": "backend/node_modules"
-      }
-    ],
-    "extraFiles": [
-      {
-        "from": "backend/node_modules",
-        "to": "resources/backend/node_modules",
-        "filter": ["**/*"]
       }
     ],
     "win": {
