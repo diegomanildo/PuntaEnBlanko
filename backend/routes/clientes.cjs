@@ -1,6 +1,6 @@
-import express from "express";
-import db from "../db.js";
-import { isValidPhoneNumber } from "libphonenumber-js";
+const express = require("express");
+const db = require("../db.cjs");
+const { isValidPhoneNumber } = require("libphonenumber-js");
 
 const router = express.Router();
 
@@ -167,4 +167,4 @@ router.delete("/desvincular-venta/:venta_id", (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

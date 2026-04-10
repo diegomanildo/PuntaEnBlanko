@@ -1,5 +1,5 @@
-import express from "express";
-import db from "../db.js";
+const express = require("express");
+const db = require("../db.cjs");
 
 const router = express.Router();
 
@@ -152,4 +152,4 @@ router.get("/:id", (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

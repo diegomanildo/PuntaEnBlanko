@@ -1,6 +1,6 @@
-import express from "express";
-import db from "../db.js";
-import { capitalizarNombre } from "../utils/utils.js";
+const express = require("express");
+const db = require("../db.cjs");
+const { capitalizarNombre } = require("../utils/utils.cjs");
 
 const router = express.Router();
 
@@ -144,4 +144,4 @@ router.delete("/:id", (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
