@@ -29,20 +29,20 @@ app.on("ready", () => {
   );
   backend.on("error", (err) => console.error("Spawn error:", err));
   backend.on("close", (code) =>
-    console.error("Backend cerró con código:", code),
+    console.error("Backend cerro con codigo:", code),
   );
 
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     autoHideMenuBar: true,
+    fullscreen: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
+      zoomFactor: 1.1,
     },
   });
-
-  mainWindow.maximize();
 
   setTimeout(() => {
     mainWindow.loadURL(startUrl);
