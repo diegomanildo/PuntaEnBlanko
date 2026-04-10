@@ -8,26 +8,30 @@ router.post("/", (req, res) => {
   const { productos, total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia } = req.body;
 
   try {
-    const result = db.prepare(`
-      INSERT INTO presupuestos (total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(
-      total,
-      cliente_nombre ?? null,
-      medio_pago ?? "efectivo",
-      medio_pago === "mix" ? (monto_efectivo ?? null) : null,
-      medio_pago === "mix" ? (monto_transferencia ?? null) : null
-    );
+    const guardar = db.transaction(() => {
+      const result = db.prepare(`
+        INSERT INTO presupuestos (total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(
+        total,
+        cliente_nombre ?? null,
+        medio_pago ?? "efectivo",
+        medio_pago === "mix" ? (monto_efectivo ?? null) : null,
+        medio_pago === "mix" ? (monto_transferencia ?? null) : null
+      );
 
-    const presupuestoId = result.lastInsertRowid;
-    const insertDetalle = db.prepare(
-      "INSERT INTO detalle_presupuestos (presupuesto_id, producto_id, cantidad, precio) VALUES (?, ?, ?, ?)"
-    );
+      const presupuestoId = result.lastInsertRowid;
 
-    const insertarTodo = db.transaction((productos) => {
-      for (const p of productos) insertDetalle.run(presupuestoId, p.id, p.cantidad, p.precio);
+      for (const p of productos) {
+        db.prepare(
+          "INSERT INTO detalle_presupuestos (presupuesto_id, producto_id, cantidad, precio) VALUES (?, ?, ?, ?)"
+        ).run(presupuestoId, p.id, p.cantidad, p.precio);
+      }
+
+      return presupuestoId;
     });
-    insertarTodo(productos);
+
+    const presupuestoId = guardar();  // ← acá se ejecuta
 
     res.json({ success: true, id: presupuestoId, message: "Presupuesto guardado" });
   } catch (err) {

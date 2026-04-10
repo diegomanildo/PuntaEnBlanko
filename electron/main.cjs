@@ -12,7 +12,7 @@ process.env.DB_PATH = app.isPackaged
   : path.join(__dirname, "../backend");
 
 async function createWindow() {
-  const zoom = 1.2;
+  const zoom = 1.1;
   const { startServer } = require(path.join(backendPath, "server.cjs"));
   await startServer();
 
@@ -25,6 +25,7 @@ async function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
       zoomFactor: zoom,
+      devTools: true,
     },
   });
 
@@ -57,7 +58,15 @@ async function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  await createWindow();
+
+  if (app.isPackaged) {
+    dialog.showMessageBox({
+      message: "DB PATH: " + app.getPath("userData")
+    });
+  }
+});
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
