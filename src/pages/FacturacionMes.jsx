@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, TrendingUp, Star } from "lucide-react";
 import GraficoVentasMes from "../components/GraficoVentasMes";
-import BackButton from "../components/UI/BackButton";
+import BackButton from "../components/BackButton";
 import API_URL from "../config";
 
 function FacturacionMes() {

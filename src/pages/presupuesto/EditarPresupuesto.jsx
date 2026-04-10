@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import TicketModal from "../../components/modals/TicketModal";
-import BackButton from "../../components/UI/BackButton";
+import BackButton from "../../components/BackButton";
 import API_URL from "../../config";
 
 function EditarPresupuesto() {

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import BackButton from "../components/UI/BackButton";
+import BackButton from "../components/BackButton";
 import { rowStyle } from "../utils/colorUtils";
 import SearchBar from "../components/SearchBar";
 import API_URL from "../config";

@@ -3,7 +3,7 @@ import { FileText, Plus, Save, Trash2, UserPlus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import TicketModal from "../../components/modals/TicketModal";
-import BackButton from "../../components/UI/BackButton";
+import BackButton from "../../components/BackButton";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../../config";
 

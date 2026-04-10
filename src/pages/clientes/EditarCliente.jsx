@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Users, Save, Link2, Link2Off, ShoppingBag, ChevronDown, ChevronUp } from "lucide-react";
 import { parsePhoneNumber, isValidPhoneNumber } from "libphonenumber-js";
 import { toast } from "react-toastify";
-import BackButton from "../../components/UI/BackButton";
+import BackButton from "../../components/BackButton";
 import API_URL from "../../config";
 
 const formatearCuit = (valor) => {

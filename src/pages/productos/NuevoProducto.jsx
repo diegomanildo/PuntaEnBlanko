@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Save } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import BackButton from "../../components/UI/BackButton";
-import { ColorPicker } from "../../components/UI/ColorPicker";
+import BackButton from "../../components/BackButton";
+import { ColorPicker } from "../../components/ColorPicker";
 import API_URL from "../../config";
 
 function NuevoProducto() {

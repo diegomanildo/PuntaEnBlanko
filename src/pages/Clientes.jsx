@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import BackButton from "../components/UI/BackButton";
+import BackButton from "../components/BackButton";
 import SearchBar from "../components/SearchBar";
 import API_URL from "../config";
 

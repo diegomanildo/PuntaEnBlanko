@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { ChevronDown, ChevronUp, Receipt } from "lucide-react";
-import BackButton from "../components/UI/BackButton";
+import BackButton from "../components/BackButton";
 import API_URL from "../config";
 
 function FacturacionDia() {
