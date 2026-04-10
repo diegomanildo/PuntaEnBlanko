@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 
 // En producción, los archivos están en resources/backend
@@ -6,9 +6,13 @@ const backendPath = app.isPackaged
   ? path.join(process.resourcesPath, "backend")
   : path.join(__dirname, "../backend");
 
-process.env.DB_PATH = backendPath;
+// DB apunta a userData en producción para que no se pierda con updates
+process.env.DB_PATH = app.isPackaged
+  ? app.getPath("userData")
+  : path.join(__dirname, "../backend");
 
 async function createWindow() {
+  const zoom = 1.2;
   const { startServer } = require(path.join(backendPath, "server.cjs"));
   await startServer();
 
@@ -20,15 +24,16 @@ async function createWindow() {
       preload: path.join(__dirname, "preload.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
-      zoomFactor: 1.2,
+      zoomFactor: zoom,
     },
   });
 
   if (!app.isPackaged) {
     win.loadURL("http://localhost:5173");
-    win.webContents.openDevTools();
+    // win.webContents.openDevTools(); // -> Abre la consola
   } else {
     win.loadFile(path.join(__dirname, "../dist/index.html"));
+    Menu.setApplicationMenu(null);
   }
 
   win.maximize();
@@ -47,6 +52,8 @@ async function createWindow() {
       win.setAlwaysOnTop(true);
       setTimeout(() => win.setAlwaysOnTop(false), 1000);
     }
+
+    win.webContents.setZoomFactor(zoom);
   });
 }
 
