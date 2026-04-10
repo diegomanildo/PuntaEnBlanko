@@ -38,6 +38,34 @@ function NuevoPresupuesto() {
       .then((data) => Array.isArray(data) && setClientes(data));
   }, []);
 
+  const agregarProducto = () => {
+    if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
+
+    const yaEnCarrito = carrito.findIndex(
+      (p) => p.id === productoSeleccionado.id,
+    );
+
+    if (yaEnCarrito !== -1) {
+      const nuevoCarrito = [...carrito];
+      nuevoCarrito[yaEnCarrito].cantidad += Number(cantidad);
+      setCarrito(nuevoCarrito);
+    } else {
+      setCarrito([
+        ...carrito,
+        {
+          id: productoSeleccionado.id,
+          nombre: productoSeleccionado.nombre,
+          precio: productoSeleccionado.precio,
+          cantidad: Number(cantidad),
+        },
+      ]);
+    }
+
+    setBusqueda("");
+    setProductoSeleccionado(null);
+    setCantidad(1);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Enter") {
@@ -45,7 +73,10 @@ function NuevoPresupuesto() {
         barcodeBufferRef.current = "";
         clearTimeout(barcodeTimerRef.current);
 
-        if (codigo.length < 3) return;
+        if (codigo.length < 3) {
+          agregarProducto();
+          return;
+        }
         e.preventDefault();
 
         const producto = productos.find((p) => p.codigo_barras === codigo);
@@ -114,34 +145,6 @@ function NuevoPresupuesto() {
   const clientesFiltrados = clientes.filter((c) =>
     c.razon_social.toLowerCase().includes(busquedaCliente.toLowerCase()),
   );
-
-  const agregarProducto = () => {
-    if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
-
-    const yaEnCarrito = carrito.findIndex(
-      (p) => p.id === productoSeleccionado.id,
-    );
-
-    if (yaEnCarrito !== -1) {
-      const nuevoCarrito = [...carrito];
-      nuevoCarrito[yaEnCarrito].cantidad += Number(cantidad);
-      setCarrito(nuevoCarrito);
-    } else {
-      setCarrito([
-        ...carrito,
-        {
-          id: productoSeleccionado.id,
-          nombre: productoSeleccionado.nombre,
-          precio: productoSeleccionado.precio,
-          cantidad: Number(cantidad),
-        },
-      ]);
-    }
-
-    setBusqueda("");
-    setProductoSeleccionado(null);
-    setCantidad(1);
-  };
 
   useEffect(() => {
     setTotal(carrito.reduce((acc, p) => acc + p.precio * p.cantidad, 0));

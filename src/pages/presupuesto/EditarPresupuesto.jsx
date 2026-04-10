@@ -31,6 +31,34 @@ function EditarPresupuesto() {
   const totalUnidades = carrito.reduce((acc, p) => acc + p.cantidad, 0);
   const convertido = estado === "convertido";
 
+  const agregarProducto = () => {
+    if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
+
+    const yaEnCarrito = carrito.findIndex(
+      (p) => p.id === productoSeleccionado.id,
+    );
+
+    if (yaEnCarrito !== -1) {
+      const nuevoCarrito = [...carrito];
+      nuevoCarrito[yaEnCarrito].cantidad += Number(cantidad);
+      setCarrito(nuevoCarrito);
+    } else {
+      setCarrito([
+        ...carrito,
+        {
+          id: productoSeleccionado.id,
+          nombre: productoSeleccionado.nombre,
+          precio: productoSeleccionado.precio,
+          cantidad: Number(cantidad),
+        },
+      ]);
+    }
+
+    setBusqueda("");
+    setProductoSeleccionado(null);
+    setCantidad(1);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (convertido) return; // 👈 no hacer nada si ya está convertido
@@ -40,7 +68,10 @@ function EditarPresupuesto() {
         barcodeBufferRef.current = "";
         clearTimeout(barcodeTimerRef.current);
 
-        if (codigo.length < 3) return;
+        if (codigo.length < 3) {
+          agregarProducto();
+          return;
+        }
         e.preventDefault();
 
         const producto = productos.find((p) => p.codigo_barras === codigo);
@@ -132,34 +163,6 @@ function EditarPresupuesto() {
   const productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(busqueda.toLowerCase()),
   );
-
-  const agregarProducto = () => {
-    if (!productoSeleccionado) return toast.warning("Seleccioná un producto");
-
-    const yaEnCarrito = carrito.findIndex(
-      (p) => p.id === productoSeleccionado.id,
-    );
-
-    if (yaEnCarrito !== -1) {
-      const nuevoCarrito = [...carrito];
-      nuevoCarrito[yaEnCarrito].cantidad += Number(cantidad);
-      setCarrito(nuevoCarrito);
-    } else {
-      setCarrito([
-        ...carrito,
-        {
-          id: productoSeleccionado.id,
-          nombre: productoSeleccionado.nombre,
-          precio: productoSeleccionado.precio,
-          cantidad: Number(cantidad),
-        },
-      ]);
-    }
-
-    setBusqueda("");
-    setProductoSeleccionado(null);
-    setCantidad(1);
-  };
 
   const removerProducto = (index, name) => {
     setCarrito(carrito.filter((_, i) => i !== index));

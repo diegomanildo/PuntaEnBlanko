@@ -1,4 +1,5 @@
-import { useState } from "react";
+/* eslint-disable react-hooks/exhaustive-deps */
+import { useState, useEffect  } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Users, Save } from "lucide-react";
 import { toast } from "react-toastify";
@@ -91,6 +92,14 @@ function NuevoCliente() {
       toast.error("Error: " + error.message);
     }
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Enter") guardar();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [form, errores]);
 
   return (
     <div>
