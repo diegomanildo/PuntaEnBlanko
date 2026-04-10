@@ -11,6 +11,9 @@ node_modules
 dist
 dist-ssr
 *.local
+punta_en_blanko.db-shm
+punta_en_blanko.db-wal
+
 
 # Editor directories and files
 .vscode/*
