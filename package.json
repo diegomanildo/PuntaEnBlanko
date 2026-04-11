@@ -20,11 +20,7 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "backend/**/*",
-      "node_modules/**/*",
-      "!node_modules/vite/**/*",
-      "!node_modules/@vitejs/**/*",
-      "!node_modules/react-scripts/**/*"
+      "backend/**/*"
     ],
     "extraResources": [
       {

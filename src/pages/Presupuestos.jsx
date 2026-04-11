@@ -233,7 +233,7 @@ function Presupuestos() {
 
   const formatFecha = (fechaStr) => {
     if (!fechaStr) return "-";
-    const fecha = new Date(fechaStr);
+    const fecha = new Date(fechaStr + "Z");
     return fecha.toLocaleDateString("es-AR", {
       day: "2-digit",
       month: "2-digit",

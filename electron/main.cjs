@@ -61,11 +61,11 @@ async function createWindow() {
 app.whenReady().then(async () => {
   await createWindow();
 
-  if (app.isPackaged) {
-    dialog.showMessageBox({
-      message: "DB PATH: " + app.getPath("userData")
-    });
-  }
+  // if (app.isPackaged) {
+  //   dialog.showMessageBox({
+  //     message: "DB PATH: " + app.getPath("userData")
+  //   });
+  // }
 });
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();

@@ -194,7 +194,7 @@ function EditarCliente() {
 
   const formatFechaHora = (fechaStr) => {
     if (!fechaStr) return "-";
-    return new Date(fechaStr).toLocaleDateString("es-AR", {
+    return new Date(fechaStr + "Z").toLocaleDateString("es-AR", {
       day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
     });
   };

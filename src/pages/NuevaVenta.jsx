@@ -397,7 +397,9 @@ function NuevaVenta() {
     toast(
       ({ closeToast }) => (
         <div>
-          <p className="mb-1 fw-semibold">¿Anular venta #{venta.id}?</p>
+          <p className="mb-1 fw-semibold">
+            ¿Nota de crédito para venta #{venta.id}?
+          </p>
           <p className="text-muted mb-2" style={{ fontSize: 12 }}>
             ${Number(venta.total).toLocaleString("es-AR")} · {venta.medio_pago}
           </p>
@@ -409,13 +411,13 @@ function NuevaVenta() {
               className="btn btn-danger btn-sm"
               onClick={() => confirmarAnulacion(venta.id, true, closeToast)}
             >
-              Anular y restaurar stock
+              Nota de crédito y restaurar stock
             </button>
             <button
               className="btn btn-outline-danger btn-sm"
               onClick={() => confirmarAnulacion(venta.id, false, closeToast)}
             >
-              Anular sin restaurar
+              Nota de crédito sin restaurar
             </button>
             <button className="btn btn-secondary btn-sm" onClick={closeToast}>
               Cancelar
@@ -1152,77 +1154,77 @@ function NuevaVenta() {
                     </tr>
                   </thead>
                   <tbody>
-  {historialVentas.map((v) => {
-    const anulada = v.estado === "anulada";
-    return (
-      <tr
-        key={v.id}
-        style={anulada ? { opacity: 0.45 } : undefined}
-      >
-        <td className="text-muted" style={{ fontSize: 12 }}>
-          #{v.id}
-          {anulada && (
-            <span
-              className="badge bg-danger ms-1"
-              style={{ fontSize: 9 }}
-            >
-              anulada
-            </span>
-          )}
-        </td>
-        <td style={{ fontSize: 12 }}>
-          {new Date(v.fecha).toLocaleTimeString("es-AR", {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </td>
-        <td style={{ fontSize: 12 }}>
-          {v.cliente_nombre ? (
-            <span className="d-flex align-items-center gap-1">
-              <User size={11} className="text-muted" />
-              {v.cliente_nombre}
-            </span>
-          ) : (
-            <span className="text-muted">—</span>
-          )}
-        </td>
-        <td style={{ fontSize: 12 }}>
-          <span
-            className="badge bg-secondary bg-opacity-10 text-secondary fw-normal"
-            style={{ fontSize: 11 }}
-          >
-            {v.medio_pago === "efectivo"
-              ? "💵 Efectivo"
-              : v.medio_pago === "transferencia"
-                ? "📲 Transferencia"
-                : "🔀 Mix"}
-          </span>
-        </td>
-        <td
-          className="text-end fw-semibold"
-          style={{
-            fontSize: 13,
-            textDecoration: anulada ? "line-through" : "none",
-          }}
-        >
-          ${Number(v.total).toLocaleString("es-AR")}
-        </td>
-        <td className="text-center">
-          {!anulada && (
-            <button
-              className="btn btn-sm btn-outline-danger d-flex align-items-center"
-              style={{ padding: "2px 6px" }}
-              onClick={() => anularVenta(v)}
-              title="Anular venta"
-            >
-              <Trash2 size={12} />
-            </button>
-          )}
-        </td>
-      </tr>
-    );
-  })}
-</tbody>
+                    {historialVentas.map((v) => {
+                      const anulada = v.estado === "anulada";
+                      return (
+                        <tr
+                          key={v.id}
+                          style={anulada ? { opacity: 0.45 } : undefined}
+                        >
+                          <td className="text-muted" style={{ fontSize: 12 }}>
+                            #{v.id}
+                            {anulada && (
+                              <span
+                                className="badge bg-danger ms-1"
+                                style={{ fontSize: 9 }}
+                              >
+                                anulada
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ fontSize: 12 }}>
+                            {new Date(v.fecha + "Z").toLocaleTimeString("es-AR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </td>
+                          <td style={{ fontSize: 12 }}>
+                            {v.cliente_nombre ? (
+                              <span className="d-flex align-items-center gap-1">
+                                <User size={11} className="text-muted" />
+                                {v.cliente_nombre}
+                              </span>
+                            ) : (
+                              <span className="text-muted">—</span>
+                            )}
+                          </td>
+                          <td style={{ fontSize: 12 }}>
+                            <span
+                              className="badge bg-secondary bg-opacity-10 text-secondary fw-normal"
+                              style={{ fontSize: 11 }}
+                            >
+                              {v.medio_pago === "efectivo"
+                                ? "💵 Efectivo"
+                                : v.medio_pago === "transferencia"
+                                  ? "📲 Transferencia"
+                                  : "🔀 Mix"}
+                            </span>
+                          </td>
+                          <td
+                            className="text-end fw-semibold"
+                            style={{
+                              fontSize: 13,
+                              textDecoration: anulada ? "line-through" : "none",
+                            }}
+                          >
+                            ${Number(v.total).toLocaleString("es-AR")}
+                          </td>
+                          <td className="text-center">
+                            {!anulada && (
+                              <button
+                                className="btn btn-sm btn-outline-danger d-flex align-items-center"
+                                style={{ padding: "2px 6px" }}
+                                onClick={() => anularVenta(v)}
+                                title="Nota de crédito"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
                 </table>
               </div>
             </div>

@@ -127,7 +127,8 @@ function Clientes() {
 
   const formatFecha = (fechaStr) => {
     if (!fechaStr) return "-";
-    return new Date(fechaStr).toLocaleDateString("es-AR", {
+    const [yyyy, mm, dd] = fechaStr.split("T")[0].split("-");
+    return new Date(yyyy, mm - 1, dd).toLocaleDateString("es-AR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -136,7 +137,7 @@ function Clientes() {
 
   const formatFechaHora = (fechaStr) => {
     if (!fechaStr) return "-";
-    return new Date(fechaStr).toLocaleDateString("es-AR", {
+    return new Date(fechaStr + "Z").toLocaleDateString("es-AR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",

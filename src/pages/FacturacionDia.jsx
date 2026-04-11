@@ -201,7 +201,7 @@ function FacturacionDia() {
                       )}
                     </td>
                     <td>
-                      {new Date(v.fecha).toLocaleTimeString([], {
+                      {new Date(v.fecha + "Z").toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}

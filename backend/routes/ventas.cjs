@@ -45,7 +45,6 @@ router.get("/hoy", (req, res) => {
       FROM ventas v
       LEFT JOIN clientes c ON v.cliente_id = c.id
       WHERE DATE(v.fecha) = DATE('now', 'localtime')
-      AND v.estado = 'normal'
       ORDER BY v.fecha DESC
     `).all();
 
