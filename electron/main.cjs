@@ -1,14 +1,12 @@
 const { app, BrowserWindow, Menu } = require("electron");
 const path = require("path");
 
-// ── Single instance lock ──────────────────────────────────────────────────────
 const gotLock = app.requestSingleInstanceLock();
 
 if (!gotLock) {
-  app.quit(); // ya hay una instancia → cerrar esta
+  app.quit();
 } else {
   app.on("second-instance", () => {
-    // alguien intentó abrir una segunda instancia → enfocar la existente
     const wins = BrowserWindow.getAllWindows();
     if (wins.length > 0) {
       const win = wins[0];
@@ -18,7 +16,7 @@ if (!gotLock) {
     }
   });
   // ─────────────────────────────────────────────────────────────────────────────
-
+  
   const backendPath = app.isPackaged
     ? path.join(process.resourcesPath, "backend")
     : path.join(__dirname, "../backend");
@@ -28,7 +26,7 @@ if (!gotLock) {
     : path.join(__dirname, "../backend");
 
   async function createWindow() {
-    const zoom = 1.1;
+    const zoom = 0.9;
     const { startServer } = require(path.join(backendPath, "server.cjs"));
     await startServer();
 

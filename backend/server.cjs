@@ -20,7 +20,7 @@ app.use("/clientes", clientesRouter);
 
 module.exports = {
   startServer: async () => {
-    await initDb();           // ← inicializa sql.js antes de aceptar requests
+    await initDb();
     app.listen(PORT, () => {
       console.log(`Servidor corriendo en puerto ${PORT}`);
     });

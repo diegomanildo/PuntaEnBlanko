@@ -31,7 +31,7 @@ router.post("/", (req, res) => {
       return presupuestoId;
     });
 
-    const presupuestoId = guardar();  // ← acá se ejecuta
+    const presupuestoId = guardar();
 
     res.json({ success: true, id: presupuestoId, message: "Presupuesto guardado" });
   } catch (err) {

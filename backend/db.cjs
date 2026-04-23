@@ -6,14 +6,11 @@ const dbPath = process.env.DB_PATH
   ? path.join(process.env.DB_PATH, "punta_en_blanko.db")
   : path.join(__dirname, "punta_en_blanko.db");
 
-// --- Wrapper que imita la API de better-sqlite3 ---
-// Así todas tus routes quedan exactamente igual, sin tocar nada.
-
 function createWrapper(sqlDb) {
-  let inTransaction = false;  // ← flag
+  let inTransaction = false;
 
   function save() {
-    if (inTransaction) return;  // ← no guardar en medio de una transacción
+    if (inTransaction) return;
     const data = sqlDb.export();
     fs.writeFileSync(dbPath, Buffer.from(data));
   }
@@ -67,7 +64,7 @@ function createWrapper(sqlDb) {
         stmt.bind(params.flat());
         stmt.step();
         stmt.free();
-        save();  // ← solo guarda si no hay transacción activa
+        save();
         const changes = sqlDb.getRowsModified();
         const [[lastId]] = sqlDb.exec("SELECT last_insert_rowid()")[0]?.values ?? [[0]];
         return {
@@ -80,17 +77,17 @@ function createWrapper(sqlDb) {
 
   function transaction(fn) {
     return function (arg) {
-      inTransaction = true;  // ← activar flag
+      inTransaction = true;
       sqlDb.run("BEGIN");
       try {
         const result = fn(arg);
         sqlDb.run("COMMIT");
-        inTransaction = false;  // ← desactivar flag
-        save();  // ← guardar una sola vez al final
+        inTransaction = false;
+        save();
         return result;
       } catch (err) {
         try { sqlDb.run("ROLLBACK"); } catch (_) {}
-        inTransaction = false;  // ← desactivar flag aunque falle
+        inTransaction = false;
         throw err;
       }
     };
@@ -98,9 +95,6 @@ function createWrapper(sqlDb) {
 
   return { exec, pragma, prepare, transaction };
 }
-
-// --- Inicialización sincrónica con async IIFE ---
-// Cargamos sql.js una sola vez al arrancar el servidor.
 
 let db = null;
 
@@ -127,8 +121,7 @@ async function initDb() {
   // Pragmas
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
-
-  // Crear tablas si no existen
+  
   db.exec(`
     CREATE TABLE IF NOT EXISTS productos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -211,6 +204,6 @@ module.exports = {
   prepare: (sql) => getDb().prepare(sql),
   exec:    (sql) => getDb().exec(sql),
   pragma:  (s)   => getDb().pragma(s),
-  transaction: (fn) => getDb().transaction(fn),  // ← sin el doble wrapper
+  transaction: (fn) => getDb().transaction(fn),
   initDb,
 };

@@ -10,7 +10,7 @@ const PRINT_STYLES = `
   body * { visibility: hidden !important; }
   #ticket-print, #ticket-print * { visibility: visible !important; }
   #ticket-print {
-    position: fixed !important;
+    position: absolute !important;
     top: 0; left: 0;
     width: 80mm;
     padding: 6mm 4mm;
@@ -41,7 +41,35 @@ function TicketModal({ ticket, onClose, tipo = "venta" }) {
     }
   }, []);
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => {
+    const content = document.getElementById("ticket-print").innerHTML;
+    const ventana = window.open("", "_blank", "width=400,height=600");
+    ventana.document.write(`
+      <html>
+        <head>
+          <style>
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
+            body {
+              font-family: 'Courier New', monospace;
+              font-size: 14px;
+              width: 80mm;
+              margin: 0;
+              padding: 4mm;
+              -webkit-print-color-adjust: exact;
+            }
+          </style>
+        </head>
+        <body>${content}</body>
+      </html>
+    `);
+    ventana.document.close();
+    ventana.focus();
+    ventana.print();
+    ventana.close();
+  };
 
   const fecha = new Date(ticket.fecha).toLocaleDateString("es-AR", {
     day: "2-digit",
