@@ -203,4 +203,49 @@ router.get("/:id", (req, res) => {
   }
 });
 
+// GET /ventas/mes/:anio/:mes
+router.get("/mes/:anio/:mes", (req, res) => {
+  const { anio, mes } = req.params;
+  const periodo = `${anio}-${mes}`;
+
+  try {
+    const porDia = db.prepare(`
+      SELECT strftime('%Y-%m-%d', fecha) as dia, COUNT(*) as cantidad, SUM(total) as total
+      FROM ventas
+      WHERE strftime('%Y-%m', fecha) = ?
+      AND estado = 'normal'
+      GROUP BY strftime('%Y-%m-%d', fecha)
+      ORDER BY dia ASC
+    `).all(periodo);
+
+    const resumen = db.prepare(`
+      SELECT COUNT(*) as cantidad, COALESCE(SUM(total), 0) as total
+      FROM ventas
+      WHERE strftime('%Y-%m', fecha) = ?
+      AND estado = 'normal'
+    `).get(periodo);
+
+    const topProductos = db.prepare(`
+      SELECT p.nombre, SUM(dv.cantidad) as total_vendido
+      FROM detalle_ventas dv
+      JOIN productos p ON dv.producto_id = p.id
+      JOIN ventas v ON dv.venta_id = v.id
+      WHERE strftime('%Y-%m', v.fecha) = ?
+      AND v.estado = 'normal'
+      GROUP BY p.nombre
+      ORDER BY total_vendido DESC
+      LIMIT 3
+    `).all(periodo);
+
+    res.json({
+      porDia,
+      total: resumen.total || 0,
+      cantidadVentas: resumen.cantidad || 0,
+      topProductos,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

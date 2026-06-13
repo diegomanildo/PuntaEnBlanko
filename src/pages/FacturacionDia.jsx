@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import { ChevronDown, ChevronUp, Receipt } from "lucide-react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Receipt } from "lucide-react";
 import BackButton from "../components/BackButton";
 import API_URL from "../config";
 
@@ -13,6 +13,23 @@ function FacturacionDia() {
   const [total, setTotal] = useState(0);
   const [detalles, setDetalles] = useState({});
   const [ventaAbierta, setVentaAbierta] = useState(null);
+
+  const navigate = useNavigate();
+
+  const fechaHoy = () => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const cambiarDia = (delta) => {
+    const [yyyy, mm, dd] = fecha.split("-").map(Number);
+    const d = new Date(yyyy, mm - 1, dd + delta);
+    const nuevaFecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    navigate(`/facturacion/${nuevaFecha}`, { state: { backDir } });
+  };
 
   useEffect(() => {
     fetch(`${API_URL}/ventas/dia/${fecha}`)
@@ -67,9 +84,22 @@ function FacturacionDia() {
           <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
             Facturación del día
           </h2>
-          <small className="text-muted" style={{ textTransform: "capitalize" }}>
-            {fechaFormateada}
-          </small>
+          <span key={fecha} className="badge-periodo">
+            📅 {fechaFormateada}
+          </span>
+        </div>
+
+        <div className="nav-fecha-wrapper ms-auto">
+          <button className="btn-nav-fecha" onClick={() => cambiarDia(-1)}>
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            className="btn-nav-fecha"
+            onClick={() => cambiarDia(1)}
+            disabled={fecha === fechaHoy()}
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       </div>
 

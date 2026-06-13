@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { BarChart3, TrendingUp, Star } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  BarChart3,
+  TrendingUp,
+  Star,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import GraficoVentasMes from "../components/GraficoVentasMes";
 import BackButton from "../components/BackButton";
 import API_URL from "../config";
@@ -8,6 +14,47 @@ import API_URL from "../config";
 function FacturacionMes() {
   const [datos, setDatos] = useState(null);
   const navigate = useNavigate();
+  const { anio, mes } = useParams();
+
+  const hoy = new Date();
+  const anioActual = anio || String(hoy.getFullYear());
+  const mesActual = mes || String(hoy.getMonth() + 1).padStart(2, "0");
+  const periodo = `${anioActual}-${mesActual}`;
+
+  useEffect(() => {
+    fetch(`${API_URL}/ventas/mes/${anioActual}/${mesActual}`)
+      .then((r) => r.json())
+      .then(setDatos);
+  }, [anioActual, mesActual]);
+
+  // const fechaMes = new Date(Number(anioActual), Number(mesActual) - 1, 1)
+  //   .toLocaleDateString("es-AR", { month: "long", year: "numeric" });
+
+  const esMesActual =
+    periodo ===
+    `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
+  const hayMesAnterior = true;
+  const hayMesSiguiente = !esMesActual;
+
+  const irAPeriodo = (nuevoPeriodo) => {
+    const [a, m] = nuevoPeriodo.split("-");
+    navigate(`/facturacion/mes/${a}/${m}`);
+  };
+
+  const cambiarMes = (delta) => {
+    // delta=1 → mes anterior, delta=-1 → mes siguiente
+    let a = Number(anioActual);
+    let m = Number(mesActual) + (delta === 1 ? -1 : 1);
+    if (m === 0) {
+      m = 12;
+      a -= 1;
+    }
+    if (m === 13) {
+      m = 1;
+      a += 1;
+    }
+    irAPeriodo(`${a}-${String(m).padStart(2, "0")}`);
+  };
 
   const [orden, setOrden] = useState({ columna: null, direccion: "asc" });
 
@@ -56,17 +103,6 @@ function FacturacionMes() {
     return fechaFormateada;
   };
 
-  useEffect(() => {
-    fetch(`${API_URL}/ventas/mes`)
-      .then((r) => r.json())
-      .then(setDatos);
-  }, []);
-
-  const fechaMes = new Date().toLocaleDateString("es-AR", {
-    month: "long",
-    year: "numeric",
-  });
-
   const ticketPromedio =
     datos && datos.cantidadVentas > 0
       ? Math.round(datos.total / datos.cantidadVentas)
@@ -87,9 +123,31 @@ function FacturacionMes() {
           <h2 className="fw-bold mb-0" style={{ fontSize: "1.2rem" }}>
             Historial del mes
           </h2>
-          <small className="text-muted" style={{ textTransform: "capitalize" }}>
-            {fechaMes}
-          </small>
+          <span key={periodo} className="badge-periodo">
+            📅{" "}
+            {new Date(Number(anioActual), Number(mesActual) - 1, 1).toLocaleDateString("es-AR", {
+              month: "long",
+              year: "numeric",
+            })}
+          </span>
+        </div>
+
+        <div className="nav-fecha-wrapper ms-auto">
+          <button
+            className="btn-nav-fecha"
+            disabled={!hayMesAnterior}
+            onClick={() => cambiarMes(1)}
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          <button
+            className="btn-nav-fecha"
+            disabled={!hayMesSiguiente}
+            onClick={() => cambiarMes(-1)}
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       </div>
 
@@ -222,7 +280,9 @@ function FacturacionMes() {
             </div>
           )}
 
-          {datos.porDia.length > 0 && <GraficoVentasMes porDia={datos.porDia} />}
+          {datos.porDia.length > 0 && (
+            <GraficoVentasMes porDia={datos.porDia} />
+          )}
 
           {/* Historial por día */}
           <div
@@ -280,7 +340,11 @@ function FacturacionMes() {
                       <td>
                         <button
                           className="btn btn-primary btn-sm d-flex align-items-center gap-1"
-                          onClick={() => navigate(`/facturacion/${d.dia}`, { state: { backDir: "/facturacion/mes" } })}
+                          onClick={() =>
+                            navigate(`/facturacion/${d.dia}`, {
+                              state: { backDir: "/facturacion/mes" },
+                            })
+                          }
                         >
                           Ver →
                         </button>

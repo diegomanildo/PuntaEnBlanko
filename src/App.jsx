@@ -46,6 +46,7 @@ function App() {
 
           <Route path="/facturacion/:fecha" element={<FacturacionDia />} />
           <Route path="/facturacion/mes" element={<FacturacionMes />} />
+          <Route path="/facturacion/mes/:anio/:mes" element={<FacturacionMes />} />
 
           <Route path="/productos" element={<Productos />} />
           <Route path="/productos/nuevo" element={<NuevoProducto />} />

@@ -402,6 +402,197 @@ td.d-flex .btn {
   font-weight: bold;
 }
 
+.btn-nav-fecha {
+  background: transparent;
+  border: none;
+  color: var(--bs-body-color);
+  transition: background 0.15s ease;
+}
+.btn-nav-fecha:hover:not(:disabled) {
+  background: var(--bs-secondary-bg, #e9ecef);
+}
+.btn-nav-fecha:disabled {
+  opacity: 0.35;
+}
+
+/* Selector de navegación de fecha/mes */
+.nav-fecha-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.light .nav-fecha-wrapper {
+  background: #f3f4f6;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.dark .nav-fecha-wrapper {
+  background: #252525;
+  border: 1px solid #333;
+}
+
+.btn-nav-fecha {
+  background: transparent;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.light .btn-nav-fecha {
+  color: #212529;
+}
+
+.dark .btn-nav-fecha {
+  color: #e0e0e0;
+}
+
+.light .btn-nav-fecha:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.dark .btn-nav-fecha:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn-nav-fecha:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Select de mes dentro del wrapper */
+.select-mes {
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+
+.light .select-mes {
+  color: #212529;
+}
+
+.dark .select-mes {
+  color: #e0e0e0;
+}
+
+.dark .select-mes option {
+  background: #1e1e1e;
+  color: #e0e0e0;
+}
+
+.badge-periodo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: capitalize;
+  margin-top: 2px;
+}
+
+.light .badge-periodo {
+  background: rgba(255, 193, 7, 0.12);
+  color: #b8860b;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.dark .badge-periodo {
+  background: rgba(255, 193, 7, 0.1);
+  color: #ffd966;
+  border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.badge-periodo {
+  animation: fadeSlide 0.25s ease;
+}
+
+/* Home - hero principal */
+.home-hero {
+  background: linear-gradient(135deg, #198754 0%, #15a872 60%, #0d9488 100%);
+  box-shadow: 0 8px 24px rgba(25, 135, 84, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.home-hero:hover {
+  transform: translateY(-3px) scale(1.005);
+  box-shadow: 0 12px 32px rgba(25, 135, 84, 0.35);
+}
+
+.home-hero-arrow {
+  transition: transform 0.25s ease;
+}
+
+.home-hero:hover .home-hero-arrow {
+  transform: translateX(4px);
+}
+
+/* Cards destacadas (Productos, Presupuestos) */
+.home-card-feature {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.home-card-feature:hover {
+  transform: translateY(-2px) translateX(2px);
+}
+
+.light .home-card-feature:hover {
+  border-color: rgba(0, 0, 0, 0.06);
+}
+
+.dark .home-card-feature:hover {
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.home-card-arrow {
+  transition: transform 0.2s ease, color 0.2s ease;
+  font-size: 1.4rem;
+}
+
+.home-card-feature:hover .home-card-arrow {
+  transform: translateX(4px);
+  color: #198754 !important;
+}
+
+/* Mini cards de accesos */
+.home-card-mini {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-card-mini:hover {
+  transform: translateY(-3px);
+}
+
+/* Responsive: en pantallas chicas, columnas reducidas */
+@media (max-width: 576px) {
+  .home-card-mini-grid {
+    grid-template-columns: repeat(1, 1fr) !important;
+  }
+}
+
 /* Colores personalizados de producto — modo oscuro */
 .dark .table > :not(caption) > * > .prod-blue   { background-color: #1a2a3a !important; }
 .dark .table > :not(caption) > * > .prod-green  { background-color: #1a2e1a !important; }
