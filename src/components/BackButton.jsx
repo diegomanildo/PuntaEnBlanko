@@ -17,7 +17,8 @@ function BackButton({ dir }) {
 
   return (
     <button className="btn-volver" onClick={() => navigate(finalDir)}>
-      <ArrowLeft size={16} /> Volver
+      <ArrowLeft size={16} className="btn-volver-icon" />
+      Volver
     </button>
   );
 }
