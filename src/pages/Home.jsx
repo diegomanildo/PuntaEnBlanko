@@ -7,6 +7,7 @@ import {
   ClipboardList,
   Users,
   ArrowRight,
+  HardDriveDownload,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import API_URL from "../config";
@@ -81,6 +82,12 @@ function Home() {
       iconBg: "bg-info bg-opacity-10",
       iconColor: "text-info",
     },
+    {
+      to: "/backups",
+      icon: <HardDriveDownload size={24} />,
+      label: "Copias de seguridad",
+      iconStyle: { background: "rgba(25, 135, 84, 0.12)", color: "#198754" },
+    },
   ];
 
   return (
@@ -124,7 +131,10 @@ function Home() {
                   >
                     Sin stock
                   </p>
-                  <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
+                  <p
+                    className="mb-0 text-muted"
+                    style={{ fontSize: "0.78rem" }}
+                  >
                     {alertaStock.sinStock} producto
                     {alertaStock.sinStock !== 1 ? "s" : ""} sin unidades
                     disponibles
@@ -150,7 +160,10 @@ function Home() {
                   >
                     Stock bajo
                   </p>
-                  <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
+                  <p
+                    className="mb-0 text-muted"
+                    style={{ fontSize: "0.78rem" }}
+                  >
                     {alertaStock.stockBajo} producto
                     {alertaStock.stockBajo !== 1 ? "s" : ""} por debajo del
                     límite
@@ -183,10 +196,16 @@ function Home() {
               <ShoppingCart size={28} />
             </div>
             <div>
-              <p className="mb-0 fw-bold text-white" style={{ fontSize: "1.25rem" }}>
+              <p
+                className="mb-0 fw-bold text-white"
+                style={{ fontSize: "1.25rem" }}
+              >
                 Nueva Venta
               </p>
-              <p className="mb-0" style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.85)" }}>
+              <p
+                className="mb-0"
+                style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.85)" }}
+              >
                 Registrar una transacción
               </p>
             </div>
@@ -196,62 +215,77 @@ function Home() {
 
         {/* Tarjetas destacadas: Productos y Presupuestos */}
         <div className="d-flex flex-column gap-3 mb-3">
-          {tarjetasDestacadas.map(({ to, icon, label, sub, iconBg, iconColor }) => (
-            <Link
-              key={to}
-              to={to}
-              className="card text-decoration-none d-flex flex-row align-items-center gap-3 p-3 home-card-feature"
-              style={{ borderRadius: 14 }}
-            >
-              <div
-                className="d-flex align-items-center justify-content-center rounded-3"
-                style={{
-                  width: 50,
-                  height: 50,
-                  flexShrink: 0,
-                  background: iconBg,
-                  color: iconColor,
-                }}
+          {tarjetasDestacadas.map(
+            ({ to, icon, label, sub, iconBg, iconColor }) => (
+              <Link
+                key={to}
+                to={to}
+                className="card text-decoration-none d-flex flex-row align-items-center gap-3 p-3 home-card-feature"
+                style={{ borderRadius: 14 }}
               >
-                {icon}
-              </div>
-              <div className="flex-grow-1">
-                <p className="mb-0 fw-semibold" style={{ fontSize: "1.05rem" }}>
-                  {label}
-                </p>
-                <p className="mb-0 text-muted" style={{ fontSize: "0.8rem" }}>
-                  {sub}
-                </p>
-              </div>
-              <span className="text-muted home-card-arrow">›</span>
-            </Link>
-          ))}
+                <div
+                  className="d-flex align-items-center justify-content-center rounded-3"
+                  style={{
+                    width: 50,
+                    height: 50,
+                    flexShrink: 0,
+                    background: iconBg,
+                    color: iconColor,
+                  }}
+                >
+                  {icon}
+                </div>
+                <div className="flex-grow-1">
+                  <p
+                    className="mb-0 fw-semibold"
+                    style={{ fontSize: "1.05rem" }}
+                  >
+                    {label}
+                  </p>
+                  <p className="mb-0 text-muted" style={{ fontSize: "0.8rem" }}>
+                    {sub}
+                  </p>
+                </div>
+                <span className="text-muted home-card-arrow">›</span>
+              </Link>
+            ),
+          )}
         </div>
 
         {/* Accesos secundarios */}
         <div
           className="d-grid gap-3"
-          style={{ gridTemplateColumns: "repeat(3, 1fr)" }}
+          style={{ gridTemplateColumns: "repeat(4, 1fr)" }}
         >
-          {accesosSecundarios.map(({ to, icon, label, iconBg, iconColor, iconStyle, state }) => (
-            <Link
-              key={to}
-              to={to}
-              state={state}
-              className="card text-decoration-none d-flex flex-column align-items-center text-center gap-2 p-3 home-card-mini"
-              style={{ borderRadius: 14 }}
-            >
-              <div
-                className={`d-flex align-items-center justify-content-center rounded-3 ${iconBg ?? ""} ${iconColor ?? ""}`}
-                style={{ width: 48, height: 48, flexShrink: 0, ...(iconStyle ?? {}) }}
+          {accesosSecundarios.map(
+            ({ to, icon, label, iconBg, iconColor, iconStyle, state }) => (
+              <Link
+                key={to}
+                to={to}
+                state={state}
+                className="card text-decoration-none d-flex flex-column align-items-center text-center gap-2 p-3 home-card-mini"
+                style={{ borderRadius: 14 }}
               >
-                {icon}
-              </div>
-              <p className="mb-0" style={{ fontSize: "0.82rem", lineHeight: 1.3 }}>
-                {label}
-              </p>
-            </Link>
-          ))}
+                <div
+                  className={`d-flex align-items-center justify-content-center rounded-3 ${iconBg ?? ""} ${iconColor ?? ""}`}
+                  style={{
+                    width: 48,
+                    height: 48,
+                    flexShrink: 0,
+                    ...(iconStyle ?? {}),
+                  }}
+                >
+                  {icon}
+                </div>
+                <p
+                  className="mb-0"
+                  style={{ fontSize: "0.82rem", lineHeight: 1.3 }}
+                >
+                  {label}
+                </p>
+              </Link>
+            ),
+          )}
         </div>
       </div>
     </div>

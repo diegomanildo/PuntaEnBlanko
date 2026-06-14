@@ -1,3 +1,5 @@
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import {
   ShoppingCart,
@@ -8,6 +10,9 @@ import {
   Sun,
   Moon,
   Users,
+  HardDriveDownload,
+  ChevronDown,
+  LayoutDashboard,
 } from "lucide-react";
 import logo from "../assets/logo.png";
 
@@ -19,22 +24,87 @@ const fechaHoy = () => {
   return `${yyyy}-${mm}-${dd}`;
 };
 
-const navLinks = [
+// Links principales: siempre visibles
+const mainLinks = [
   { to: "/ventas/nueva", icon: ShoppingCart, label: "Nueva Venta" },
   { to: "/presupuestos", icon: ClipboardList, label: "Presupuestos" },
   { to: "/clientes", icon: Users, label: "Clientes" },
   { to: "/productos", icon: Package, label: "Productos" },
+];
+
+// Links secundarios: agrupados bajo "Reportes"
+const reportLinks = [
   {
     to: `/facturacion/${fechaHoy()}`,
     icon: Receipt,
-    label: "Hoy",
+    label: "Facturación de hoy",
     state: { backDir: "/" },
   },
-  { to: "/facturacion/mes", icon: TrendingUp, label: "Este mes" },
+  { to: "/facturacion/mes", icon: TrendingUp, label: "Facturación del mes" },
+  { to: "/backups", icon: HardDriveDownload, label: "Backups" },
 ];
 
 function Navbar({ toggleTheme, theme }) {
   const location = useLocation();
+  const [reportsOpen, setReportsOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, right: "auto" });
+  const toggleRef = useRef(null);
+  const menuRef = useRef(null);
+
+  // Calcular la posición del menú en base al botón
+  const updateMenuPos = () => {
+    if (!toggleRef.current) return;
+    const rect = toggleRef.current.getBoundingClientRect();
+    const menuWidth = 210;
+    const overflowsRight = rect.left + menuWidth > window.innerWidth;
+
+    setMenuPos({
+      top: rect.bottom + 6,
+      left: overflowsRight ? "auto" : rect.left,
+      right: overflowsRight ? window.innerWidth - rect.right : "auto",
+    });
+  };
+
+  useEffect(() => {
+    if (!reportsOpen) return;
+
+    updateMenuPos();
+
+    const handleClickOutside = (e) => {
+      if (
+        toggleRef.current?.contains(e.target) ||
+        menuRef.current?.contains(e.target)
+      ) {
+        return;
+      }
+      setReportsOpen(false);
+    };
+
+    window.addEventListener("resize", updateMenuPos);
+    window.addEventListener("scroll", updateMenuPos, true);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("resize", updateMenuPos);
+      window.removeEventListener("scroll", updateMenuPos, true);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [reportsOpen]);
+
+  // Cerrar el dropdown al cambiar de ruta (ajuste de estado durante el render)
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
+  if (location.pathname !== prevPathname) {
+    setPrevPathname(location.pathname);
+    setReportsOpen(false);
+  }
+
+  const isActive = (to) =>
+    location.pathname === to ||
+    (to !== "/" && location.pathname.startsWith(to));
+
+  const isReportsActive =
+    location.pathname.startsWith("/facturacion") ||
+    location.pathname.startsWith("/backups");
 
   return (
     <nav className="navbar navbar-expand-lg">
@@ -52,52 +122,84 @@ function Navbar({ toggleTheme, theme }) {
         </Link>
 
         {/* Separador */}
-        <div
-          style={{
-            width: 1,
-            height: 20,
-            background:
-              theme === "dark" ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
-            flexShrink: 0,
-          }}
-        />
+        <div className="navbar-separator" />
 
         {/* Links */}
-        <div
-          className="navbar-nav d-flex flex-row align-items-center flex-wrap"
-          style={{ gap: "2px", flex: 1 }}
-        >
-          {/* eslint-disable-next-line no-unused-vars */}
-          {navLinks.map(({ to, icon: Icon, label, state }) => {
-            const isActive =
-              location.pathname === to ||
-              (to !== "/" && location.pathname.startsWith(to));
+        <div className="navbar-links navbar-nav d-flex flex-row align-items-center">
+          {mainLinks.map(({ to, icon: Icon, label }) => {
+            const active = isActive(to);
             return (
               <Link
                 key={to}
                 to={to}
-                state={state}
-                className="nav-link d-flex align-items-center"
-                style={{
-                  gap: "6px",
-                  fontSize: "0.83rem",
-                  fontWeight: isActive ? 600 : 400,
-                  borderRadius: "8px",
-                  padding: "5px 10px",
-                  background: isActive
-                    ? theme === "dark"
-                      ? "rgba(255,255,255,0.08)"
-                      : "rgba(0,0,0,0.06)"
-                    : "transparent",
-                  opacity: isActive ? 1 : 0.75,
-                  transition: "background 0.2s ease, opacity 0.2s ease",
-                }}
+                title={label}
+                className={`nav-link d-flex align-items-center${active ? " active" : ""}`}
               >
-                <Icon size={15} strokeWidth={isActive ? 2.2 : 1.8} />
-                {label}
+                <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+                <span className="nav-link-label">{label}</span>
               </Link>
             );
           })}
+
+          {/* Dropdown de Reportes */}
+          <div className="nav-dropdown">
+            <button
+              ref={toggleRef}
+              type="button"
+              title="Reportes"
+              className={`nav-link nav-dropdown-toggle d-flex align-items-center${
+                isReportsActive ? " active" : ""
+              }`}
+              onClick={() => setReportsOpen((o) => !o)}
+              aria-expanded={reportsOpen}
+            >
+              <LayoutDashboard
+                size={15}
+                strokeWidth={isReportsActive ? 2.2 : 1.8}
+              />
+              <span className="nav-link-label">Reportes</span>
+              <ChevronDown
+                size={14}
+                className="nav-dropdown-chevron"
+                style={{
+                  transform: reportsOpen ? "rotate(180deg)" : "rotate(0deg)",
+                }}
+              />
+            </button>
+
+            {reportsOpen &&
+              createPortal(
+                <div
+                  ref={menuRef}
+                  className="nav-dropdown-menu"
+                  style={{
+                    position: "fixed",
+                    top: menuPos.top,
+                    left: menuPos.left,
+                    right: menuPos.right,
+                  }}
+                >
+                  {reportLinks.map(({ to, icon: Icon, label, state }) => {
+                    const active = isActive(to);
+                    return (
+                      <Link
+                        key={to}
+                        to={to}
+                        state={state}
+                        className={`nav-dropdown-item d-flex align-items-center${
+                          active ? " active" : ""
+                        }`}
+                        onClick={() => setReportsOpen(false)}
+                      >
+                        <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
+                        <span>{label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>,
+                document.body
+              )}
+          </div>
         </div>
 
         {/* Toggle tema */}

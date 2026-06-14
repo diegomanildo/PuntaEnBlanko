@@ -6,7 +6,7 @@ import NuevaVenta from "./pages/NuevaVenta";
 import NuevoProducto from "./pages/productos/NuevoProducto";
 import EditarProducto from "./pages/productos/EditarProducto";
 import { useEffect, useState } from "react";
-import { ToastContainer } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import FacturacionDia from "./pages/FacturacionDia";
 import FacturacionMes from "./pages/FacturacionMes";
 import NuevoPresupuesto from "./pages/presupuesto/NuevoPresupuesto";
@@ -15,6 +15,8 @@ import EditarPresupuesto from "./pages/presupuesto/EditarPresupuesto";
 import Clientes from "./pages/Clientes";
 import NuevoCliente from "./pages/clientes/NuevoCliente";
 import EditarCliente from "./pages/clientes/EditarCliente";
+import Backups from "./pages/Backups";
+import API_URL from "./config";
 
 function App() {
   const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
@@ -23,6 +25,19 @@ function App() {
     document.body.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/backups/auto`, { method: "POST" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ejecutado) {
+          toast.success(`Backup automático creado: ${data.carpeta}`);
+        } else if (data.error) {
+          toast.error(`Backup automático falló: ${data.error}`);
+        }
+      })
+      .catch((err) => console.error("Error en backup automático:", err));
+  }, []);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -55,6 +70,8 @@ function App() {
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/clientes/nuevo" element={<NuevoCliente />} />
           <Route path="/clientes/editar/:id" element={<EditarCliente />} />
+
+          <Route path="/backups" element={<Backups />} />
         </Routes>
       </div>
 

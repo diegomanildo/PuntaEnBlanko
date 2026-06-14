@@ -1,0 +1,65 @@
+/* ============================================
+   SPINNER — agregar al final de tu CSS existente
+   ============================================ */
+
+.spinner {
+  border-radius: 50%;
+  border: 3px solid transparent;
+  border-top-color: #198754;
+  border-right-color: #198754;
+  animation: spin 0.7s linear infinite;
+}
+
+.dark .spinner {
+  border-top-color: #34d399;
+  border-right-color: #34d399;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Contenedor para spinner no-fullscreen, centrado dentro de su espacio */
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 220px;
+  width: 100%;
+}
+
+/* Spinner de "página": ocupa el área de contenido,
+   pero respeta navbar/BackButton renderizados afuera */
+.spinner-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+  animation: fadeSlide 0.2s ease;
+}
+
+.spinner-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.spinner-text {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.light .spinner-text {
+  color: #6c757d;
+}
+
+.dark .spinner-text {
+  color: #8f8f8f;
+}

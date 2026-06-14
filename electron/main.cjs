@@ -1,7 +1,34 @@
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require("electron");
 const path = require("path");
+const fs = require("fs");
 
 const gotLock = app.requestSingleInstanceLock();
+
+ipcMain.handle("seleccionar-carpeta", async () => {
+  const win = BrowserWindow.getFocusedWindow();
+  const result = await dialog.showOpenDialog(win, {
+    properties: ["openDirectory"],
+    title: "Seleccionar carpeta de destino para el backup",
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+
+  return result.filePaths[0];
+});
+
+ipcMain.handle("obtener-ruta-default-backups", () => {
+  const ruta = path.join(app.getPath("documents"), "PuntaEnBlanko", "Backups");
+  try {
+    if (!fs.existsSync(ruta)) {
+      fs.mkdirSync(ruta, { recursive: true });
+    }
+  } catch (err) {
+    console.error("Error creando carpeta default de backups:", err);
+  }
+  return ruta;
+});
 
 if (!gotLock) {
   app.quit();
@@ -16,7 +43,7 @@ if (!gotLock) {
     }
   });
   // ─────────────────────────────────────────────────────────────────────────────
-  
+
   const backendPath = app.isPackaged
     ? path.join(process.resourcesPath, "backend")
     : path.join(__dirname, "../backend");

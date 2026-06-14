@@ -17,6 +17,7 @@ app.use("/productos", productosRoutes);
 app.use("/ventas", ventasRoutes);
 app.use("/presupuestos", presupuestoRoutes);
 app.use("/clientes", clientesRouter);
+app.use("/backups", require("./routes/backups.cjs"));
 
 module.exports = {
   startServer: async () => {

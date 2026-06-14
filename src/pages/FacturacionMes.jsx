@@ -125,7 +125,11 @@ function FacturacionMes() {
           </h2>
           <span key={periodo} className="badge-periodo">
             📅{" "}
-            {new Date(Number(anioActual), Number(mesActual) - 1, 1).toLocaleDateString("es-AR", {
+            {new Date(
+              Number(anioActual),
+              Number(mesActual) - 1,
+              1,
+            ).toLocaleDateString("es-AR", {
               month: "long",
               year: "numeric",
             })}
@@ -137,16 +141,17 @@ function FacturacionMes() {
             className="btn-nav-fecha"
             disabled={!hayMesAnterior}
             onClick={() => cambiarMes(1)}
+            data-tooltip="Mes anterior"
           >
-            <ChevronLeft size={16} />
+            <ChevronLeft size={18} />
           </button>
-
           <button
             className="btn-nav-fecha"
             disabled={!hayMesSiguiente}
             onClick={() => cambiarMes(-1)}
+            data-tooltip="Mes siguiente"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>

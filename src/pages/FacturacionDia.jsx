@@ -1,6 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Receipt } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Receipt,
+} from "lucide-react";
 import BackButton from "../components/BackButton";
 import API_URL from "../config";
 
@@ -90,15 +96,20 @@ function FacturacionDia() {
         </div>
 
         <div className="nav-fecha-wrapper ms-auto">
-          <button className="btn-nav-fecha" onClick={() => cambiarDia(-1)}>
-            <ChevronLeft size={16} />
+          <button
+            className="btn-nav-fecha"
+            onClick={() => cambiarDia(-1)}
+            data-tooltip="Día anterior"
+          >
+            <ChevronLeft size={18} />
           </button>
           <button
             className="btn-nav-fecha"
             onClick={() => cambiarDia(1)}
             disabled={fecha === fechaHoy()}
+            data-tooltip="Día siguiente"
           >
-            <ChevronRight size={16} />
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
