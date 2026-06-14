@@ -23,7 +23,7 @@ const formatBytes = (bytes) => {
 function Backups() {
   const [carpeta, setCarpeta] = useState(null);
   const [carpetaDefault, setCarpetaDefault] = useState(null);
-  const [automatico, setAutomatico] = useState(false);
+  const [automatico, setAutomatico] = useState(true);
   const [generando, setGenerando] = useState(false);
   const [ultimoBackup, setUltimoBackup] = useState(null);
   const [maxBackups, setMaxBackups] = useState(1000);
