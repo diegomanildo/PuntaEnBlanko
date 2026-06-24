@@ -1,5 +1,5 @@
 {
   "destino": "C:\\Users\\diego\\OneDrive\\Documentos\\PuntaEnBlanko\\Backups",
-  "automatico": true,
-  "maxBackups": 1000
+  "automatico": null,
+  "maxBackups": null
 }

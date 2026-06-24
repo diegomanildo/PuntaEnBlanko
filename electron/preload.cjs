@@ -5,4 +5,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onMessage: (channel, callback) => ipcRenderer.on(channel, callback),
   seleccionarCarpeta: () => ipcRenderer.invoke('seleccionar-carpeta'),
   obtenerRutaDefaultBackups: () => ipcRenderer.invoke('obtener-ruta-default-backups'),
+  abrirCarpetaBackups: (ruta) => ipcRenderer.invoke("abrir-carpeta-backups", ruta),
 })

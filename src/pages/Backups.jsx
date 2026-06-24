@@ -5,12 +5,12 @@ import {
   CheckCircle2,
   Save,
   RotateCcw,
+  Eye,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import BackButton from "../components/BackButton";
 import API_URL from "../config";
 import Spinner from "../components/Spinner";
-
 
 const formatBytes = (bytes) => {
   if (!bytes || bytes <= 0) return "0 B";
@@ -28,6 +28,7 @@ function Backups() {
   const [ultimoBackup, setUltimoBackup] = useState(null);
   const [maxBackups, setMaxBackups] = useState(1000);
   const [tamanoDB, setTamanoDB] = useState(0); // bytes
+  const [ultimoBackupFecha, setUltimoBackupFecha] = useState(null);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
@@ -36,12 +37,15 @@ function Backups() {
         const [resConfig, rutaDefault, resTamano] = await Promise.all([
           fetch(`${API_URL}/backups/config`).then((r) => r.json()),
           window.electronAPI?.obtenerRutaDefaultBackups?.() ?? null,
-          fetch(`${API_URL}/backups/db-size`).then((r) => r.json()).catch(() => ({ tamano: 0 })),
+          fetch(`${API_URL}/backups/db-size`)
+            .then((r) => r.json())
+            .catch(() => ({ tamano: 0 })),
         ]);
 
         setCarpetaDefault(rutaDefault);
         setMaxBackups(resConfig.maxBackups ?? 1000);
         setTamanoDB(resTamano.tamano ?? 0);
+        setUltimoBackupFecha(resConfig.ultimoBackup ?? null);
 
         if (resConfig.destino) {
           setCarpeta(resConfig.destino);
@@ -129,12 +133,19 @@ function Backups() {
       if (!res.ok) throw new Error(data.error || "Error al crear el backup");
 
       setUltimoBackup(data);
+      setUltimoBackupFecha(new Date().toISOString());
       toast.success("Backup creado correctamente");
     } catch (err) {
       toast.error(err.message);
     } finally {
       setGenerando(false);
     }
+  };
+
+  const diasDesde = (fechaISO) => {
+    if (!fechaISO) return null;
+    const diffMs = Date.now() - new Date(fechaISO).getTime();
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
   };
 
   const cambiarMaxBackups = async (valor) => {
@@ -150,6 +161,20 @@ function Backups() {
         ? "Sin límite de copias guardadas"
         : `Se conservarán las últimas ${num} copias`,
     );
+  };
+
+  const verBackups = async () => {
+    if (!window.electronAPI?.abrirCarpetaBackups) {
+      toast.error(
+        "Esta función solo está disponible en la aplicación de escritorio",
+      );
+      return;
+    }
+    if (!carpeta) {
+      toast.warning("Todavía no hay una carpeta configurada");
+      return;
+    }
+    await window.electronAPI.abrirCarpetaBackups(carpeta);
   };
 
   if (cargando) {
@@ -188,6 +213,49 @@ function Backups() {
         </div>
       </div>
 
+      {(() => {
+        const dias = diasDesde(ultimoBackupFecha);
+        if (dias === null) {
+          return (
+            <div
+              className="d-flex align-items-center gap-3 px-3 py-2 mb-3 mx-auto"
+              style={{
+                borderRadius: 10,
+                background: "rgba(255, 193, 7, 0.08)",
+                border: "1px solid rgba(255, 193, 7, 0.3)",
+                maxWidth: 560,
+                width: "100%",
+              }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>🟡</span>
+              <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
+                Todavía no hiciste ninguna copia de seguridad
+              </p>
+            </div>
+          );
+        }
+        if (dias >= 7) {
+          return (
+            <div
+              className="d-flex align-items-center gap-3 px-3 py-2 mb-3"
+              style={{
+                borderRadius: 10,
+                background: "rgba(220, 53, 69, 0.08)",
+                border: "1px solid rgba(220, 53, 69, 0.25)",
+                maxWidth: 560,
+                width: "100%",
+              }}
+            >
+              <span style={{ fontSize: "1.2rem" }}>🔴</span>
+              <p className="mb-0 text-muted" style={{ fontSize: "0.78rem" }}>
+                Hace {dias} días que no hacés una copia de seguridad
+              </p>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       <div className="d-flex flex-column align-items-center">
         <div
           className="card p-3"
@@ -206,24 +274,33 @@ function Backups() {
               <p className="mb-2 fw-semibold" style={{ fontSize: "0.85rem" }}>
                 Carpeta donde se guardan las copias
               </p>
-              <div className="d-flex gap-2 flex-wrap">
+              <div className="d-flex gap-2 flex-wrap mb-2">
                 <button
                   className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2"
-                  onClick={elegirCarpeta}
+                  onClick={verBackups}
                 >
-                  <FolderOpen size={16} />
-                  Cambiar carpeta
+                  <Eye size={16} />
+                  Ver backups
                 </button>
-
-                {carpetaDefault && carpeta !== carpetaDefault && (
+                <div className="d-flex gap-2 flex-wrap">
                   <button
                     className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2"
-                    onClick={restaurarDefault}
+                    onClick={elegirCarpeta}
                   >
-                    <RotateCcw size={14} />
-                    Usar carpeta predeterminada
+                    <FolderOpen size={16} />
+                    Cambiar carpeta
                   </button>
-                )}
+
+                  {carpetaDefault && carpeta !== carpetaDefault && (
+                    <button
+                      className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2"
+                      onClick={restaurarDefault}
+                    >
+                      <RotateCcw size={14} />
+                      Usar predeterminada
+                    </button>
+                  )}
+                </div>
               </div>
 
               {carpeta && (
@@ -307,18 +384,26 @@ function Backups() {
 
               {tamanoDB > 0 ? (
                 maxBackups > 0 ? (
-                  <p className="mt-2 mb-0 text-muted" style={{ fontSize: "0.75rem" }}>
+                  <p
+                    className="mt-2 mb-0 text-muted"
+                    style={{ fontSize: "0.75rem" }}
+                  >
                     Espacio estimado al llegar al máximo de copias:{" "}
-                    <strong>{formatBytes(tamanoDB * maxBackups)}</strong>{" "}
-                    ({formatBytes(tamanoDB)} por copia.)
+                    <strong>{formatBytes(tamanoDB * maxBackups)}</strong> (
+                    {formatBytes(tamanoDB)} por copia.)
                   </p>
                 ) : (
-                  <p className="mt-2 mb-0 text-muted" style={{ fontSize: "0.75rem" }}>
-                    Sin límite: el espacio crecerá indefinidamente
-                    ({formatBytes(tamanoDB)} por copia.)
+                  <p
+                    className="mt-2 mb-0 text-muted"
+                    style={{ fontSize: "0.75rem" }}
+                  >
+                    Sin límite: el espacio crecerá indefinidamente (
+                    {formatBytes(tamanoDB)} por copia.)
                   </p>
                 )
-              ) : (<></>)}
+              ) : (
+                <></>
+              )}
             </div>
           </div>
 
