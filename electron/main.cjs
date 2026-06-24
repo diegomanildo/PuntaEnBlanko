@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 
@@ -28,6 +28,12 @@ ipcMain.handle("obtener-ruta-default-backups", () => {
     console.error("Error creando carpeta default de backups:", err);
   }
   return ruta;
+});
+
+ipcMain.handle("abrir-carpeta-backups", async (event, ruta) => {
+  if (ruta && fs.existsSync(ruta)) {
+    shell.openPath(ruta);
+  }
 });
 
 if (!gotLock) {

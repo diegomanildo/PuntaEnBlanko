@@ -15,14 +15,15 @@ function leerConfig() {
       const config = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf-8"));
       return {
         destino: config.destino ?? null,
-        automatico: config.automatico ?? false,
-        maxBackups: config.maxBackups ?? 0, // 0 = sin límite
+        automatico: config.automatico,
+        maxBackups: config.maxBackups,
+        ultimoBackup: config.ultimoBackup ?? null,
       };
     }
   } catch (err) {
     console.error("Error leyendo config de backups:", err);
   }
-  return { destino: null, automatico: false, maxBackups: 0 };
+  return { destino: null, automatico: null, maxBackups: null, ultimoBackup: null };
 }
 
 function limpiarBackupsAntiguos(destino, maxBackups) {
@@ -74,6 +75,10 @@ function ejecutarBackup(destino, maxBackups) {
   fs.copyFileSync(DB_FILE, rutaArchivo);
 
   limpiarBackupsAntiguos(destino, maxBackups);
+
+  const config = leerConfig();
+  config.ultimoBackup = new Date().toISOString();
+  guardarConfig(config);
 
   return { carpeta: nombreCarpeta, ruta: carpetaBackup };
 }
