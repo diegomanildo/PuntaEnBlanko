@@ -58,7 +58,7 @@ if (!gotLock) {
     : path.join(__dirname, "../backend");
 
   async function createWindow() {
-    const zoom = 1.3;
+    const zoom = 1.2;
     const { startServer } = require(path.join(backendPath, "server.cjs"));
     await startServer();
 

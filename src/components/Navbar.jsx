@@ -41,7 +41,7 @@ const reportLinks = [
     state: { backDir: "/" },
   },
   { to: "/facturacion/mes", icon: TrendingUp, label: "Facturación del mes" },
-  { to: "/backups", icon: HardDriveDownload, label: "Backups" },
+  { to: "/backups", icon: HardDriveDownload, label: "Copias de seguridad" },
 ];
 
 function Navbar({ toggleTheme, theme }) {
@@ -50,8 +50,7 @@ function Navbar({ toggleTheme, theme }) {
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0, right: "auto" });
   const toggleRef = useRef(null);
   const menuRef = useRef(null);
-
-  // Calcular la posición del menú en base al botón
+  
   const updateMenuPos = () => {
     if (!toggleRef.current) return;
     const rect = toggleRef.current.getBoundingClientRect();
@@ -126,6 +125,7 @@ function Navbar({ toggleTheme, theme }) {
 
         {/* Links */}
         <div className="navbar-links navbar-nav d-flex flex-row align-items-center">
+          {/* eslint-disable-next-line no-unused-vars */}
           {mainLinks.map(({ to, icon: Icon, label }) => {
             const active = isActive(to);
             return (
@@ -179,6 +179,7 @@ function Navbar({ toggleTheme, theme }) {
                     right: menuPos.right,
                   }}
                 >
+                  {/* eslint-disable-next-line no-unused-vars */}
                   {reportLinks.map(({ to, icon: Icon, label, state }) => {
                     const active = isActive(to);
                     return (

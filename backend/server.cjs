@@ -5,6 +5,8 @@ const productosRoutes = require("./routes/productos.cjs");
 const ventasRoutes = require("./routes/ventas.cjs");
 const presupuestoRoutes = require("./routes/presupuestos.cjs");
 const clientesRouter = require("./routes/clientes.cjs");
+const backupsRouter = require("./routes/backups.cjs");
+
 const { PORT } = require("./config.cjs");
 const { initDb } = require("./db.cjs");
 
@@ -17,7 +19,7 @@ app.use("/productos", productosRoutes);
 app.use("/ventas", ventasRoutes);
 app.use("/presupuestos", presupuestoRoutes);
 app.use("/clientes", clientesRouter);
-app.use("/backups", require("./routes/backups.cjs"));
+app.use("/backups", backupsRouter);
 
 module.exports = {
   startServer: async () => {
