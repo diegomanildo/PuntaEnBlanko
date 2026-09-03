@@ -1,13 +1,9 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const { DB_FILE, CONFIG_FILE } = require("../config.cjs");
 
 const router = express.Router();
-
-const DB_FILE = process.env.DB_PATH
-  ? path.join(process.env.DB_PATH, "punta_en_blanko.db")
-  : path.join(__dirname, "punta_en_blanko.db");
-const CONFIG_FILE = path.join(process.env.DB_PATH, "backup-config.json");
 
 function leerConfig() {
   try {

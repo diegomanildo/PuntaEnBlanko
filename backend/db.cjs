@@ -1,10 +1,6 @@
 const initSqlJs = require("sql.js");
-const path = require("path");
 const fs = require("fs");
-
-const dbPath = process.env.DB_PATH
-  ? path.join(process.env.DB_PATH, "punta_en_blanko.db")
-  : path.join(__dirname, "punta_en_blanko.db");
+const { DB_FILE: dbPath } = require("./config.cjs");
 
 function createWrapper(sqlDb) {
   let inTransaction = false;
