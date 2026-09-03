@@ -21,6 +21,22 @@ app.use("/presupuestos", presupuestoRoutes);
 app.use("/clientes", clientesRouter);
 app.use("/backups", backupsRouter);
 
+// Ruta no encontrada
+app.use((req, res) => {
+  res
+    .status(404)
+    .json({ error: "Ruta no encontrada", message: "Ruta no encontrada" });
+});
+
+// Manejador de errores central. Forma de respuesta única para todo el backend:
+// { error, message } con el mismo texto (el front lee una u otra clave).
+app.use((err, req, res, next) => {
+  console.error(err);
+  const status = err.status || 500;
+  const msg = err.message || "Error interno del servidor";
+  res.status(status).json({ error: msg, message: msg });
+});
+
 module.exports = {
   startServer: async () => {
     await initDb();

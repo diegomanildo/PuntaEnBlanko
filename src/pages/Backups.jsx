@@ -411,7 +411,7 @@ function Backups() {
 
           {/* Paso 4 - Crear manualmente */}
           <div className="d-flex align-items-start gap-3">
-            <span className="backup-step-number">3</span>
+            <span className="backup-step-number">4</span>
             <div className="flex-grow-1">
               <p className="mb-2 fw-semibold" style={{ fontSize: "0.85rem" }}>
                 Crear copia ahora

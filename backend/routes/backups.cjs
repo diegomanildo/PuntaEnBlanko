@@ -1,7 +1,7 @@
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
-const { DB_FILE, CONFIG_FILE } = require("../config.cjs");
+const { DB_FILE, DB_NAME, CONFIG_FILE } = require("../config.cjs");
 
 const router = express.Router();
 
@@ -67,7 +67,7 @@ function ejecutarBackup(destino, maxBackups) {
   const carpetaBackup = path.join(destino, nombreCarpeta);
   fs.mkdirSync(carpetaBackup, { recursive: true });
 
-  const rutaArchivo = path.join(carpetaBackup, "punta_en_blanko.db");
+  const rutaArchivo = path.join(carpetaBackup, DB_NAME);
   fs.copyFileSync(DB_FILE, rutaArchivo);
 
   limpiarBackupsAntiguos(destino, maxBackups);
@@ -85,16 +85,11 @@ function guardarConfig(config) {
 
 // GET /backups/db-size
 router.get("/db-size", (req, res) => {
-  try {
-    if (!fs.existsSync(DB_FILE)) {
-      return res.json({ tamano: 0 });
-    }
-    const stats = fs.statSync(DB_FILE);
-    res.json({ tamano: stats.size });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+  if (!fs.existsSync(DB_FILE)) {
+    return res.json({ tamano: 0 });
   }
+  const stats = fs.statSync(DB_FILE);
+  res.json({ tamano: stats.size });
 });
 
 // GET /backups/config
@@ -112,6 +107,10 @@ router.put("/config", (req, res) => {
       req.body.automatico !== undefined ? req.body.automatico : actual.automatico,
     maxBackups:
       req.body.maxBackups !== undefined ? req.body.maxBackups : actual.maxBackups,
+    ultimoBackup:
+      req.body.ultimoBackup !== undefined
+        ? req.body.ultimoBackup
+        : actual.ultimoBackup,
   };
   guardarConfig(nuevo);
   res.json(nuevo);
@@ -119,30 +118,20 @@ router.put("/config", (req, res) => {
 
 // POST /backups
 router.post("/", (req, res) => {
-  try {
-    const config = leerConfig();
-    const destino = req.body?.destino || config.destino;
-    const resultado = ejecutarBackup(destino, config.maxBackups);
-    res.json({ success: true, ...resultado });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
+  const config = leerConfig();
+  const destino = req.body?.destino || config.destino;
+  const resultado = ejecutarBackup(destino, config.maxBackups);
+  res.json({ success: true, ...resultado });
 });
 
 // POST /backups/auto
 router.post("/auto", (req, res) => {
-  try {
-    const config = leerConfig();
-    if (!config.automatico) {
-      return res.json({ ejecutado: false });
-    }
-    const resultado = ejecutarBackup(config.destino, config.maxBackups);
-    res.json({ ejecutado: true, ...resultado });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ ejecutado: false, error: err.message });
+  const config = leerConfig();
+  if (!config.automatico) {
+    return res.json({ ejecutado: false });
   }
+  const resultado = ejecutarBackup(config.destino, config.maxBackups);
+  res.json({ ejecutado: true, ...resultado });
 });
 
 module.exports = router;
