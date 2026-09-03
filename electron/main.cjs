@@ -71,7 +71,7 @@ if (!gotLock) {
         contextIsolation: true,
         nodeIntegration: false,
         zoomFactor: zoom,
-        devTools: true,
+        devTools: !app.isPackaged,
       },
     });
 
