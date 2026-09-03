@@ -1,5 +1,3 @@
-const API_URL = `http://localhost:3001`;
-  // : `http://127.0.0.1:${PORT}`;
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-console.log("API_URL:", API_URL);
 export default API_URL;

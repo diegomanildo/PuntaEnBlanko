@@ -119,7 +119,6 @@ async function initDb() {
   db = createWrapper(sqlDb);
 
   // Pragmas
-  db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   
   db.exec(`
