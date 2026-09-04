@@ -13,6 +13,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import BackButton from "../components/BackButton";
 import TicketModal from "../components/modals/TicketModal";
+import { bloquearNoNumerico } from "../utils/inputUtils";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../config";
 
@@ -250,6 +251,7 @@ function NuevaVenta() {
   const cancelarEditPrecio = () => setEditandoPrecio(null);
 
   const handleKeyEditPrecio = (e) => {
+    bloquearNoNumerico(e);
     if (e.key === "Enter") {
       e.preventDefault();
       confirmarEditPrecio();
@@ -283,6 +285,7 @@ function NuevaVenta() {
   const cancelarEditTotal = () => setEditandoTotal(false);
 
   const handleKeyEditTotal = (e) => {
+    bloquearNoNumerico(e);
     if (e.key === "Enter") {
       e.preventDefault();
       confirmarEditTotal();
@@ -662,6 +665,7 @@ function NuevaVenta() {
               </label>
               <input
                 type="number"
+                onKeyDown={bloquearNoNumerico}
                 className="form-control"
                 value={cantidad}
                 min={1}
@@ -949,6 +953,7 @@ function NuevaVenta() {
                           </label>
                           <input
                             type="number"
+                            onKeyDown={bloquearNoNumerico}
                             className="form-control form-control-sm"
                             placeholder="$0"
                             value={montoEfectivo}
@@ -973,6 +978,7 @@ function NuevaVenta() {
                           </label>
                           <input
                             type="number"
+                            onKeyDown={bloquearNoNumerico}
                             className="form-control form-control-sm"
                             placeholder="$0"
                             value={montoTransferencia}

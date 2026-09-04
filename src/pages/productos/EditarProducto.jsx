@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import BackButton from "../../components/BackButton";
 import { ColorPicker } from "../../components/ColorPicker";
 import API_URL from "../../config";
+import { bloquearNoNumerico } from "../../utils/inputUtils";
 
 function EditarProducto() {
   const { id } = useParams();
@@ -136,6 +137,7 @@ function EditarProducto() {
           <label className="form-label">Precio</label>
           <input
             type="number"
+            onKeyDown={bloquearNoNumerico}
             className={`form-control ${errores.precio ? "is-invalid" : ""}`}
             value={precio}
             onChange={(e) => {
@@ -176,6 +178,7 @@ function EditarProducto() {
             <label className="form-label">Stock</label>
             <input
               type="number"
+              onKeyDown={bloquearNoNumerico}
               className={`form-control ${errores.stock ? "is-invalid" : ""}`}
               value={stock}
               onChange={(e) => {

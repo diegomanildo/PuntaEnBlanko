@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import BackButton from "../components/BackButton";
 import { rowStyle } from "../utils/colorUtils";
+import { bloquearNoNumerico } from "../utils/inputUtils";
 import SearchBar from "../components/SearchBar";
 import API_URL from "../config";
 
@@ -195,6 +196,7 @@ function Productos() {
           <small className="text-muted">Alerta stock bajo:</small>
           <input
             type="number"
+            onKeyDown={bloquearNoNumerico}
             className="form-control form-control-sm"
             style={{ width: 60, textAlign: "center" }}
             value={nuevoStockAlerta}

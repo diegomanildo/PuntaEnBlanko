@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import TicketModal from "../../components/modals/TicketModal";
 import BackButton from "../../components/BackButton";
 import API_URL from "../../config";
+import { bloquearNoNumerico } from "../../utils/inputUtils";
 
 function EditarPresupuesto() {
   const { id } = useParams();
@@ -442,6 +443,7 @@ function EditarPresupuesto() {
                 </label>
                 <input
                   type="number"
+                  onKeyDown={bloquearNoNumerico}
                   className="form-control"
                   value={cantidad}
                   onChange={(e) => setCantidad(e.target.value)}
@@ -608,6 +610,7 @@ function EditarPresupuesto() {
                               </label>
                               <input
                                 type="number"
+                                onKeyDown={bloquearNoNumerico}
                                 className="form-control form-control-sm"
                                 placeholder="$0"
                                 value={montoEfectivo}
@@ -634,6 +637,7 @@ function EditarPresupuesto() {
                               </label>
                               <input
                                 type="number"
+                                onKeyDown={bloquearNoNumerico}
                                 className="form-control form-control-sm"
                                 placeholder="$0"
                                 value={montoTransferencia}

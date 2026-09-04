@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import BackButton from "../components/BackButton";
 import API_URL from "../config";
 import Spinner from "../components/Spinner";
+import { bloquearNoNumerico } from "../utils/inputUtils";
 
 const formatBytes = (bytes) => {
   if (!bytes || bytes <= 0) return "0 B";
@@ -375,6 +376,7 @@ function Backups() {
                 type="number"
                 min={0}
                 step={1}
+                onKeyDown={bloquearNoNumerico}
                 className="form-control form-control-sm"
                 style={{ maxWidth: 220 }}
                 value={maxBackups}

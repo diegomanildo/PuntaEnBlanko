@@ -6,6 +6,7 @@ import TicketModal from "../../components/modals/TicketModal";
 import BackButton from "../../components/BackButton";
 import { useNavigate } from "react-router-dom";
 import API_URL from "../../config";
+import { bloquearNoNumerico } from "../../utils/inputUtils";
 
 function NuevoPresupuesto() {
   const navigate = useNavigate();
@@ -450,6 +451,7 @@ function NuevoPresupuesto() {
               </label>
               <input
                 type="number"
+                onKeyDown={bloquearNoNumerico}
                 className="form-control"
                 value={cantidad}
                 min={1}
@@ -590,6 +592,7 @@ function NuevoPresupuesto() {
                           </label>
                           <input
                             type="number"
+                            onKeyDown={bloquearNoNumerico}
                             className="form-control form-control-sm"
                             placeholder="$0"
                             value={montoEfectivo}
@@ -614,6 +617,7 @@ function NuevoPresupuesto() {
                           </label>
                           <input
                             type="number"
+                            onKeyDown={bloquearNoNumerico}
                             className="form-control form-control-sm"
                             placeholder="$0"
                             value={montoTransferencia}

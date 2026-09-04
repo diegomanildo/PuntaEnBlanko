@@ -6,6 +6,7 @@ import { parsePhoneNumber, isValidPhoneNumber } from "libphonenumber-js";
 import { toast } from "react-toastify";
 import BackButton from "../../components/BackButton";
 import API_URL from "../../config";
+import { bloquearNoNumerico } from "../../utils/inputUtils";
 
 const formatearCuit = (valor) => {
   const soloDigitos = valor.replace(/\D/g, "").slice(0, 11);
@@ -359,6 +360,7 @@ function EditarCliente() {
             <div className="d-flex gap-2">
               <input
                 type="number"
+                onKeyDown={bloquearNoNumerico}
                 className="form-control"
                 placeholder="ID de venta (ej: 42)"
                 value={ventaIdInput}
