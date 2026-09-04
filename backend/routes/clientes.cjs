@@ -6,6 +6,20 @@ const router = express.Router();
 
 const validarCuit = (cuit) => /^\d{2}-\d{8}-\d{1}$/.test(cuit);
 
+// Valida el cuerpo de un alta/edición de cliente.
+// Devuelve un string con el error, o null si está todo bien.
+function validarCliente({ razon_social, cuit, telefono, mail }) {
+  if (!razon_social?.trim()) return "La razón social es obligatoria";
+  if (!cuit?.trim()) return "El CUIT es obligatorio";
+  if (!validarCuit(cuit.trim()))
+    return "El CUIT no tiene el formato correcto (XX-XXXXXXXX-X)";
+  if (telefono && !isValidPhoneNumber(telefono.trim(), "AR"))
+    return "El teléfono no tiene un formato válido para Argentina";
+  if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.trim()))
+    return "El mail no tiene un formato válido";
+  return null;
+}
+
 // GET /clientes
 router.get("/", (req, res) => {
   const rows = db.prepare(`
@@ -52,11 +66,8 @@ router.get("/:id/compras", (req, res) => {
 router.post("/", (req, res) => {
   const { razon_social, domicilio, localidad, cuit, telefono, mail } = req.body;
 
-  if (!razon_social?.trim()) return res.status(400).json({ message: "La razón social es obligatoria" });
-  if (!cuit?.trim()) return res.status(400).json({ message: "El CUIT es obligatorio" });
-  if (!validarCuit(cuit.trim())) return res.status(400).json({ message: "El CUIT no tiene el formato correcto (XX-XXXXXXXX-X)" });
-  if (telefono && !isValidPhoneNumber(telefono.trim(), "AR")) return res.status(400).json({ message: "El teléfono no tiene un formato válido para Argentina" });
-  if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.trim())) return res.status(400).json({ message: "El mail no tiene un formato válido" });
+  const err = validarCliente(req.body);
+  if (err) return res.status(400).json({ message: err });
 
   const existente = db.prepare("SELECT id FROM clientes WHERE cuit = ?").get(cuit.trim());
   if (existente) return res.status(400).json({ message: "Ya existe un cliente con ese CUIT" });
@@ -80,11 +91,8 @@ router.put("/:id", (req, res) => {
   const { id } = req.params;
   const { razon_social, domicilio, localidad, cuit, telefono, mail } = req.body;
 
-  if (!razon_social?.trim()) return res.status(400).json({ message: "La razón social es obligatoria" });
-  if (!cuit?.trim()) return res.status(400).json({ message: "El CUIT es obligatorio" });
-  if (!validarCuit(cuit.trim())) return res.status(400).json({ message: "El CUIT no tiene el formato correcto (XX-XXXXXXXX-X)" });
-  if (telefono && !isValidPhoneNumber(telefono.trim(), "AR")) return res.status(400).json({ message: "El teléfono no tiene un formato válido para Argentina" });
-  if (mail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mail.trim())) return res.status(400).json({ message: "El mail no tiene un formato válido" });
+  const err = validarCliente(req.body);
+  if (err) return res.status(400).json({ message: err });
 
   const existente = db.prepare("SELECT id FROM clientes WHERE cuit = ? AND id != ?").get(cuit.trim(), id);
   if (existente) return res.status(400).json({ message: "Ya existe otro cliente con ese CUIT" });

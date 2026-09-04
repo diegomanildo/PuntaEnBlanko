@@ -192,7 +192,30 @@ async function initDb() {
     );
   `);
 
+  migrate();
+
   return db;
+}
+
+// Migraciones incrementales versionadas con PRAGMA user_version.
+// migrations[n] lleva la base de la versión n a la n+1.
+// migrations[0] (0 -> 1) es el esquema base, ya garantizado por los
+// CREATE TABLE IF NOT EXISTS de arriba. Para agregar un cambio de esquema,
+// sumá una función al final del array (nunca reordenes ni borres las previas).
+function migrate() {
+  const migrations = [
+    () => {}, // 0 -> 1 : esquema base
+    // () => db.exec("ALTER TABLE ventas ADD COLUMN descuento REAL DEFAULT 0"), // 1 -> 2
+  ];
+
+  let { user_version: version } = db.prepare("PRAGMA user_version").get();
+
+  while (version < migrations.length) {
+    db.transaction(migrations[version])();
+    version += 1;
+    db.exec(`PRAGMA user_version = ${version}`);
+    console.log(`Base de datos migrada a la versión ${version}`);
+  }
 }
 
 module.exports = {

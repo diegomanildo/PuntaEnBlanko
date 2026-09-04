@@ -1,11 +1,86 @@
 const express = require("express");
 const db = require("../db.cjs");
+const { validarItems, validarTotal } = require("../utils/utils.cjs");
 
 const router = express.Router();
+
+const MEDIOS_PAGO = ["efectivo", "transferencia", "mix"];
+
+// Resumen mensual (usado por GET /mes y GET /mes/:anio/:mes).
+// periodo tiene formato 'YYYY-MM'.
+function resumenDeMes(periodo) {
+  const porDia = db.prepare(`
+    SELECT strftime('%Y-%m-%d', fecha) as dia, COUNT(*) as cantidad, SUM(total) as total
+    FROM ventas
+    WHERE strftime('%Y-%m', fecha) = ?
+    AND estado = 'normal'
+    GROUP BY strftime('%Y-%m-%d', fecha)
+    ORDER BY dia ASC
+  `).all(periodo);
+
+  const resumen = db.prepare(`
+    SELECT COUNT(*) as cantidad, COALESCE(SUM(total), 0) as total
+    FROM ventas
+    WHERE strftime('%Y-%m', fecha) = ?
+    AND estado = 'normal'
+  `).get(periodo);
+
+  const topProductos = db.prepare(`
+    SELECT p.nombre, SUM(dv.cantidad) as total_vendido
+    FROM detalle_ventas dv
+    JOIN productos p ON dv.producto_id = p.id
+    JOIN ventas v ON dv.venta_id = v.id
+    WHERE strftime('%Y-%m', v.fecha) = ?
+    AND v.estado = 'normal'
+    GROUP BY p.nombre
+    ORDER BY total_vendido DESC
+    LIMIT 3
+  `).all(periodo);
+
+  return {
+    porDia,
+    total: resumen.total || 0,
+    cantidadVentas: resumen.cantidad || 0,
+    topProductos,
+  };
+}
 
 // POST /ventas
 router.post("/", (req, res) => {
   const { productos, total, medio_pago, monto_efectivo, monto_transferencia, cliente_id } = req.body;
+
+  const errItems = validarItems(productos);
+  if (errItems) return res.status(400).json({ message: errItems });
+
+  const errTotal = validarTotal(total);
+  if (errTotal) return res.status(400).json({ message: errTotal });
+
+  if (medio_pago && !MEDIOS_PAGO.includes(medio_pago))
+    return res.status(400).json({ message: "Medio de pago inválido" });
+
+  if (medio_pago === "mix") {
+    const suma = Number(monto_efectivo || 0) + Number(monto_transferencia || 0);
+    if (Math.abs(suma - Number(total)) >= 1)
+      return res.status(400).json({ message: "Los montos del pago mixto no suman el total" });
+  }
+
+  // Chequeo de existencia y stock contra la base
+  const ids = productos.map((p) => p.id);
+  const enBase = db
+    .prepare(
+      `SELECT id, nombre, stock, tiene_stock FROM productos WHERE id IN (${ids.map(() => "?").join(",")})`
+    )
+    .all(ids);
+  const porId = new Map(enBase.map((r) => [r.id, r]));
+
+  for (const p of productos) {
+    const prod = porId.get(p.id);
+    if (!prod) return res.status(400).json({ message: `El producto ${p.id} no existe` });
+    if (prod.tiene_stock && Number(p.cantidad) > prod.stock)
+      return res.status(400).json({
+        message: `Stock insuficiente de "${prod.nombre}" (disponible: ${prod.stock})`,
+      });
+  }
 
   const ventaResult = db.prepare(
     "INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia, cliente_id) VALUES (?, ?, ?, ?, ?)"
@@ -54,40 +129,9 @@ router.get("/hoy", (req, res) => {
 
 // GET /ventas/mes
 router.get("/mes", (req, res) => {
-  const porDia = db.prepare(`
-    SELECT strftime('%Y-%m-%d', fecha) as dia, COUNT(*) as cantidad, SUM(total) as total
-    FROM ventas
-    WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now', 'localtime')
-    AND estado = 'normal'
-    GROUP BY strftime('%Y-%m-%d', fecha)
-    ORDER BY dia ASC
-  `).all();
-
-  const resumen = db.prepare(`
-    SELECT COUNT(*) as cantidad, COALESCE(SUM(total), 0) as total
-    FROM ventas
-    WHERE strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now', 'localtime')
-    AND estado = 'normal'
-  `).get();
-
-  const topProductos = db.prepare(`
-    SELECT p.nombre, SUM(dv.cantidad) as total_vendido
-    FROM detalle_ventas dv
-    JOIN productos p ON dv.producto_id = p.id
-    JOIN ventas v ON dv.venta_id = v.id
-    WHERE strftime('%Y-%m', v.fecha) = strftime('%Y-%m', 'now', 'localtime')
-    AND v.estado = 'normal'
-    GROUP BY p.nombre
-    ORDER BY total_vendido DESC
-    LIMIT 3
-  `).all();
-
-  res.json({
-    porDia,
-    total: resumen.total || 0,
-    cantidadVentas: resumen.cantidad || 0,
-    topProductos,
-  });
+  const now = new Date();
+  const periodo = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  res.json(resumenDeMes(periodo));
 });
 
 // GET /ventas/dia/:fecha
@@ -176,42 +220,8 @@ router.get("/:id", (req, res) => {
 // GET /ventas/mes/:anio/:mes
 router.get("/mes/:anio/:mes", (req, res) => {
   const { anio, mes } = req.params;
-  const periodo = `${anio}-${mes}`;
-
-  const porDia = db.prepare(`
-    SELECT strftime('%Y-%m-%d', fecha) as dia, COUNT(*) as cantidad, SUM(total) as total
-    FROM ventas
-    WHERE strftime('%Y-%m', fecha) = ?
-    AND estado = 'normal'
-    GROUP BY strftime('%Y-%m-%d', fecha)
-    ORDER BY dia ASC
-  `).all(periodo);
-
-  const resumen = db.prepare(`
-    SELECT COUNT(*) as cantidad, COALESCE(SUM(total), 0) as total
-    FROM ventas
-    WHERE strftime('%Y-%m', fecha) = ?
-    AND estado = 'normal'
-  `).get(periodo);
-
-  const topProductos = db.prepare(`
-    SELECT p.nombre, SUM(dv.cantidad) as total_vendido
-    FROM detalle_ventas dv
-    JOIN productos p ON dv.producto_id = p.id
-    JOIN ventas v ON dv.venta_id = v.id
-    WHERE strftime('%Y-%m', v.fecha) = ?
-    AND v.estado = 'normal'
-    GROUP BY p.nombre
-    ORDER BY total_vendido DESC
-    LIMIT 3
-  `).all(periodo);
-
-  res.json({
-    porDia,
-    total: resumen.total || 0,
-    cantidadVentas: resumen.cantidad || 0,
-    topProductos,
-  });
+  const periodo = `${anio}-${String(mes).padStart(2, "0")}`;
+  res.json(resumenDeMes(periodo));
 });
 
 module.exports = router;

@@ -1,11 +1,17 @@
 const express = require("express");
 const db = require("../db.cjs");
+const { validarItems, validarTotal } = require("../utils/utils.cjs");
 
 const router = express.Router();
 
 // POST /presupuestos
 router.post("/", (req, res) => {
   const { productos, total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia } = req.body;
+
+  const errItems = validarItems(productos);
+  if (errItems) return res.status(400).json({ success: false, message: errItems });
+  const errTotal = validarTotal(total);
+  if (errTotal) return res.status(400).json({ success: false, message: errTotal });
 
   const guardar = db.transaction(() => {
     const result = db.prepare(`
@@ -39,6 +45,11 @@ router.post("/", (req, res) => {
 router.put("/:id", (req, res) => {
   const { id } = req.params;
   const { productos, total, cliente_nombre, medio_pago, monto_efectivo, monto_transferencia } = req.body;
+
+  const errItems = validarItems(productos);
+  if (errItems) return res.status(400).json({ success: false, message: errItems });
+  const errTotal = validarTotal(total);
+  if (errTotal) return res.status(400).json({ success: false, message: errTotal });
 
   const result = db.prepare(`
     UPDATE presupuestos SET total=?, cliente_nombre=?, medio_pago=?, monto_efectivo=?, monto_transferencia=?
@@ -79,6 +90,25 @@ router.post("/:id/convertir", (req, res) => {
   const montoTransferenciaFinal = medioPagoFinal === "mix" ? (monto_transferencia ?? presupuesto.monto_transferencia ?? null) : null;
 
   const detalle = db.prepare("SELECT * FROM detalle_presupuestos WHERE presupuesto_id = ?").all(id);
+
+  // Chequeo de stock: el stock pudo cambiar desde que se cargó el presupuesto.
+  const ids = detalle.map((d) => d.producto_id);
+  if (ids.length) {
+    const enBase = db
+      .prepare(
+        `SELECT id, nombre, stock, tiene_stock FROM productos WHERE id IN (${ids.map(() => "?").join(",")})`
+      )
+      .all(ids);
+    const porId = new Map(enBase.map((r) => [r.id, r]));
+    for (const d of detalle) {
+      const prod = porId.get(d.producto_id);
+      if (prod && prod.tiene_stock && d.cantidad > prod.stock)
+        return res.status(400).json({
+          success: false,
+          message: `Stock insuficiente de "${prod.nombre}" (disponible: ${prod.stock})`,
+        });
+    }
+  }
 
   const convertir = db.transaction(() => {
     const ventaResult = db.prepare(
