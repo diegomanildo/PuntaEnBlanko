@@ -16,6 +16,10 @@
   "build": {
     "appId": "com.puntaenblanko.pos",
     "productName": "Punta En Blanko",
+    "compression": "maximum",
+    "directories": {
+      "output": "release"
+    },
     "files": [
       "dist/**/*",
       "electron/**/*"
