@@ -18,16 +18,16 @@
     "productName": "Punta En Blanko",
     "files": [
       "dist/**/*",
-      "electron/**/*",
-      "backend/**/*"
+      "electron/**/*"
     ],
     "extraResources": [
       {
         "from": "backend",
-        "to": "backend"
+        "to": "backend",
+        "filter": ["**/*", "!node_modules"]
       },
       {
-        "from": "node_modules",
+        "from": "backend/node_modules",
         "to": "backend/node_modules"
       }
     ],
