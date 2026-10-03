@@ -40,8 +40,14 @@ app.use((err, req, res, next) => {
 module.exports = {
   startServer: async () => {
     await initDb();
-    app.listen(PORT, () => {
-      console.log(`Servidor corriendo en puerto ${PORT}`);
+    // Solo localhost: la API no tiene autenticación y no debe quedar expuesta a la red.
+    // Se espera a que el puerto esté escuchando (o falle, ej. puerto ocupado) antes de resolver.
+    await new Promise((resolve, reject) => {
+      const server = app.listen(PORT, "127.0.0.1", () => {
+        console.log(`Servidor corriendo en puerto ${PORT}`);
+        resolve();
+      });
+      server.once("error", reject);
     });
   },
 };

@@ -6,22 +6,25 @@ const router = express.Router();
 
 const MEDIOS_PAGO = ["efectivo", "transferencia", "mix"];
 
+// Las fechas se guardan en UTC (CURRENT_TIMESTAMP): todas las comparaciones
+// por día/mes se hacen con 'localtime' para no correr ventas al día siguiente.
+
 // Resumen mensual (usado por GET /mes y GET /mes/:anio/:mes).
 // periodo tiene formato 'YYYY-MM'.
 function resumenDeMes(periodo) {
   const porDia = db.prepare(`
-    SELECT strftime('%Y-%m-%d', fecha) as dia, COUNT(*) as cantidad, SUM(total) as total
+    SELECT strftime('%Y-%m-%d', fecha, 'localtime') as dia, COUNT(*) as cantidad, SUM(total) as total
     FROM ventas
-    WHERE strftime('%Y-%m', fecha) = ?
+    WHERE strftime('%Y-%m', fecha, 'localtime') = ?
     AND estado = 'normal'
-    GROUP BY strftime('%Y-%m-%d', fecha)
+    GROUP BY strftime('%Y-%m-%d', fecha, 'localtime')
     ORDER BY dia ASC
   `).all(periodo);
 
   const resumen = db.prepare(`
     SELECT COUNT(*) as cantidad, COALESCE(SUM(total), 0) as total
     FROM ventas
-    WHERE strftime('%Y-%m', fecha) = ?
+    WHERE strftime('%Y-%m', fecha, 'localtime') = ?
     AND estado = 'normal'
   `).get(periodo);
 
@@ -30,7 +33,7 @@ function resumenDeMes(periodo) {
     FROM detalle_ventas dv
     JOIN productos p ON dv.producto_id = p.id
     JOIN ventas v ON dv.venta_id = v.id
-    WHERE strftime('%Y-%m', v.fecha) = ?
+    WHERE strftime('%Y-%m', v.fecha, 'localtime') = ?
     AND v.estado = 'normal'
     GROUP BY p.nombre
     ORDER BY total_vendido DESC
@@ -65,16 +68,16 @@ router.post("/", (req, res) => {
   }
 
   // Chequeo de existencia y stock contra la base
-  const ids = productos.map((p) => p.id);
+  const ids = productos.map((p) => Number(p.id));
   const enBase = db
     .prepare(
-      `SELECT id, nombre, stock, tiene_stock FROM productos WHERE id IN (${ids.map(() => "?").join(",")})`
+      `SELECT id, nombre, stock, tiene_stock FROM productos WHERE activo = 1 AND id IN (${ids.map(() => "?").join(",")})`
     )
     .all(ids);
   const porId = new Map(enBase.map((r) => [r.id, r]));
 
   for (const p of productos) {
-    const prod = porId.get(p.id);
+    const prod = porId.get(Number(p.id));
     if (!prod) return res.status(400).json({ message: `El producto ${p.id} no existe` });
     if (prod.tiene_stock && Number(p.cantidad) > prod.stock)
       return res.status(400).json({
@@ -82,12 +85,9 @@ router.post("/", (req, res) => {
       });
   }
 
-  const ventaResult = db.prepare(
+  const insertVenta = db.prepare(
     "INSERT INTO ventas (total, medio_pago, monto_efectivo, monto_transferencia, cliente_id) VALUES (?, ?, ?, ?, ?)"
-  ).run(total, medio_pago, monto_efectivo ?? null, monto_transferencia ?? null, cliente_id ?? null);
-
-  const ventaId = ventaResult.lastInsertRowid;
-
+  );
   const insertDetalle = db.prepare(
     "INSERT INTO detalle_ventas (venta_id, producto_id, cantidad, precio) VALUES (?, ?, ?, ?)"
   );
@@ -95,14 +95,19 @@ router.post("/", (req, res) => {
     "UPDATE productos SET stock = stock - ? WHERE id = ?"
   );
 
+  // Venta, detalle y stock en una sola transacción: o se guarda todo o nada.
   const insertarTodo = db.transaction((productos) => {
+    const { lastInsertRowid: ventaId } = insertVenta.run(
+      total, medio_pago, monto_efectivo ?? null, monto_transferencia ?? null, cliente_id ?? null
+    );
     for (const p of productos) {
-      insertDetalle.run(ventaId, p.id, p.cantidad, p.precio);
-      actualizarStock.run(p.cantidad, p.id);
+      insertDetalle.run(ventaId, Number(p.id), p.cantidad, p.precio);
+      actualizarStock.run(p.cantidad, Number(p.id));
     }
+    return ventaId;
   });
 
-  insertarTodo(productos);
+  const ventaId = insertarTodo(productos);
 
   res.json({ success: true, id: ventaId });
 });
@@ -113,14 +118,14 @@ router.get("/hoy", (req, res) => {
     SELECT v.*, c.razon_social AS cliente_nombre
     FROM ventas v
     LEFT JOIN clientes c ON v.cliente_id = c.id
-    WHERE DATE(v.fecha) = DATE('now', 'localtime')
+    WHERE DATE(v.fecha, 'localtime') = DATE('now', 'localtime')
     ORDER BY v.fecha DESC
   `).all();
 
   const { total } = db.prepare(`
     SELECT COALESCE(SUM(total), 0) as total
     FROM ventas
-    WHERE DATE(fecha) = DATE('now', 'localtime')
+    WHERE DATE(fecha, 'localtime') = DATE('now', 'localtime')
     AND estado = 'normal'
   `).get();
 
@@ -141,7 +146,7 @@ router.get("/dia/:fecha", (req, res) => {
     SELECT v.*, c.razon_social AS cliente_nombre
     FROM ventas v
     LEFT JOIN clientes c ON v.cliente_id = c.id
-    WHERE DATE(v.fecha) = ?
+    WHERE DATE(v.fecha, 'localtime') = ?
     AND v.estado = 'normal'
     ORDER BY v.fecha DESC
   `).all(fecha);
@@ -149,7 +154,7 @@ router.get("/dia/:fecha", (req, res) => {
   const { total } = db.prepare(`
     SELECT COALESCE(SUM(total), 0) as total
     FROM ventas
-    WHERE DATE(fecha) = ?
+    WHERE DATE(fecha, 'localtime') = ?
     AND estado = 'normal'
   `).get(fecha);
 
@@ -177,21 +182,21 @@ router.put("/:id/anular", (req, res) => {
   if (!venta) return res.status(404).json({ error: "Venta no encontrada" });
   if (venta.estado === "anulada") return res.status(400).json({ error: "La venta ya está anulada" });
 
-  db.prepare("UPDATE ventas SET estado = 'anulada' WHERE id = ?").run(id);
+  const restaurar = db.prepare(
+    "UPDATE productos SET stock = stock + ? WHERE id = ?"
+  );
 
-  if (restaurarStock) {
-    const detalles = db.prepare(
-      "SELECT producto_id, cantidad FROM detalle_ventas WHERE venta_id = ?"
-    ).all(id);
-
-    const restaurar = db.prepare(
-      "UPDATE productos SET stock = stock + ? WHERE id = ?"
-    );
-    const restaurarTodo = db.transaction((detalles) => {
+  // Anulación y devolución de stock en la misma transacción.
+  const anular = db.transaction(() => {
+    db.prepare("UPDATE ventas SET estado = 'anulada' WHERE id = ?").run(id);
+    if (restaurarStock) {
+      const detalles = db.prepare(
+        "SELECT producto_id, cantidad FROM detalle_ventas WHERE venta_id = ?"
+      ).all(id);
       for (const d of detalles) restaurar.run(d.cantidad, d.producto_id);
-    });
-    restaurarTodo(detalles);
-  }
+    }
+  });
+  anular();
 
   res.json({ success: true });
 });

@@ -98,8 +98,24 @@ router.get("/config", (req, res) => {
   res.json(config);
 });
 
+// Valida los campos de config que vengan en el body. Devuelve string de error o null.
+function validarConfig({ destino, automatico, maxBackups }) {
+  if (destino !== undefined && destino !== null &&
+      (typeof destino !== "string" || !path.isAbsolute(destino)))
+    return "La carpeta de destino es inválida";
+  if (automatico !== undefined && typeof automatico !== "boolean")
+    return "El valor de backup automático es inválido";
+  if (maxBackups !== undefined && maxBackups !== null &&
+      (!Number.isInteger(maxBackups) || maxBackups < 0))
+    return "La cantidad máxima de backups es inválida";
+  return null;
+}
+
 // PUT /backups/config
 router.put("/config", (req, res) => {
+  const err = validarConfig(req.body ?? {});
+  if (err) return res.status(400).json({ error: err, message: err });
+
   const actual = leerConfig();
   const nuevo = {
     destino: req.body.destino !== undefined ? req.body.destino : actual.destino,
@@ -107,10 +123,7 @@ router.put("/config", (req, res) => {
       req.body.automatico !== undefined ? req.body.automatico : actual.automatico,
     maxBackups:
       req.body.maxBackups !== undefined ? req.body.maxBackups : actual.maxBackups,
-    ultimoBackup:
-      req.body.ultimoBackup !== undefined
-        ? req.body.ultimoBackup
-        : actual.ultimoBackup,
+    ultimoBackup: actual.ultimoBackup, // lo actualiza solo ejecutarBackup
   };
   guardarConfig(nuevo);
   res.json(nuevo);
@@ -119,8 +132,9 @@ router.put("/config", (req, res) => {
 // POST /backups
 router.post("/", (req, res) => {
   const config = leerConfig();
-  const destino = req.body?.destino || config.destino;
-  const resultado = ejecutarBackup(destino, config.maxBackups);
+  // Solo se usa la carpeta guardada en la config (validada en PUT /config);
+  // no se acepta un destino arbitrario desde el body.
+  const resultado = ejecutarBackup(config.destino, config.maxBackups);
   res.json({ success: true, ...resultado });
 });
 

@@ -84,6 +84,8 @@ router.post("/:id/convertir", (req, res) => {
 
   const presupuesto = db.prepare("SELECT * FROM presupuestos WHERE id = ?").get(id);
   if (!presupuesto) return res.status(404).json({ success: false, message: "Presupuesto no encontrado" });
+  if (presupuesto.estado === "convertido" || presupuesto.venta_id != null)
+    return res.status(400).json({ success: false, message: "El presupuesto ya fue convertido en venta" });
 
   const medioPagoFinal = medio_pago ?? presupuesto.medio_pago ?? "efectivo";
   const montoEfectivoFinal = medioPagoFinal === "mix" ? (monto_efectivo ?? presupuesto.monto_efectivo ?? null) : null;

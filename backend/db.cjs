@@ -7,8 +7,12 @@ function createWrapper(sqlDb) {
 
   function save() {
     if (inTransaction) return;
+    // Escritura atómica: si se corta la luz a mitad de la escritura, el .db
+    // original queda intacto (rename reemplaza el archivo de una sola vez).
     const data = sqlDb.export();
-    fs.writeFileSync(dbPath, Buffer.from(data));
+    const tmpPath = `${dbPath}.tmp`;
+    fs.writeFileSync(tmpPath, Buffer.from(data));
+    fs.renameSync(tmpPath, dbPath);
   }
 
   function exec(sql) {
@@ -205,7 +209,8 @@ async function initDb() {
 function migrate() {
   const migrations = [
     () => {}, // 0 -> 1 : esquema base
-    // () => db.exec("ALTER TABLE ventas ADD COLUMN descuento REAL DEFAULT 0"), // 1 -> 2
+    // 1 -> 2 : borrado lógico de productos (así no se pierde el detalle de ventas viejas)
+    () => db.exec("ALTER TABLE productos ADD COLUMN activo INTEGER DEFAULT 1"),
   ];
 
   let { user_version: version } = db.prepare("PRAGMA user_version").get();

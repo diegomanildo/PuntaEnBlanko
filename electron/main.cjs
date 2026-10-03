@@ -103,7 +103,17 @@ if (!gotLock) {
   }
 
   app.whenReady().then(async () => {
-    await createWindow();
+    try {
+      await createWindow();
+    } catch (err) {
+      console.error("Error al iniciar la aplicación:", err);
+      const detalle =
+        err && err.code === "EADDRINUSE"
+          ? "El puerto del servidor interno ya está en uso. Cerrá otras instancias de la aplicación e intentá de nuevo."
+          : String((err && err.message) || err);
+      dialog.showErrorBox("Punta en Blanko no pudo iniciar", detalle);
+      app.quit();
+    }
   });
 
   app.on("window-all-closed", () => {

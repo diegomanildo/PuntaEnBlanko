@@ -6,7 +6,7 @@ const router = express.Router();
 
 // GET /productos
 router.get("/", (req, res) => {
-  const rows = db.prepare("SELECT * FROM productos").all();
+  const rows = db.prepare("SELECT * FROM productos WHERE activo = 1").all();
   res.json(rows);
 });
 
@@ -29,11 +29,11 @@ router.get("/stock-bajo", (req, res) => {
   const stockAlerta = config.stock_alerta;
 
   const { total: stockBajo } = db
-    .prepare("SELECT COUNT(*) as total FROM productos WHERE stock <= ? AND stock > 0")
+    .prepare("SELECT COUNT(*) as total FROM productos WHERE stock <= ? AND stock > 0 AND activo = 1")
     .get(stockAlerta);
 
   const { total: sinStock } = db
-    .prepare("SELECT COUNT(*) as total FROM productos WHERE stock = 0 AND tiene_stock = 1")
+    .prepare("SELECT COUNT(*) as total FROM productos WHERE stock = 0 AND tiene_stock = 1 AND activo = 1")
     .get();
 
   res.json({ stockBajo, sinStock });
@@ -42,7 +42,7 @@ router.get("/stock-bajo", (req, res) => {
 // GET /productos/barcode/:codigo
 router.get("/barcode/:codigo", (req, res) => {
   const row = db
-    .prepare("SELECT * FROM productos WHERE codigo_barras = ?")
+    .prepare("SELECT * FROM productos WHERE codigo_barras = ? AND activo = 1")
     .get(req.params.codigo);
   if (!row) return res.status(404).json({ message: "Producto no encontrado" });
   res.json(row);
@@ -102,9 +102,10 @@ router.put("/:id", (req, res) => {
 // DELETE /productos/:id
 router.delete("/:id", (req, res) => {
   const { id } = req.params;
-  const row = db.prepare("SELECT nombre FROM productos WHERE id = ?").get(id);
+  const row = db.prepare("SELECT nombre FROM productos WHERE id = ? AND activo = 1").get(id);
   if (!row) return res.status(404).json({ message: "Producto no encontrado" });
-  db.prepare("DELETE FROM productos WHERE id = ?").run(id);
+  // Borrado lógico: un DELETE real borraría en cascada el detalle de ventas pasadas.
+  db.prepare("UPDATE productos SET activo = 0 WHERE id = ?").run(id);
   res.json({ message: `Producto "${row.nombre}" eliminado` });
 });
 
